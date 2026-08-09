@@ -250,7 +250,7 @@ flag is set after isolation testing.
 | API comparison | OpenAPI-derived cases and HTTP execution |
 | GitHub integration | GitHub Apps, OAuth, and Check Runs |
 | Dashboard | React, Next.js, TypeScript, and custom CSS |
-| Optional AI enrichment | Ollama-compatible language models |
+| Optional AI enrichment and migration intelligence | GPT-4o Responses API |
 
 ## Product architecture
 

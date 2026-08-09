@@ -7,6 +7,20 @@ from app.repository_intelligence.models import RepositoryWorkspace
 from app.repository_intelligence.workspace import workspace_fingerprint
 
 
+def test_service_prefers_openai_when_api_key_is_configured(monkeypatch, tmp_path):
+    intelligence = object()
+    executor = object()
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("ARTIFACT_STORAGE_ROOT", str(tmp_path / "artifacts"))
+    monkeypatch.setattr(tasks, "OpenAIMigrationIntelligence", lambda: intelligence)
+    monkeypatch.setattr(tasks, "CloudflareSandboxExecutor", lambda *_args, **_kwargs: executor)
+
+    service = tasks._service()
+
+    assert service.intelligence is intelligence
+    assert service.executor is executor
+
+
 def test_generation_checks_out_exact_snapshot_and_always_cleans_up(monkeypatch, tmp_path):
     (tmp_path / "app.py").write_text("old()\n")
     digest, files, size, symlinks = workspace_fingerprint(tmp_path)

@@ -19,13 +19,14 @@ repository commands itself.
    SHA using an opaque GitHub installation handle, and verifies the checkout's
    deterministic content digest against the Phase 3 snapshot.
 4. Context assembly includes only evidence-linked call-site and dependency
-   files, at most 20 files and 1 MB. Credential-like text is redacted, large
+   files, at most 20 files and 70 KB of file content. Credential-like text is redacted, large
    change values are replaced by a digest, and repository/provider text is
    explicitly marked untrusted. A developer's bounded revision instructions
    are carried into the new immutable attempt context.
-5. A dedicated HTTPS migration-intelligence gateway returns a schema-validated
-   plan and structured full-file edits. The gateway receives no GitHub,
-   database, sandbox, or model-provider credentials from Delta Code.
+5. GPT-4o returns a strict-schema plan and structured full-file edits through
+   the worker's Responses API client. The client has no tools and receives no
+   GitHub, database, or sandbox credentials. The existing dedicated HTTPS
+   migration-intelligence gateway remains an optional provider-neutral fallback.
 6. The trusted worker rejects path traversal, CI/workflow edits, credential
    files, key material, stale file digests, unplanned paths, secret-like output,
    oversized patches, and non-allowlisted verification executables.
@@ -63,11 +64,24 @@ credentials—are persisted on failed attempts.
 
 ## Configuration
 
-The generation worker requires all of the following:
+The generation worker requires one intelligence configuration:
+
+```text
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-4o
+```
+
+The legacy dedicated-gateway fallback is used only when `OPENAI_API_KEY` is
+unset:
 
 ```text
 MIGRATION_INTELLIGENCE_URL=https://...
 MIGRATION_INTELLIGENCE_TOKEN=...
+```
+
+Sandbox verification additionally requires:
+
+```text
 SANDBOX_EXECUTOR_URL=https://...
 SANDBOX_EXECUTOR_TOKEN=...
 SANDBOX_EXECUTION_ENABLED=true
@@ -75,9 +89,10 @@ ARTIFACT_STORAGE_ROOT=/encrypted/persistent/path
 ```
 
 `SANDBOX_EXECUTION_ENABLED` is fail-closed: only the exact case-insensitive
-value `true` enables execution. Missing gateway URLs, missing tokens, non-HTTPS
-URLs, embedded URL credentials, or a disabled execution flag fail the attempt
-into a visible `blocked` state.
+value `true` enables execution. Missing intelligence credentials, missing
+sandbox tokens, non-HTTPS URLs, embedded URL credentials, or a disabled
+execution flag fail the attempt into a visible `blocked` state. In hosted
+environments, install `OPENAI_API_KEY` only on the generation worker service.
 
 The same bearer token must be installed as the Worker's
 `SANDBOX_EXECUTOR_TOKEN` secret; it must not appear in `wrangler.jsonc` or a
@@ -116,6 +131,6 @@ enablement.
 Phase 4 produces plans, structured patch artifacts, deterministic check
 evidence, reviews, recommendations, and durable attempts. It never applies
 patches to Git itself; Phase 5 consumes only its immutable artifact and evidence
-through the separate publisher boundary. The HTTP intelligence gateway is a
-deliberate provider-neutral seam, not a model-provider-specific implementation
-in this repository.
+through the separate publisher boundary. The `MigrationIntelligence` protocol
+remains the provider-neutral seam; the initial hosted implementation uses a
+bounded GPT-4o client and retains the HTTP gateway adapter as a fallback.

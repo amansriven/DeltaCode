@@ -16,13 +16,13 @@ def test_llm_cases_are_normalized_into_executable_cases(monkeypatch):
     monkeypatch.setattr(
         llm,
         "_generate_json",
-        lambda _prompt: {
+        lambda **_kwargs: {
             "cases": [
                 {
                     "name": "negative_price",
                     "method": "post",
                     "path": "/items",
-                    "json": {"price": -1},
+                    "json_text": '{"price":-1}',
                     "rationale": "Prices are normally non-negative.",
                 }
             ]
@@ -30,8 +30,8 @@ def test_llm_cases_are_normalized_into_executable_cases(monkeypatch):
     )
 
     cases = llm.suggest_extra_cases(
-        {},
-        {},
+        {"paths": {"/items": {"post": {}}}},
+        {"paths": {"/items": {"post": {}}}},
         [{"name": "operation_baseline"}],
     )
 
@@ -54,7 +54,7 @@ def test_explanations_are_keyed_by_stable_case_id(monkeypatch):
     monkeypatch.setattr(
         llm,
         "_generate_json",
-        lambda _prompt: {
+        lambda **_kwargs: {
             "summaries": [
                 {
                     "case_id": "post:/items:omit_discount",

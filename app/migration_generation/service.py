@@ -145,6 +145,17 @@ class MigrationGenerationService:
         recommendation = _guard_recommendation(recommendation, execution)
         completed_at = datetime.now(UTC)
         checks = _verification_checks(execution)
+        cost = {"sandbox_seconds": execution.duration_ms / 1000}
+        model_usage = getattr(self.intelligence, "usage", None)
+        if model_usage is not None:
+            cost.update(
+                {
+                    "currency": "USD",
+                    "model_input_tokens": model_usage.input_tokens,
+                    "model_output_tokens": model_usage.output_tokens,
+                    "model_cost": round(model_usage.cost_usd, 8),
+                }
+            )
         evidence = MigrationEvidence(
             migration_id=context.migration_id,
             attempt_id=context.attempt_id,
@@ -165,7 +176,7 @@ class MigrationGenerationService:
             review=review,
             recommendation=recommendation,
             tool_versions=[proposal.patch.generator, execution.executor],
-            cost={"sandbox_seconds": execution.duration_ms / 1000},
+            cost=cost,
             created_at=created_at,
             completed_at=completed_at,
         )

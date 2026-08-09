@@ -12,8 +12,8 @@ from .models import ContextFile, PlanningContext
 from .policy import SECRET_PATTERNS, PatchPolicyError, normalize_repository_path
 
 MAX_CONTEXT_FILES = 20
-MAX_CONTEXT_BYTES = 1_000_000
-MAX_CONTEXT_FILE_BYTES = 256_000
+MAX_CONTEXT_BYTES = 70_000
+MAX_CONTEXT_FILE_BYTES = 64_000
 MAX_CHANGE_VALUE_BYTES = 20_000
 
 

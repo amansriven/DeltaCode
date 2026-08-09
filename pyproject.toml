@@ -15,6 +15,7 @@ dependencies = [
   "packaging",
   "procrastinate",
   "psycopg[binary]",
+  "python-dotenv[cli]",
   "PyJWT",
   "uvicorn[standard]",
 ]

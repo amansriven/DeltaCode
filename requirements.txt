@@ -4,5 +4,6 @@ procrastinate
 psycopg[binary]
 httpx
 packaging
+python-dotenv[cli]
 PyJWT
 cryptography

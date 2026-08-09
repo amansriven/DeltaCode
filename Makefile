@@ -66,10 +66,20 @@ db-schema:
 	$(PROCRASTINATE) schema --apply
 
 api:
-	$(PYTHON) -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	@if [ -f .env.local ]; then \
+		$(PYTHON) -m dotenv -f .env.local run -- \
+		$(PYTHON) -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000; \
+	else \
+		$(PYTHON) -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000; \
+	fi
 
 worker:
-	$(PROCRASTINATE) worker
+	@if [ -f .env.local ]; then \
+		$(PYTHON) -m dotenv -f .env.local run -- \
+		$(PYTHON) -m procrastinate --app app.procrastinate_app.procrastinate_app worker; \
+	else \
+		$(PROCRASTINATE) worker; \
+	fi
 
 frontend-dev: frontend-env
 	cd frontend && NEXT_PUBLIC_DELTA_CODE_API_URL="$(LIVE_API_URL)" npm run dev

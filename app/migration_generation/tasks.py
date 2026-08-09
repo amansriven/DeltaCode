@@ -13,18 +13,22 @@ from app.repository_intelligence.workspace import (
 
 from .context import assemble_planning_context
 from .executor import CloudflareSandboxExecutor
-from .intelligence import HttpMigrationIntelligence
+from .intelligence import HttpMigrationIntelligence, OpenAIMigrationIntelligence
 from .service import MigrationGenerationService
 from .store import claim_attempt, complete_attempt, fail_attempt
 
 
 def _service() -> MigrationGenerationService:
-    intelligence_url = os.environ.get("MIGRATION_INTELLIGENCE_URL", "")
-    intelligence_token = os.environ.get("MIGRATION_INTELLIGENCE_TOKEN", "")
     sandbox_url = os.environ.get("SANDBOX_EXECUTOR_URL", "")
     sandbox_token = os.environ.get("SANDBOX_EXECUTOR_TOKEN", "")
     execution_enabled = os.environ.get("SANDBOX_EXECUTION_ENABLED", "").lower() == "true"
-    intelligence = HttpMigrationIntelligence(intelligence_url, intelligence_token)
+    if os.environ.get("OPENAI_API_KEY"):
+        intelligence = OpenAIMigrationIntelligence()
+    else:
+        intelligence = HttpMigrationIntelligence(
+            os.environ.get("MIGRATION_INTELLIGENCE_URL", ""),
+            os.environ.get("MIGRATION_INTELLIGENCE_TOKEN", ""),
+        )
     executor = CloudflareSandboxExecutor(
         sandbox_url,
         sandbox_token,
@@ -42,6 +46,7 @@ def _service() -> MigrationGenerationService:
 def run_migration_generation(workspace_id: str, attempt_id: str) -> None:
     observation = JobObservation("generation")
     workspace = None
+    service = None
     provider = GitRepositoryWorkspaceProvider(GitHubInstallationCredentialBroker())
     try:
         attempt = claim_attempt(workspace_id, attempt_id)
@@ -70,7 +75,8 @@ def run_migration_generation(workspace_id: str, attempt_id: str) -> None:
             impact=attempt.impact,
             root=Path(workspace.root),
         )
-        result = _service().run(planning_context, Path(workspace.root))
+        service = _service()
+        result = service.run(planning_context, Path(workspace.root))
         complete_attempt(attempt, result.evidence, result.patch_object_ref)
         observation.finish("completed")
     except Exception as exc:
@@ -79,5 +85,11 @@ def run_migration_generation(workspace_id: str, attempt_id: str) -> None:
         fail_attempt(workspace_id, attempt_id, str(error_code))
         raise
     finally:
-        if workspace is not None:
-            provider.cleanup(workspace)
+        try:
+            if service is not None:
+                close = getattr(getattr(service, "intelligence", None), "close", None)
+                if close is not None:
+                    close()
+        finally:
+            if workspace is not None:
+                provider.cleanup(workspace)

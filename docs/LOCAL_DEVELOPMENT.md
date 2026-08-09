@@ -76,6 +76,10 @@ The API and worker read configuration from environment variables. Export
 GitHub App and OAuth values in the shell before starting them when testing
 webhooks, Check Runs, or the complete sign-in flow:
 
+`make api` and `make worker` also load an ignored root `.env.local` when it
+exists. Keep model credentials there for local development only; never put
+them in `frontend/.env*` or in a `NEXT_PUBLIC_*` variable.
+
 ```bash
 export GITHUB_APP_ID="..."
 export GITHUB_PRIVATE_KEY="..."
@@ -85,6 +89,15 @@ export GITHUB_OAUTH_CLIENT_SECRET="..."
 export GITHUB_OAUTH_CALLBACK_URL="http://localhost:8000/auth/github/callback"
 export FRONTEND_URL="http://localhost:3000"
 export ARTIFACT_STORAGE_ROOT="$PWD/.delta-code-artifacts"
+export OPENAI_API_KEY="..."
+export OPENAI_MODEL="gpt-4o"
+# Process-local safety brakes. Also configure a hard project budget at OpenAI.
+export LLM_DAILY_BUDGET_USD="1.00"
+export LLM_TOTAL_BUDGET_USD="9.00"
+export LLM_MAX_REQUEST_COST_USD="0.20"
+export LLM_MAX_INPUT_BYTES="120000"
+export LLM_MAX_RETRIES="1"
+# Optional legacy dedicated-gateway fallback when OPENAI_API_KEY is unset.
 export MIGRATION_INTELLIGENCE_URL="https://your-gateway.example"
 export MIGRATION_INTELLIGENCE_TOKEN="..."
 export SANDBOX_EXECUTOR_URL="https://your-sandbox-worker.example.workers.dev"
@@ -96,14 +109,20 @@ export GITHUB_PUBLISHING_ENABLED="true"
 # Protect the aggregate Prometheus scrape endpoint with a separate credential.
 export METRICS_BEARER_TOKEN="..."
 # Optional per-attempt Phase 7 resource budgets (shown with defaults).
-export GENERATION_MAX_CONTEXT_BYTES="1500000"
-export GENERATION_MAX_PROPOSAL_BYTES="2500000"
+export GENERATION_MAX_CONTEXT_BYTES="100000"
+export GENERATION_MAX_PROPOSAL_BYTES="250000"
 export GENERATION_MAX_CHECK_TIMEOUT_MS="600000"
 export GENERATION_MAX_SANDBOX_DURATION_MS="600000"
 ```
 
 Do not commit those values. Basic pages and the signed-out live-API state work
 without GitHub credentials.
+
+For Railway, set `OPENAI_API_KEY` on the background `worker` service only. The
+browser and Vercel frontend never need the key. GPT-4o enrichments are optional:
+if the key is absent, request-case generation and finding explanations continue
+with deterministic evidence alone. Migration generation requires either the
+OpenAI key or the legacy dedicated-gateway variables.
 
 The authenticated dashboard opens at `/migrations`. With
 `NEXT_PUBLIC_DELTA_CODE_API_URL` unset it uses clearly labeled preview

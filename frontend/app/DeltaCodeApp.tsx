@@ -5,10 +5,13 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ApiConnectionStatus,
+  AiTriageResponse,
   checkApiConnection,
   CurrentUser,
+  demoAiTriage,
   demoDetails,
   demoRuns,
+  fetchAiTriage,
   fetchMe,
   fetchRun,
   fetchRuns,
@@ -16,6 +19,7 @@ import {
   FindingKind,
   githubLoginUrl,
   githubRepositoryRefreshUrl,
+  generateAiTriage,
   liveApiUrl,
   RepositoryAccess,
   RunDetail,
@@ -45,31 +49,31 @@ const dashboardNavigation: Array<{
 }> = [
   {
     section: "migrations",
-    label: "Migration inbox",
+    label: "Review inbox",
     href: "/migrations",
     icon: "△",
-    description: "Provider changes and developer decisions",
+    description: "AI migration PRs and developer decisions",
   },
   {
     section: "providers",
-    label: "Providers",
+    label: "Change sources",
     href: "/providers",
     icon: "⌁",
-    description: "Source health and change coverage",
+    description: "Official API and SDK source health",
   },
   {
     section: "overview",
-    label: "Verifier overview",
+    label: "Workspace",
     href: "/overview",
     icon: "◇",
-    description: "Workspace health and recent activity",
+    description: "Review health, AI triage, and recent activity",
   },
   {
     section: "runs",
-    label: "Verification runs",
+    label: "Behavior checks",
     href: "/runs",
     icon: "≋",
-    description: "API verification history",
+    description: "Reproduced base-versus-head API evidence",
   },
   {
     section: "repositories",
@@ -188,7 +192,7 @@ function PublicHeader() {
         </a>
         <ThemeToggle compact />
         <a className="button button-primary button-small" href={githubLoginUrl}>
-          Get started <span aria-hidden="true">↗</span>
+          Install the bot <span aria-hidden="true">↗</span>
         </a>
       </nav>
     </header>
@@ -200,8 +204,8 @@ function PublicFooter() {
     <footer className="public-footer public-footer-expanded">
       <div className="footer-brand">
         <Wordmark compact />
-        <p>Evidence-first API verification for every pull request.</p>
-        <span>Built for teams that ship APIs with confidence.</span>
+        <p>The AI review bot for breaking API changes.</p>
+        <span>AI proposes. Evidence proves. You decide.</span>
       </div>
       <div className="footer-links">
         <div>
@@ -213,7 +217,7 @@ function PublicFooter() {
         <div>
           <strong>Resources</strong>
           <a href="/docs">Documentation</a>
-          <a href="/runs">Live dashboard</a>
+          <a href="/migrations">Migration inbox</a>
           <a href="https://github.com/amansriven/DeltaCode" target="_blank" rel="noreferrer">
             GitHub ↗
           </a>
@@ -842,142 +846,181 @@ function EvidencePreview() {
   );
 }
 
+function ReviewBotPreview() {
+  return (
+    <div className="review-bot-preview" aria-label="Delta Code migration pull request preview">
+      <div className="review-bot-topbar">
+        <span className="review-bot-repo"><i aria-hidden="true">GH</i> acme/checkout</span>
+        <span className="draft-pr-badge">Draft PR #184</span>
+      </div>
+      <div className="review-bot-title">
+        <div className="bot-avatar" aria-hidden="true">Δ</div>
+        <div>
+          <small>DELTA CODE BOT · 2 MINUTES AGO</small>
+          <h2>Migrate checkout requests to PaymentMethod</h2>
+          <p>Stripe API 2026-08-01 removes the legacy <code>source</code> field.</p>
+        </div>
+      </div>
+      <div className="review-bot-trace">
+        <div className="trace-item trace-verified">
+          <span>01</span>
+          <div><strong>Provider change verified</strong><small>Official migration guide · artifact captured</small></div>
+          <b>verified</b>
+        </div>
+        <div className="trace-item trace-verified">
+          <span>02</span>
+          <div><strong>3 affected call sites found</strong><small>src/billing/checkout.ts · tests/checkout.test.ts</small></div>
+          <b>mapped</b>
+        </div>
+        <div className="trace-item trace-ai">
+          <span>03</span>
+          <div><strong>Patch and tests generated</strong><small>Bounded repository context · strict structured output</small></div>
+          <b>GPT-4o</b>
+        </div>
+        <div className="trace-item trace-verified">
+          <span>04</span>
+          <div><strong>14 verification checks passed</strong><small>lint · type-check · unit tests · sandbox destroyed</small></div>
+          <b>passed</b>
+        </div>
+      </div>
+      <div className="review-bot-files">
+        <span><i>M</i><code>src/billing/checkout.ts</code><small>+12 −8</small></span>
+        <span><i>A</i><code>tests/payment-method.test.ts</code><small>+34</small></span>
+      </div>
+      <div className="review-bot-decision">
+        <span><i aria-hidden="true">✓</i><strong>Ready for developer review</strong></span>
+        <div><button type="button">Request revision</button><button type="button">Review PR ↗</button></div>
+      </div>
+    </div>
+  );
+}
+
 function LandingPage() {
   return (
-    <main className="public-page">
+    <main className="public-page bot-public-page">
       <InteractiveLandingShell>
         <PublicHeader />
-        <section className="hero">
-          <div className="hero-copy">
+        <section className="hero bot-hero">
+          <div className="hero-copy bot-hero-copy">
             <div className="eyebrow">
               <span />
-              GitHub-native API verification
-              <b>New</b>
+              AI migration review bot
+              <b>GPT-4o</b>
             </div>
             <h1>
-              Ship API changes
+              The AI review bot
               <br />
-              <em>without the guesswork.</em>
+              <em>for breaking API changes.</em>
             </h1>
             <p>
-              Delta Code turns every pull request into a real behavioral comparison.
-              We generate targeted requests, run both branches, and surface only
-              the API changes your team needs to review.
+              Delta Code watches official provider changes, finds the code they affect,
+              uses GPT-4o to write and review the migration, verifies the exact patch,
+              and opens a draft pull request for your team.
             </p>
             <div className="hero-actions">
               <a className="button button-primary button-large" href={githubLoginUrl}>
-                Start verifying with GitHub <span aria-hidden="true">→</span>
+                Install the GitHub bot <span aria-hidden="true">→</span>
               </a>
-              <a className="button button-quiet button-large" href="/runs">
-                View live dashboard
+              <a className="button button-quiet button-large" href="/migrations">
+                Open the review inbox
               </a>
             </div>
             <div className="hero-proof">
-              <span><i>✓</i> Reproducible evidence</span>
-              <span><i>✓</i> OpenAPI aware</span>
-              <span><i>✓</i> Setup in minutes</span>
+              <span><i>✓</i> Official-source provenance</span>
+              <span><i>✓</i> Verified before PR</span>
+              <span><i>✓</i> Human-controlled merge</span>
             </div>
           </div>
-          <div className="hero-visual">
-            <div className="floating-chip chip-one"><i /> OpenAPI diff detected</div>
-            <div className="floating-chip chip-two">✓ Check run published</div>
-            <EvidencePreview />
+          <div className="hero-visual bot-hero-visual">
+            <div className="floating-chip chip-one"><i /> Provider change detected</div>
+            <div className="floating-chip chip-two">✦ AI review complete</div>
+            <ReviewBotPreview />
             <div className="visual-glow" aria-hidden="true" />
           </div>
         </section>
         <div className="trusted-strip">
-          <span>Designed for modern API teams</span>
+          <span>Built for the code review loop</span>
           <div>
-            <b>FASTAPI</b>
-            <b>OPENAPI</b>
+            <b>OPENAI</b>
             <b>GITHUB</b>
-            <b>POSTGRESQL</b>
-            <b>PYTHON</b>
+            <b>OPENAPI</b>
+            <b>PYTHON + TS</b>
+            <b>SANDBOXED</b>
           </div>
         </div>
       </InteractiveLandingShell>
 
-      <section className="story-section">
+      <section className="positioning-section">
+        <div className="positioning-statement">
+          <span className="section-kicker">A new category of dependency automation</span>
+          <h2>Dependabot finds version bumps.<br /><em>Delta Code ships API migrations.</em></h2>
+        </div>
+        <div className="positioning-copy">
+          <p>External APIs change outside your dependency graph. Delta Code connects the provider announcement to the exact repository, call sites, patch, tests, verification evidence, and draft PR.</p>
+          <a href="/product">See the complete product →</a>
+        </div>
+        <div className="positioning-metrics">
+          <span><strong>Official</strong><small>source provenance</small></span>
+          <span><strong>Repository-specific</strong><small>impact and patches</small></span>
+          <span><strong>Verified</strong><small>before developer review</small></span>
+        </div>
+      </section>
+
+      <section className="bot-workflow-section">
         <div className="section-heading centered-heading">
-          <span className="section-kicker">From diff to decision</span>
-          <h2>Everything you need to review API behavior.</h2>
-          <p>One focused workflow replaces manual reproduction, speculative comments, and scattered logs.</p>
+          <span className="section-kicker">From provider change to pull request</span>
+          <h2>One bot. The complete migration review loop.</h2>
+          <p>Every step leaves an inspectable artifact, so the final recommendation can be reviewed instead of merely trusted.</p>
         </div>
-        <div className="workflow-rail">
-          <article>
-            <span className="workflow-icon">⌁</span>
-            <small>01 · Detect</small>
-            <h3>Understand the changed surface</h3>
-            <p>Delta Code reads both OpenAPI specifications and isolates endpoints, parameters, and fields touched by the PR.</p>
-          </article>
-          <span className="rail-arrow">→</span>
-          <article>
-            <span className="workflow-icon">⚡</span>
-            <small>02 · Exercise</small>
-            <h3>Run targeted edge cases</h3>
-            <p>Deterministic and AI-assisted cases execute against both branches with identical requests.</p>
-          </article>
-          <span className="rail-arrow">→</span>
-          <article>
-            <span className="workflow-icon">Δ</span>
-            <small>03 · Compare</small>
-            <h3>Review concrete evidence</h3>
-            <p>Only reproduced differences appear in your GitHub Check and dashboard, with both responses attached.</p>
-          </article>
+        <div className="bot-workflow-grid">
+          <article><span>01</span><i>⌁</i><h3>Watch the source</h3><p>Capture official specs, releases, guides, and SDK changes with immutable provenance.</p><code>provider.change</code></article>
+          <article><span>02</span><i>◎</i><h3>Trace impact</h3><p>Map the change to dependencies, symbols, and concrete call sites in connected repositories.</p><code>3 call sites</code></article>
+          <article className="workflow-ai"><span>03</span><i>✦</i><h3>Generate with AI</h3><p>GPT-4o proposes a minimal migration and tests from bounded repository context.</p><code>strict JSON</code></article>
+          <article><span>04</span><i>✓</i><h3>Verify the patch</h3><p>Run allowed commands in an isolated sandbox and preserve every check result.</p><code>14 / 14 passed</code></article>
+          <article><span>05</span><i>↗</i><h3>Open a draft PR</h3><p>Publish the exact verified patch, evidence, uncertainty, and review recommendation.</p><code>human decision</code></article>
         </div>
       </section>
 
-      <section className="bento-section">
-        <div className="section-heading">
-          <span className="section-kicker">Built for signal</span>
-          <h2>A calmer way to ship fast.</h2>
+      <section className="ai-system-section">
+        <div className="ai-system-copy">
+          <span className="section-kicker">AI with an evidence boundary</span>
+          <h2>Give the model judgment.<br />Keep proof deterministic.</h2>
+          <p>GPT-4o interprets provider material, understands repository context, writes the patch and tests, and reviews its work. Delta Code independently owns source hashes, call-site evidence, patch policy, sandbox checks, and Git state.</p>
+          <div className="ai-boundary-list">
+            <span><i>AI</i><strong>Plans, patches, tests, and review explanations</strong></span>
+            <span><i>✓</i><strong>Provenance, execution, checks, and exact Git artifacts</strong></span>
+          </div>
         </div>
-        <div className="bento-grid">
-          <article className="bento-card bento-wide bento-blue">
-            <div>
-              <span className="card-label">Behavioral diff</span>
-              <h3>See what users experience—not just what code changed.</h3>
-              <p>Compare status codes and response bodies from real executions on each side of the pull request.</p>
-            </div>
-            <div className="mini-diff" aria-hidden="true">
-              <span><b>main</b><code>201 Created</code></span>
-              <i>→</i>
-              <span className="mini-diff-danger"><b>pull request</b><code>422 Required</code></span>
-            </div>
-          </article>
-          <article className="bento-card">
-            <span className="card-icon">◎</span>
-            <span className="card-label">Repository aware</span>
-            <h3>One workspace, every connected repo.</h3>
-            <p>Installation-scoped access keeps teams focused on exactly the repositories they manage.</p>
-          </article>
-          <article className="bento-card">
-            <span className="card-icon">↻</span>
-            <span className="card-label">Reliable operations</span>
-            <h3>Async runs with safe retries.</h3>
-            <p>PostgreSQL-backed jobs capture progress, errors, history, and retry state without blocking webhooks.</p>
-          </article>
-          <article className="bento-card bento-wide ai-card">
-            <div>
-              <span className="card-label">AI-ready, evidence-first</span>
-              <h3>Intelligence that extends tests—never invents verdicts.</h3>
-              <p>LLMs can propose semantic edge cases and explain impact, while the regression decision always comes from reproduced requests.</p>
-            </div>
-            <div className="ai-orbit" aria-hidden="true">
-              <span>API</span><i /><i /><i />
-            </div>
-          </article>
+        <div className="model-trace-card">
+          <div><span>AI REVIEW TRACE</span><b>gpt-4o</b></div>
+          <ol>
+            <li><span>context</span><code>provider + repository + call sites</code><b>bounded</b></li>
+            <li><span>proposal</span><code>plan + patch + tests</code><b>validated</b></li>
+            <li><span>sandbox</span><code>lint + typecheck + test</code><b className="trace-pass">passed</b></li>
+            <li><span>review</span><code>evidence-grounded recommendation</code><b>approve</b></li>
+          </ol>
+          <div className="model-trace-footer"><span>tools disabled</span><span>store: false</span><span>budget limited</span></div>
         </div>
       </section>
 
-      <section className="final-cta">
-        <div className="cta-orb" aria-hidden="true" />
-        <span className="section-kicker">Start with your next pull request</span>
-        <h2>Make every API change explain itself.</h2>
-        <p>Connect GitHub, select a repository, and let Delta Code turn hidden behavior changes into reviewable evidence.</p>
+      <section className="legacy-proof-section">
         <div>
-          <a className="button button-primary button-large" href={githubLoginUrl}>Connect GitHub <span>→</span></a>
-          <a className="button button-quiet button-large" href="/docs">Read the docs</a>
+          <span className="section-kicker">Behavioral proof when it matters</span>
+          <h2>The original API verifier is now part of the trust layer.</h2>
+          <p>Delta Code can still generate semantic cases, run identical requests against base and head, and attach reproduced behavior changes to the review.</p>
+          <a className="text-link" href="/runs">Explore behavior checks →</a>
+        </div>
+        <div className="legacy-evidence-preview"><EvidencePreview /></div>
+      </section>
+
+      <section className="final-cta bot-final-cta">
+        <div className="cta-orb" aria-hidden="true" />
+        <span className="section-kicker">The next API migration can arrive as a PR</span>
+        <h2>Let the bot do the migration.<br />Keep the decision yours.</h2>
+        <p>Connect GitHub and turn provider changes into verified, reviewable work before they become emergency upgrades.</p>
+        <div>
+          <a className="button button-primary button-large" href={githubLoginUrl}>Install Delta Code <span>→</span></a>
+          <a className="button button-quiet button-large" href="/docs">Read the architecture</a>
         </div>
       </section>
       <PublicFooter />
@@ -1008,40 +1051,40 @@ function PublicPageHero({
 
 function ProductPage() {
   return (
-    <main className="public-page light-public-page">
+    <main className="public-page light-public-page bot-subpage">
       <PublicHeader />
       <PublicPageHero
-        kicker="The verification platform"
-        title="API regression testing your whole team can trust."
-        description="Delta Code connects contract changes to runtime evidence, giving reviewers a fast, shared understanding of what a pull request changes for real clients."
+        kicker="The API migration review bot"
+        title="One review bot from provider change to verified PR."
+        description="Delta Code combines official-source monitoring, repository impact analysis, GPT-4o migration intelligence, sandbox verification, and draft-PR publishing in one developer-controlled workflow."
       >
         <div className="subpage-actions">
-          <a className="button button-primary button-large" href={githubLoginUrl}>Connect a repository →</a>
+          <a className="button button-primary button-large" href={githubLoginUrl}>Install the review bot →</a>
           <a className="button button-quiet button-large" href="/how-it-works">Explore the workflow</a>
         </div>
       </PublicPageHero>
       <section className="product-showcase">
         <div className="showcase-copy">
-          <span className="section-kicker">A complete feedback loop</span>
-          <h2>From pull request to proof, automatically.</h2>
-          <p>Every run preserves the context a reviewer needs: repository, branch, commit, generated request, both responses, severity, and operational state.</p>
+          <span className="section-kicker">A complete review artifact</span>
+          <h2>From official change to a PR your team can evaluate.</h2>
+          <p>Every migration keeps its provider source, affected call sites, AI-generated plan, exact patch, tests, sandbox checks, model review, uncertainty, and developer decision together.</p>
           <ul className="check-list">
-            <li><i>✓</i> OpenAPI-aware case generation</li>
-            <li><i>✓</i> Real base-versus-head execution</li>
-            <li><i>✓</i> GitHub Check Run reporting</li>
-            <li><i>✓</i> Searchable, repository-grouped history</li>
+            <li><i>✓</i> Official-source provenance</li>
+            <li><i>✓</i> Repository and call-site evidence</li>
+            <li><i>✓</i> GPT-4o patch generation and review</li>
+            <li><i>✓</i> Verified draft PRs with immutable attempts</li>
           </ul>
         </div>
-        <EvidencePreview />
+        <ReviewBotPreview />
       </section>
       <section className="feature-matrix">
         {[
-          ["⌁", "Changed-surface detection", "Targets only endpoints and inputs affected by the pull request."],
-          ["◫", "Request provenance", "Stable case IDs and rationales make every generated request traceable."],
-          ["Δ", "Behavior classification", "Separates true regressions from other status-code changes."],
-          ["↻", "Failure recovery", "Clear errors and one-click retries keep transient failures actionable."],
-          ["◎", "Repository visibility", "See every repository granted to the Delta Code GitHub App."],
-          ["✦", "AI enrichment", "Optional semantic cases and explanations layer onto deterministic evidence."],
+          ["⌁", "Provider intelligence", "Captures official specs, releases, guides, and SDK changes with immutable provenance."],
+          ["◎", "Repository impact", "Connects a normalized change to concrete dependencies, symbols, and call sites."],
+          ["✦", "AI migration generation", "GPT-4o proposes bounded plans, edits, tests, and allowed verification commands."],
+          ["✓", "Sandbox verification", "Runs the exact patch in an isolated boundary and records every deterministic check."],
+          ["↗", "Draft PR publishing", "Commits the verified artifact, opens an owned draft PR, and publishes evidence."],
+          ["◇", "Human review controls", "Approve, revise, snooze, decline, retry, and publish without automatic merging."],
         ].map(([icon, title, copy]) => (
           <article key={title}>
             <span>{icon}</span><h3>{title}</h3><p>{copy}</p>
@@ -1055,21 +1098,22 @@ function ProductPage() {
 
 function WorkflowPage() {
   return (
-    <main className="public-page light-public-page">
+    <main className="public-page light-public-page bot-subpage">
       <PublicHeader />
       <PublicPageHero
         kicker="How Delta Code works"
-        title="A rigorous test loop, triggered by a pull request."
-        description="Delta Code combines contract analysis, isolated execution, and evidence-first reporting in one repeatable workflow."
+        title="A provider change enters. A verified draft PR comes out."
+        description="Delta Code turns external change management into a durable review workflow, with GPT-4o handling repository-specific judgment and deterministic systems preserving proof."
       />
       <section className="timeline-section">
         {[
-          ["01", "A pull request changes your API", "The GitHub App receives the event and creates an asynchronous verification run.", "pull_request.opened"],
-          ["02", "Delta Code maps the changed surface", "Base and head OpenAPI specifications are compared to identify testable request changes.", "openapi.diff()"],
-          ["03", "Focused cases are generated", "Rules cover contract boundaries; optional AI adds semantic cases based on field meaning.", "cases.generate()"],
-          ["04", "Both branches are exercised", "The same request runs against isolated base and pull-request applications.", "base ⇄ head"],
-          ["05", "Only differences survive", "Equivalent behavior and pre-existing failures are suppressed to keep the result focused.", "compare.responses()"],
-          ["06", "Evidence reaches the review", "Findings are stored, published as a GitHub Check, and available in the dashboard.", "check_run.complete"],
+          ["01", "An official provider source changes", "Delta Code captures and fingerprints the artifact, then normalizes it into a provider-independent change.", "source.captured"],
+          ["02", "Connected repositories are assessed", "Dependency inventory and language analyzers locate supported call sites and expose coverage limits.", "impact.assessed"],
+          ["03", "GPT-4o proposes the migration", "Bounded provider, repository, and call-site context produces a schema-validated plan, patch, tests, and commands.", "ai.proposal"],
+          ["04", "Patch policy constrains the output", "Only supplied files, expected hashes, known call sites, and approved command arrays can advance.", "patch.validated"],
+          ["05", "The exact patch runs in a sandbox", "Build, lint, type-check, test, and behavioral checks produce deterministic evidence.", "sandbox.verified"],
+          ["06", "GPT-4o reviews against the evidence", "The model identifies grounded findings and recommends approve, revise, snooze, or decline.", "ai.review"],
+          ["07", "A draft pull request reaches the developer", "Delta Code publishes the verified patch, source links, checks, uncertainty, and immutable attempt history.", "pull_request.draft"],
         ].map(([number, title, copy, code]) => (
           <article key={number}>
             <span className="timeline-number">{number}</span>
@@ -1080,8 +1124,8 @@ function WorkflowPage() {
       </section>
       <section className="principle-callout">
         <span>Our core principle</span>
-        <blockquote>“AI can suggest what to test. Only execution can prove what changed.”</blockquote>
-        <p>This boundary keeps Delta Code useful in serious engineering workflows: generated ideas remain clearly separate from reproduced evidence.</p>
+        <blockquote>“AI proposes. Evidence proves. You decide.”</blockquote>
+        <p>GPT-4o supplies the judgment required to migrate unfamiliar repository code. Deterministic systems establish what source was captured, what code was affected, what patch ran, and which checks passed.</p>
       </section>
       <PublicFooter />
     </main>
@@ -1090,7 +1134,7 @@ function WorkflowPage() {
 
 function DocsPage() {
   return (
-    <main className="public-page light-public-page">
+    <main className="public-page light-public-page bot-subpage">
       <PublicHeader />
       <div className="docs-layout">
         <aside className="docs-sidebar">
@@ -1103,8 +1147,8 @@ function DocsPage() {
         </aside>
         <article className="docs-content">
           <span className="section-kicker">Delta Code docs</span>
-          <h1 id="quickstart">Start verifying API behavior.</h1>
-          <p className="docs-lede">Get the complete Delta Code stack running locally, or connect the hosted dashboard to a GitHub App installation.</p>
+          <h1 id="quickstart">Run the AI migration review bot.</h1>
+          <p className="docs-lede">Start the control plane, worker, migration inbox, GPT-4o intelligence, and optional sandbox executor locally—or connect the hosted product to a GitHub App installation.</p>
           <div className="docs-note"><b>Prerequisites</b><span>Python 3.12+, Node.js 22.13+, Docker, Git, and Make.</span></div>
           <h2>Local quickstart</h2>
           <p>Install dependencies and start PostgreSQL:</p>
@@ -1113,7 +1157,7 @@ function DocsPage() {
           <pre><code>{`make api\nmake worker\nmake frontend-dev LIVE_API_URL=http://localhost:8000`}</code></pre>
           <h2 id="architecture">Architecture</h2>
           <div className="architecture-row">
-            <span>GitHub App</span><i>→</i><span>FastAPI</span><i>→</i><span>PostgreSQL queue</span><i>→</i><span>Worker</span><i>→</i><span>Check Run</span>
+            <span>Provider source</span><i>→</i><span>Impact analysis</span><i>→</i><span>GPT-4o</span><i>→</i><span>Sandbox</span><i>→</i><span>Draft PR</span>
           </div>
           <h2 id="local-development">Local URLs</h2>
           <table className="docs-table"><tbody>
@@ -1125,12 +1169,16 @@ function DocsPage() {
           <h2 id="api">Core API</h2>
           <div className="endpoint-list">
             <span><b>GET</b><code>/auth/me</code><small>Current GitHub identity and repositories</small></span>
+            <span><b>GET</b><code>/migrations</code><small>Workspace-scoped migration review inbox</small></span>
+            <span><b>POST</b><code>/migrations/&#123;id&#125;/generate</code><small>Queue a bounded AI migration attempt</small></span>
             <span><b>GET</b><code>/runs</code><small>Recent authorized verification runs</small></span>
             <span><b>GET</b><code>/runs/&#123;id&#125;</code><small>Complete run evidence and branch context</small></span>
             <span><b>POST</b><code>/runs/&#123;id&#125;/retry</code><small>Requeue a verification run</small></span>
           </div>
           <h2 id="ai">AI assistance</h2>
-          <p>Set <code>OLLAMA_URL</code> and <code>OLLAMA_MODEL</code> to enable semantic case suggestions and evidence-grounded explanations. Delta Code continues deterministically when the model is unavailable.</p>
+          <p>Set <code>OPENAI_API_KEY</code> on the backend worker to enable GPT-4o migration planning, patch review, semantic API cases, and evidence-grounded explanations. The key must never be exposed through a browser or <code>NEXT_PUBLIC_</code> variable.</p>
+          <pre><code>{`OPENAI_API_KEY=your-server-side-key\nOPENAI_MODEL=gpt-4o\nLLM_DAILY_BUDGET_USD=1.00\nLLM_TOTAL_BUDGET_USD=9.00`}</code></pre>
+          <p>Model requests use strict structured output, no model tools, bounded context and output, <code>store: false</code>, retry limits, and request-level cost limits. Repository and provider text is treated as untrusted data.</p>
         </article>
       </div>
       <PublicFooter />
@@ -1140,30 +1188,32 @@ function DocsPage() {
 
 function SecurityPage() {
   return (
-    <main className="public-page light-public-page">
+    <main className="public-page light-public-page bot-subpage">
       <PublicHeader />
       <PublicPageHero
-        kicker="Security by design"
-        title="Repository access stays explicit. Evidence stays scoped."
-        description="Delta Code uses separate GitHub App and OAuth responsibilities so repository automation and dashboard identity never blur together."
+        kicker="Security and model boundaries"
+        title="Give the bot enough context to migrate. Never enough authority to decide alone."
+        description="Delta Code separates GitHub access, model interpretation, trusted patch policy, sandbox execution, deterministic evidence, and developer approval into explicit boundaries."
       />
       <section className="security-grid">
         <article className="security-primary">
           <span className="card-icon">◈</span>
-          <h2>Least-privilege repository access</h2>
-          <p>Delta Code can only receive events and read code for repositories explicitly selected during GitHub App installation.</p>
+          <h2>Least privilege from source capture to pull request</h2>
+          <p>Delta Code can only access repositories selected during GitHub App installation, and generated patches remain drafts until a developer reviews them.</p>
         </article>
-        <article><span>01</span><h3>Signed webhooks</h3><p>Every incoming GitHub event is verified before processing.</p></article>
-        <article><span>02</span><h3>Server-side sessions</h3><p>Dashboard access uses secure, HTTP-only session cookies.</p></article>
-        <article><span>03</span><h3>Scoped run queries</h3><p>Run history and retries are filtered by the signed-in user’s accessible repositories.</p></article>
-        <article><span>04</span><h3>Isolated execution</h3><p>Base and head applications run in separate subprocesses during comparison.</p></article>
+        <article><span>01</span><h3>Prompt-injection resistance</h3><p>Provider, repository, and developer text is untrusted data. Model tools are disabled and outputs must match strict schemas.</p></article>
+        <article><span>02</span><h3>Bounded model context</h3><p>Only known source evidence, call sites, selected files, and explicit instructions enter each GPT-4o request.</p></article>
+        <article><span>03</span><h3>Fail-closed sandbox</h3><p>Repository-controlled commands run in a separate executor with deny-by-default networking and explicit enablement.</p></article>
+        <article><span>04</span><h3>Human-controlled Git writes</h3><p>The publisher owns its branch and exact patch, opens a draft PR, and never auto-merges the migration.</p></article>
       </section>
       <section className="security-boundary">
-        <div><span className="section-kicker">Clear trust boundaries</span><h2>Automation and identity remain separate.</h2></div>
+        <div><span className="section-kicker">Clear trust boundaries</span><h2>Interpretation, proof, and authority remain separate.</h2></div>
         <div className="boundary-cards">
-          <article><b>GitHub App</b><p>Repository events, installation tokens, code access, and Check Run publishing.</p></article>
+          <article><b>GPT-4o</b><p>Plans, edits, tests, explanations, and evidence-grounded review recommendations.</p></article>
           <span>≠</span>
-          <article><b>GitHub OAuth</b><p>User sign-in, server-side sessions, and repository-scoped dashboard authorization.</p></article>
+          <article><b>Deterministic evidence</b><p>Source hashes, call sites, patch validation, sandbox checks, Git artifacts, and audit history.</p></article>
+          <span>≠</span>
+          <article><b>Developer decision</b><p>Approve, revise, snooze, decline, publish, and ultimately merge.</p></article>
         </div>
       </section>
       <PublicFooter />
@@ -1185,9 +1235,10 @@ function LoginPage() {
           GH
         </div>
         <span className="section-kicker">Developer access</span>
-        <h1>Continue to Delta Code</h1>
+        <h1>Open your migration review inbox</h1>
         <p className="auth-intro">
-          Sign in with GitHub to view verification runs for repositories where
+          Sign in with GitHub to review provider changes, AI-generated migrations,
+          verification evidence, and draft pull requests for repositories where
           Delta Code is installed.
         </p>
         <div className="preview-notice">
@@ -1205,7 +1256,7 @@ function LoginPage() {
           <em>or</em>
           <span />
         </div>
-        <a className="button button-quiet button-full" href="/runs">
+        <a className="button button-quiet button-full" href="/migrations">
           Enter demo workspace
         </a>
         <p className="auth-fineprint">
@@ -1237,10 +1288,11 @@ function OnboardingPage() {
       <section className="onboarding-content">
         <div className="onboarding-copy">
           <span className="section-kicker">Connect a repository</span>
-          <h1>Bring Delta Code into your pull requests.</h1>
+          <h1>Put the API migration bot in your pull requests.</h1>
           <p>
             Install the GitHub App on the repositories you want verified.
-            Delta Code will run automatically when a pull request opens or updates.
+            Delta Code will connect provider changes to affected code, prepare
+            verified migrations, and open developer-controlled draft PRs.
           </p>
         </div>
         <div className="setup-grid">
@@ -1274,13 +1326,13 @@ function OnboardingPage() {
             <div>
               <small>Step 3</small>
               <h2>Verify access</h2>
-              <p>We’ll confirm your installation and start listening for PR events.</p>
+              <p>We’ll confirm your installation and start monitoring configured provider sources.</p>
             </div>
             <span className="step-state">Next</span>
           </article>
         </div>
         <div className="onboarding-actions">
-          <a className="button button-primary" href="/runs">
+          <a className="button button-primary" href="/migrations">
             Continue with demo workspace →
           </a>
           <a className="text-link" href={githubLoginUrl}>
@@ -1372,8 +1424,120 @@ function MiniActivityChart({ runs }: { runs: RunSummary[] }) {
   );
 }
 
+function AiTriagePanel({
+  triage,
+  loading,
+  generating,
+  error,
+  hasRuns,
+  onGenerate,
+}: {
+  triage: AiTriageResponse | null;
+  loading: boolean;
+  generating: boolean;
+  error: string;
+  hasRuns: boolean;
+  onGenerate: () => void;
+}) {
+  const working = generating || triage?.status === "queued" || triage?.status === "running";
+  const brief = triage?.status === "ready" ? triage.brief : undefined;
+  const briefRunCount = triage?.run_count ?? 0;
+
+  return (
+    <section className="ai-triage-panel" aria-labelledby="ai-triage-title">
+      <div className="ai-triage-heading">
+        <div className="ai-triage-mark" aria-hidden="true">✦</div>
+        <div>
+          <span className="section-kicker">Evidence-guided intelligence</span>
+          <h2 id="ai-triage-title">AI Triage</h2>
+        </div>
+        <span className="ai-model-pill">GPT-4o</span>
+      </div>
+
+      {loading ? (
+        <div className="ai-triage-empty" role="status">
+          <span className="loading-spinner" aria-hidden="true" />
+          <div><strong>Checking for a cached brief</strong><p>No model request is being made.</p></div>
+        </div>
+      ) : working ? (
+        <div className="ai-triage-empty" role="status">
+          <span className="loading-spinner" aria-hidden="true" />
+          <div><strong>Building your triage brief</strong><p>The worker is summarizing up to 20 recent runs.</p></div>
+        </div>
+      ) : error || triage?.status === "failed" ? (
+        <div className="ai-triage-empty ai-triage-failed" role="alert">
+          <span aria-hidden="true">!</span>
+          <div>
+            <strong>AI triage is temporarily unavailable</strong>
+            <p>{error || "The model request did not complete. Verified run evidence is unaffected."}</p>
+          </div>
+          <button className="button button-quiet" type="button" onClick={onGenerate}>Try again</button>
+        </div>
+      ) : brief ? (
+        <div className="ai-triage-result">
+          <div className="ai-triage-summary">
+            <span>Current brief</span>
+            <h3>{brief.headline}</h3>
+            <p>{brief.summary}</p>
+            <small>
+              Based on {briefRunCount} recent {briefRunCount === 1 ? "run" : "runs"}
+              {triage?.updated_at ? ` · ${formatRelativeDate(triage.updated_at)}` : ""}
+            </small>
+          </div>
+          <div className="ai-priority-list">
+            {brief.priorities.length ? brief.priorities.map((priority) => (
+              <a href={`/runs/${priority.run_id}`} key={priority.run_id}>
+                <span className={`ai-urgency urgency-${priority.urgency}`}>{priority.urgency}</span>
+                <strong>{priority.title}</strong>
+                <p>{priority.reason}</p>
+                <i aria-hidden="true">→</i>
+              </a>
+            )) : (
+              <div className="ai-no-priorities">
+                <strong>No runs need immediate review</strong>
+                <p>The current evidence did not produce a triage priority.</p>
+              </div>
+            )}
+          </div>
+          {brief.watch_items.length > 0 && (
+            <div className="ai-watch-list">
+              <strong>Keep watching</strong>
+              {brief.watch_items.map((item) => <p key={item}>• {item}</p>)}
+            </div>
+          )}
+          <div className="ai-triage-meta">
+            <span>AI interpretation—not verification evidence</span>
+            <span>{brief.input_tokens + brief.output_tokens} tokens · ${brief.estimated_cost_usd.toFixed(6)}</span>
+          </div>
+        </div>
+      ) : (
+        <div className="ai-triage-empty">
+          <span aria-hidden="true">◇</span>
+          <div>
+            <strong>Turn recent run evidence into a focused review queue</strong>
+            <p>Generated only when you ask, then cached until the underlying runs change.</p>
+          </div>
+          <button
+            className="button button-primary"
+            type="button"
+            disabled={!hasRuns}
+            onClick={onGenerate}
+          >
+            {hasRuns ? "Generate AI brief" : "No runs to summarize"}
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function OverviewPage() {
   const { runs, user, repositories, loading, error } = useWorkspaceData();
+  const [triage, setTriage] = useState<AiTriageResponse | null>(liveApiUrl ? null : demoAiTriage);
+  const [triageLoading, setTriageLoading] = useState(Boolean(liveApiUrl));
+  const [triageGenerating, setTriageGenerating] = useState(false);
+  const [triageError, setTriageError] = useState("");
+  const [triageRefresh, setTriageRefresh] = useState(0);
   const activeRuns = runs.filter((run) => run.status === "pending" || run.status === "running");
   const completedRuns = runs.filter((run) => run.status === "done");
   const regressionRuns = completedRuns.filter((run) => (run.finding_count ?? 0) > 0);
@@ -1381,6 +1545,58 @@ function OverviewPage() {
   const passRate = completedRuns.length
     ? `${Math.round((passingRuns.length / completedRuns.length) * 100)}%`
     : "—";
+
+  useEffect(() => {
+    if (!liveApiUrl || loading) return;
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let active = true;
+
+    const load = async () => {
+      try {
+        const result = await fetchAiTriage(controller.signal);
+        if (!active) return;
+        setTriage(result);
+        setTriageError("");
+        setTriageLoading(false);
+        if (result.status === "queued" || result.status === "running") {
+          timer = setTimeout(load, 1500);
+        } else {
+          setTriageGenerating(false);
+        }
+      } catch (reason) {
+        if (!active || (reason instanceof Error && reason.name === "AbortError")) return;
+        setTriageError(reason instanceof Error ? reason.message : "AI triage could not be loaded.");
+        setTriageLoading(false);
+        setTriageGenerating(false);
+      }
+    };
+
+    load();
+    return () => {
+      active = false;
+      controller.abort();
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading, triageRefresh]);
+
+  const handleGenerateTriage = async () => {
+    if (!liveApiUrl || triageGenerating) return;
+    setTriageGenerating(true);
+    setTriageError("");
+    try {
+      const result = await generateAiTriage();
+      setTriage(result);
+      if (result.status === "queued" || result.status === "running") {
+        setTriageRefresh((value) => value + 1);
+      } else {
+        setTriageGenerating(false);
+      }
+    } catch (reason) {
+      setTriageError(reason instanceof Error ? reason.message : "AI triage could not be generated.");
+      setTriageGenerating(false);
+    }
+  };
 
   const repositoryHealth = repositories
     .map((repository) => {
@@ -1462,6 +1678,14 @@ function OverviewPage() {
             href="/runs"
           />
         </section>
+        <AiTriagePanel
+          triage={triage}
+          loading={triageLoading}
+          generating={triageGenerating}
+          error={triageError}
+          hasRuns={runs.length > 0}
+          onGenerate={handleGenerateTriage}
+        />
         <div className="overview-grid">
           <section className="overview-panel repository-health-panel">
             <div className="panel-title-row">

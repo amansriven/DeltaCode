@@ -1,294 +1,238 @@
 <p align="center">
-  <img src="docs/assets/brand/delta-code-hero.png" alt="Delta Code — Your API changed. Know exactly how." width="900">
+  <img src="docs/assets/brand/delta-code-mark.png" alt="Delta Code" width="88">
+</p>
+
+<h1 align="center">Delta Code</h1>
+
+<p align="center">
+  <strong>The AI review bot for breaking API changes.</strong>
 </p>
 
 <p align="center">
-  <strong>Dependabot for APIs—repository-specific migrations with verification evidence.</strong>
-</p>
-
-<p align="center">
-  Delta Code is an API change-management platform that connects
-  official provider changes to affected code, verified migrations, and draft
-  pull requests.
+  Delta Code watches official API and SDK changes, finds the repositories they
+  affect, writes and verifies the migration, then opens an evidence-rich draft
+  pull request for a developer to review.
 </p>
 
 <p align="center">
   <a href="https://deltacode-tau.vercel.app/"><strong>Explore Delta Code</strong></a>
   ·
   <a href="docs/architecture/phase-0-rfc.md">Product RFC</a>
+  ·
+  <a href="docs/LOCAL_DEVELOPMENT.md">Run locally</a>
 </p>
 
 <p align="center">
   <img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white">
-  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-API-009688?style=flat-square&logo=fastapi&logoColor=white">
-  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-runs-4169E1?style=flat-square&logo=postgresql&logoColor=white">
-  <img alt="React" src="https://img.shields.io/badge/React-dashboard-20232A?style=flat-square&logo=react&logoColor=61DAFB">
-  <img alt="Project stage" src="https://img.shields.io/badge/stage-active%20MVP-168EB2?style=flat-square">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-control%20plane-009688?style=flat-square&logo=fastapi&logoColor=white">
+  <img alt="OpenAI" src="https://img.shields.io/badge/GPT--4o-migration%20intelligence-412991?style=flat-square&logo=openai&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-workflow-4169E1?style=flat-square&logo=postgresql&logoColor=white">
+  <img alt="GitHub" src="https://img.shields.io/badge/GitHub-draft%20PRs-181717?style=flat-square&logo=github&logoColor=white">
 </p>
 
 ---
 
-## The problem
+## Dependabot finds version bumps. Delta Code ships API migrations.
 
-External API and SDK changes are announced separately from the code that
-depends on them. Breaking changes can ship with little warning, useful features
-go unnoticed, and developers must manually connect changelogs to dependencies,
-call sites, code changes, tests, and rollout risk.
+External APIs change independently of the repositories that consume them.
+Release notes, OpenAPI revisions, SDK releases, and migration guides arrive in
+different formats and rarely identify the exact application code that must
+change.
 
-Package update tools can propose a version bump, and generic coding agents can
-modify a repository when instructed. Neither establishes the complete causal
-chain Delta Code is designed to provide:
-
-> **An authoritative external change occurred; this repository is affected at
-> these call sites; this patch performs the migration; and this evidence shows
-> what passed, failed, or remains uncertain.**
-
-The target workflow is:
-
-> API change detected → change normalized from official sources → affected
-> repositories and call sites identified → migration and tests generated →
-> sandboxed verification → draft PR → automated review → developer decision.
-
-## What Delta Code does today
-
-The implemented platform:
-
-1. captures configured official OpenAPI, structured release, changelog,
-   migration-guide, and SDK-release feeds;
-2. normalizes provider changes with immutable provenance;
-3. fans changes out across repository snapshots and PyPI/npm dependencies;
-4. locates Python AST and conservative JavaScript/TypeScript call-site evidence;
-5. creates independent migrations only for affected repositories;
-6. generates bounded plans, code changes, and tests through a model gateway;
-7. verifies the exact patch in an isolated, deny-network sandbox;
-8. records checks, review findings, uncertainty, resource cost, and attempts;
-9. opens evidence-rich draft pull requests without merging them; and
-10. presents the complete chain in an audited developer decision inbox.
-
-The original base-versus-pull-request OpenAPI verifier remains available as a
-GitHub Check and legacy dashboard view. Both workflows produce inspectable
-evidence instead of speculative warnings.
-
-## What the evidence looks like
+Delta Code closes that gap:
 
 ```text
-POST /items
-
-Request
-{ "name": "example", "price": 1.0 }
-
-Base branch                 Pull request
-201 Created          →      422 Unprocessable Entity
-discount: 0.0               discount: Field required
+Official change detected
+        ↓
+Affected repositories and call sites identified
+        ↓
+GPT-4o proposes a bounded migration and tests
+        ↓
+The exact patch is verified in an isolated sandbox
+        ↓
+GPT-4o reviews the patch against deterministic evidence
+        ↓
+An evidence-rich draft pull request is opened
+        ↓
+The developer approves, revises, snoozes, or declines
 ```
 
-Delta Code keeps the request, both responses, the status-code change, and the
-test-case identity together so the finding can be reproduced and discussed.
+The product is deliberately review-native. It does not ask a developer to
+start a generic coding-agent session, reconstruct a provider announcement, or
+trust an unexplained patch. Every proposed change stays attached to its source,
+affected call sites, verification checks, attempt history, and remaining
+uncertainty.
 
-## Finding semantics
+## What the AI review bot does
 
-| Finding | Meaning |
+GPT-4o is the migration intelligence layer. It receives bounded, repository-
+specific context and produces schema-validated output for two jobs:
+
+1. **Propose the migration.** Build a minimal plan, patch, test changes, and
+   allowed verification commands from known provider evidence and call sites.
+2. **Review the result.** Inspect the proposed patch and completed sandbox
+   evidence, identify grounded findings, and recommend approve, revise,
+   snooze, or decline.
+
+The model also enriches the legacy API verifier with semantic test cases and
+plain-language explanations of reproduced behavior changes.
+
+AI is never the source of truth for whether a check passed. Delta Code keeps
+the authority boundary explicit:
+
+| GPT-4o interprets and proposes | Deterministic systems establish |
 | --- | --- |
-| `regression` | A request succeeded on the base branch but failed on the pull request. |
-| `status_code_changed` | Both branches responded, but their status codes changed in another reviewable way. |
-| No finding | The observed behavior was equivalent, or both versions already failed. The case is suppressed. |
+| Provider prose and migration intent | Captured source artifacts and hashes |
+| Repository-specific migration plans | Dependency and call-site evidence |
+| Bounded code and test edits | Patch policy and file integrity |
+| Evidence-grounded review findings | Build, lint, type-check, test, and behavior results |
+| Developer-facing explanations | Git objects, draft PR state, and audit history |
 
-This suppression is intentional. Delta Code focuses reviewers on behavior
-introduced by the pull request rather than flooding them with every request it
-attempted.
+Model requests use strict structured output, no tools, no browsing, bounded
+input and output, `store: false`, retries with limits, and process-level cost
+brakes. Repository and provider text is treated as untrusted data rather than
+instructions.
 
-## How it works
+## Product workflow
 
-```mermaid
-flowchart LR
-    GH["GitHub pull request"] --> WH["Webhook API"]
-    WH --> DB[("PostgreSQL run")]
-    DB --> Q["Background worker"]
-    Q --> CLONE["Fetch base + head"]
-    CLONE --> SPEC["Compare OpenAPI specs"]
-    SPEC --> CASES["Generate focused cases"]
-    CASES --> BASE["Run against base"]
-    CASES --> HEAD["Run against pull request"]
-    BASE --> COMPARE["Compare responses"]
-    HEAD --> COMPARE
-    COMPARE --> RESULT["Reproduced evidence"]
-    RESULT --> CHECK["GitHub Check"]
-    RESULT --> UI["Delta Code dashboard"]
-```
+### 1. Watch authoritative sources
 
-The webhook stays fast by creating a run and handing the comparison to a
-PostgreSQL-backed worker. The heavier work—checking out revisions, starting
-both applications, running cases, and comparing responses—happens
-asynchronously.
+Collectors capture configured OpenAPI documents, structured releases,
+changelogs, migration guides, and SDK releases. Artifacts are content-addressed
+and normalized into a provider-independent change contract.
 
-## The product experience
+### 2. Trace the blast radius
 
-### GitHub-native verification
+Each change fans out across connected repositories. Delta Code inventories
+dependencies, snapshots the selected commit, and locates supported call sites
+with deterministic Python AST analysis and conservative JavaScript/TypeScript
+evidence.
 
-Delta Code reports directly on the pull request as a GitHub Check. Reviewers
-can see whether verification passed, failed, or reproduced behavioral changes
-without leaving the workflow where the code is being reviewed.
+### 3. Generate a repository-specific fix
 
-### Migration inbox
+Only affected repositories receive migrations. GPT-4o works from bounded
+provider evidence, immutable repository context, known call-site identifiers,
+and developer revision instructions. Unknowns remain explicit instead of being
+filled with guesses.
 
-The authenticated product now leads with provider-driven migration work:
+### 4. Verify before review
 
-- provider change, affected repository, risk, and effective date;
-- generation, verification, and draft-PR progress;
-- affected call sites, coverage, plan, changed files, and test intent;
-- deterministic check results, automated review, and unresolved uncertainty;
-- immutable attempts and developer revision instructions;
-- approve, revise, snooze, decline, retry, and publish actions.
+Structured edits pass patch policy in the trusted worker. Repository-controlled
+commands run in a separate Cloudflare Sandbox boundary with outbound traffic
+denied. The resulting logs, check statuses, resource cost, and artifact
+references become immutable migration evidence.
 
-The previous workspace overview and base-versus-head run evidence remain
-available as legacy verification views.
+### 5. Open the review where developers already work
 
-### Run evidence
+Delta Code creates an owned branch, commits the exact verified patch, opens an
+evidence-rich draft pull request, and publishes GitHub Checks. It never merges
+automatically in the current product.
 
-Each run includes:
+### 6. Keep the human decision explicit
 
-- repository and pull-request context;
-- base and head branches;
-- base and head commit identifiers;
-- run status and retry controls;
-- clear failure information;
-- reproduced requests;
-- side-by-side base and pull-request responses;
-- regression and behavior-change classifications.
+The migration inbox supports approve, revise, snooze, decline, retry, and
+publish actions. Regeneration creates a new immutable attempt rather than
+overwriting history.
 
-### Repository access
+## The migration review experience
 
-Users can see which repositories Delta Code can access, distinguish public,
-private, internal, and unknown visibility, and manage the GitHub App
-installation through GitHub.
+Each inbox item answers:
 
-### Accessible themes
+- Which provider changed, and what is the authoritative source?
+- Which repository and call sites are affected?
+- What did the AI review bot change, and why?
+- Which files and tests are part of the patch?
+- Which deterministic checks passed or failed?
+- What uncertainty remains?
+- Is the draft pull request ready for developer review?
 
-The interface is light-first with an optional low-glare dark theme. Both modes
-use the same semantic status colors, visible focus states, readable response
-evidence, reduced-motion support, and responsive layouts.
+The authenticated product includes:
+
+- a migration review inbox with risk, deadline, status, and decision filters;
+- provider-source health and synchronization coverage;
+- normalized change details with before/after semantics and provenance;
+- repository impact evidence and analysis limitations;
+- AI-generated plans, patch intent, tests, and review recommendations;
+- deterministic sandbox checks and immutable attempt history;
+- draft-PR publishing and developer-controlled revision actions; and
+- legacy base-versus-head API behavior checks as supporting evidence.
 
 ## Current capabilities
 
-- OpenAPI-aware changed-surface detection.
-- Generated cases for omitted fields, required-field changes, type changes,
-  path parameters, and query parameters.
-- Real base-versus-head execution.
-- GitHub webhook verification and Check Run publishing.
-- PostgreSQL-backed asynchronous run processing.
-- Persisted findings, failures, and retry support.
-- GitHub OAuth with repository-scoped dashboard authorization.
-- Authenticated checkout support for selected private repositories.
-- Workspace overview, run history, repository grouping, integrations, and
-  account settings.
-- Optional LLM-assisted case suggestions and finding explanations.
-- Deterministic operation when no model is available.
-- Provider-neutral Phase 1 control-plane contracts, lifecycle persistence,
-  cursor APIs, idempotent developer actions, and audit events.
-- Phase 2 official-source ingestion with SSRF controls, immutable artifact
-  capture, OpenAPI and structured-release normalization, provenance, health,
-  deduplication, and repository fan-out.
-- Phase 3 immutable repository snapshots, deterministic PyPI/npm dependency
-  inventory, Python AST call-site analysis, explicit coverage outcomes, and
-  affected migration fan-out without executing repository code.
-- Phase 4 bounded migration generation, immutable patch artifacts, deterministic
-  sandbox evidence, model review, and fail-closed Cloudflare execution.
-- Phase 5 exact-patch GitHub commits, owned branches, draft pull requests,
-  Check Runs, revision synchronization, and developer-controlled ready/close
-  actions behind an explicit write gate.
-- Phase 6 migration inbox with cursor paging, filters, normalized change and
-  repository evidence, attempt history, live progress, and secured developer
-  actions.
-- Phase 7 official JSON source feeds, conservative JavaScript/TypeScript impact
-  evidence, labeled benchmark gates, per-attempt resource budgets, protected
-  metrics, dependency readiness, and a documented security review.
+- Provider-neutral control-plane contracts and audited lifecycle transitions.
+- Official-source ingestion, immutable captures, deduplication, and provenance.
+- OpenAPI, structured JSON release, changelog, guide, and SDK source support.
+- Repository snapshots, PyPI/npm dependency inventory, and impact fan-out.
+- Python AST and conservative JavaScript/TypeScript call-site evidence.
+- GPT-4o migration planning and completed-patch review through the Responses API.
+- Strict JSON schemas, context limits, request limits, and model cost controls.
+- Structured patch policy with content-hash checks and allowed command arrays.
+- Fail-closed Cloudflare Sandbox execution and immutable verification evidence.
+- Exact-patch GitHub commits, owned branches, draft PRs, and Check Runs.
+- Migration inbox, provider operations, attempts, and developer decisions.
+- User-triggered, digest-cached GPT-4o dashboard triage for recent review runs.
+- OpenAPI-aware base-versus-PR behavioral verification and LLM enrichment.
+- Labeled analyzer benchmarks, operational metrics, and security review gates.
 
-## Who Delta Code is for
+## Security and trust boundary
 
-Delta Code is designed for:
+Repository access is controlled by the GitHub App installation. Dashboard
+identity uses a separate GitHub OAuth flow, and data is scoped to repositories
+the signed-in user can access.
 
-- application teams that depend on third-party APIs and SDKs;
-- platform engineers responsible for dependency and migration policy;
-- API providers that want changes to be safely adoptable by customers;
-- reviewers who need concrete evidence before accepting generated migrations;
-- backend engineers validating observable API behavior.
+The migration path validates structured edits in the trusted worker and sends
+repository-controlled commands to a separate sandbox executor. Hosted
+execution remains fail-closed until explicitly enabled after isolation
+configuration. Provider text, repository files, and developer notes are
+untrusted inputs to the model; credentials and customer secrets are excluded
+from prompts by default.
+
+The original API-comparison worker is retained as a legacy verifier and still
+executes checked-out application revisions in its worker environment. It is
+not the general migration execution boundary.
 
 ## Current scope
 
-The active MVP is intentionally focused. Target repositories should currently:
+The active MVP is intentionally conservative:
 
-- use Python for complete semantic impact coverage, or JavaScript/TypeScript
-  where positive-only lexical evidence is sufficient;
-- expose a working OpenAPI specification;
-- have a predictable local startup path;
-- run without complex external infrastructure, or provide local substitutes.
-
-Support for additional frameworks, stateful multi-step scenarios,
-authentication matrices, deeper response-schema comparison, and broader
-execution environments belongs to future iterations.
-
-## Security boundary
-
-Repository access is controlled by the GitHub App installation. Dashboard
-identity uses a separate GitHub OAuth flow, and run data is scoped to
-repositories the signed-in user can access.
-
-The legacy API-comparison worker still executes checked-out pull-request code
-in its worker environment. The Phase 4 migration path does not: it validates
-structured edits in the trusted worker and sends all repository-controlled
-commands to a separate Cloudflare Sandbox Worker with outbound traffic denied.
-Hosted migration execution remains fail-closed until its explicit enablement
-flag is set after isolation testing.
+- Python has the strongest semantic impact coverage.
+- JavaScript/TypeScript analysis reports positive lexical evidence and exposes
+  its limitations.
+- Generated migrations are bounded to supplied files and known call sites.
+- Sandbox verification requires an explicitly configured executor.
+- Draft pull requests remain developer-controlled and are never auto-merged.
+- Unsupported frameworks and incomplete source coverage become uncertainty,
+  not confident guesses.
 
 ## Technology
 
 | Area | Technology |
 | --- | --- |
-| API and webhooks | FastAPI |
-| Run persistence | PostgreSQL |
-| Background work | Procrastinate |
-| API comparison | OpenAPI-derived cases and HTTP execution |
-| GitHub integration | GitHub Apps, OAuth, and Check Runs |
-| Dashboard | React, Next.js, TypeScript, and custom CSS |
-| Optional AI enrichment and migration intelligence | GPT-4o Responses API |
+| API, webhooks, and control plane | FastAPI and Pydantic |
+| Persistence and background work | PostgreSQL and Procrastinate |
+| Migration intelligence | GPT-4o via the OpenAI Responses API |
+| Sandboxed verification | Cloudflare Sandbox Worker |
+| GitHub integration | GitHub Apps, OAuth, Checks, branches, and draft PRs |
+| Dashboard | React 19, Next.js, TypeScript, and custom CSS |
+| Legacy behavior verification | OpenAPI-derived requests and dual-revision execution |
 
-## Product architecture
+## Documentation
 
-Delta Code is a provider-independent API change-management and migration
-platform. It monitors official API and SDK sources, normalizes changes,
-identifies affected repositories and call sites, generates code and tests,
-verifies migrations in a sandbox, opens draft pull requests, reviews its work,
-and recommends approve, revise, snooze, or decline.
-
-LLMs will interpret ambiguous source material, understand repository context,
-generate migrations and tests, and explain uncertainty. Deterministic systems
-will retain authority over source hashes, specification and SDK diffs,
-dependency discovery, symbol analysis, compilation, tests, and behavioral
-verification.
-
-The accepted Phase 0 direction, domain model, contracts, schemas, and security
-boundaries live in [the architecture directory](docs/architecture/README.md).
-
-## Project documentation
-
-- [API migration product RFC](docs/architecture/phase-0-rfc.md)
-- [Architecture contracts](docs/architecture/README.md)
-- [Phase 1 control-plane implementation](docs/architecture/phase-1-control-plane.md)
-- [Phase 2 official-source ingestion](docs/architecture/phase-2-ingestion.md)
-- [Phase 3 repository intelligence](docs/architecture/phase-3-repository-intelligence.md)
-- [Phase 4 generation and sandbox verification](docs/architecture/phase-4-generation-and-sandbox.md)
-- [Phase 5 GitHub publishing](docs/architecture/phase-5-github-publishing.md)
-- [Phase 6 migration inbox](docs/architecture/phase-6-migration-inbox.md)
-- [Phase 7 generalization and hardening](docs/architecture/phase-7-generalization-and-hardening.md)
-- [Current dashboard API handoff](frontend/frontend-handoff.md)
-- [Local development and contributor runbook](docs/LOCAL_DEVELOPMENT.md)
-
-The development runbook keeps contributor setup and testing commands separate
-from this product overview.
+- [Product RFC](docs/architecture/phase-0-rfc.md)
+- [Architecture overview](docs/architecture/README.md)
+- [Domain model](docs/architecture/domain-model.md)
+- [Security and permissions](docs/architecture/security-and-permissions.md)
+- [Source ingestion](docs/architecture/phase-2-ingestion.md)
+- [Repository intelligence](docs/architecture/phase-3-repository-intelligence.md)
+- [AI generation and sandbox verification](docs/architecture/phase-4-generation-and-sandbox.md)
+- [GitHub publishing](docs/architecture/phase-5-github-publishing.md)
+- [Migration inbox](docs/architecture/phase-6-migration-inbox.md)
+- [Generalization and hardening](docs/architecture/phase-7-generalization-and-hardening.md)
+- [Local development](docs/LOCAL_DEVELOPMENT.md)
 
 ---
 
 <p align="center">
   <strong>Delta Code</strong><br>
-  Evidence, not speculation.
+  AI proposes. Evidence proves. You decide.
 </p>

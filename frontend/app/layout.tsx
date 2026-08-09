@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(origin),
     title: "Delta Code",
     description:
-      "Evidence-first API verification that shows exactly how pull requests change real behavior.",
+      "The AI review bot for breaking API changes. Delta Code finds affected code, generates and verifies migrations, and opens evidence-rich draft pull requests.",
     applicationName: "Delta Code",
     icons: {
       icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
@@ -23,30 +23,31 @@ export async function generateMetadata(): Promise<Metadata> {
       apple: "/brand/delta-code-badge.png",
     },
     keywords: [
-      "API regression testing",
-      "GitHub pull requests",
-      "FastAPI",
-      "behavioral testing",
+      "AI code review",
+      "API migration automation",
+      "Dependabot for APIs",
+      "GitHub review bot",
+      "GPT-4o",
     ],
     openGraph: {
       type: "website",
-      title: "Delta Code — Ship API changes without the guesswork.",
+      title: "Delta Code — The AI review bot for breaking API changes.",
       description:
-        "Run targeted requests against both branches and review only the behavior that actually changed.",
+        "From official provider change to verified migration draft PR, with GPT-4o intelligence and deterministic evidence.",
       images: [
         {
           url: `${origin}/og-v2.png`,
           width: 1731,
           height: 909,
-          alt: "Delta Code — Ship API changes without the guesswork.",
+          alt: "Delta Code — The AI review bot for breaking API changes.",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Delta Code — Ship API changes without the guesswork.",
+      title: "Delta Code — The AI review bot for breaking API changes.",
       description:
-        "Evidence-first API verification for modern development teams.",
+        "From official provider change to verified migration draft PR.",
       images: [`${origin}/og-v2.png`],
     },
   };

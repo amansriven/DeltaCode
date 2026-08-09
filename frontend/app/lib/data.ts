@@ -40,6 +40,35 @@ export interface RunDetail extends RunSummary {
   error?: string;
 }
 
+export type AiTriageStatus = "not_generated" | "queued" | "running" | "ready" | "failed";
+
+export interface AiTriagePriority {
+  run_id: number;
+  urgency: "high" | "medium" | "low";
+  title: string;
+  reason: string;
+}
+
+export interface AiTriageBrief {
+  headline: string;
+  summary: string;
+  priorities: AiTriagePriority[];
+  watch_items: string[];
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  estimated_cost_usd: number;
+}
+
+export interface AiTriageResponse {
+  status: AiTriageStatus;
+  run_digest: string;
+  run_count: number;
+  updated_at?: string;
+  brief?: AiTriageBrief;
+  error_code?: string;
+}
+
 const omittedDiscount: Finding = {
   case: "omit_discount",
   kind: "regression",
@@ -170,6 +199,37 @@ export const demoDetails: Record<number, RunDetail> = {
   },
 };
 
+export const demoAiTriage: AiTriageResponse = {
+  status: "ready",
+  run_digest: "preview",
+  run_count: demoRuns.length,
+  updated_at: "2026-07-27T14:45:00.000Z",
+  brief: {
+    headline: "Two verification runs deserve attention",
+    summary:
+      "Review the reproduced request regression first, then confirm whether the missing-item status change is intentional.",
+    priorities: [
+      {
+        run_id: 14,
+        urgency: "high",
+        title: "Required discount may break existing clients",
+        reason: "Run 14 reproduced the same request changing from 201 on base to 422 on the PR.",
+      },
+      {
+        run_id: 12,
+        urgency: "medium",
+        title: "Missing-item behavior changed",
+        reason: "Run 12 observed a missing item change from 404 to 200.",
+      },
+    ],
+    watch_items: ["Run 15 is still in progress and is not included in a final verdict."],
+    model: "gpt-4o",
+    input_tokens: 438,
+    output_tokens: 126,
+    estimated_cost_usd: 0.002355,
+  },
+};
+
 export const liveApiUrl =
   process.env.NEXT_PUBLIC_DELTA_CODE_API_URL?.replace(/\/$/, "") ?? "";
 
@@ -216,6 +276,34 @@ export async function fetchRuns(signal?: AbortSignal): Promise<RunSummary[]> {
     throw new Error(`Runs request failed with ${response.status}`);
   }
   return response.json();
+}
+
+async function parseAiTriageResponse(response: Response): Promise<AiTriageResponse> {
+  if (response.status === 401) {
+    throw new Error("Sign in with GitHub to use AI triage.");
+  }
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(payload?.detail || `AI triage request failed with ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function fetchAiTriage(signal?: AbortSignal): Promise<AiTriageResponse> {
+  const response = await fetch(`${liveApiUrl}/dashboard/ai-triage`, {
+    signal,
+    credentials: "include",
+    cache: "no-store",
+  });
+  return parseAiTriageResponse(response);
+}
+
+export async function generateAiTriage(): Promise<AiTriageResponse> {
+  const response = await fetch(`${liveApiUrl}/dashboard/ai-triage`, {
+    method: "POST",
+    credentials: "include",
+  });
+  return parseAiTriageResponse(response);
 }
 
 export async function fetchRun(

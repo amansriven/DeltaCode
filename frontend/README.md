@@ -1,17 +1,35 @@
 # Delta Code frontend
 
-The Delta Code frontend currently contains the public product site and
-authenticated API regression dashboard. It runs on React 19, TypeScript, and
-native Next.js, and is deployed on Vercel. The planned migration inbox is
-defined in the [Phase 0 product RFC](../docs/architecture/phase-0-rfc.md); the
-routes below describe the current implementation.
+The Delta Code frontend presents an AI-powered, Dependabot-style API migration
+review bot. The public site explains the provider-change-to-draft-PR workflow;
+the authenticated product provides the migration review inbox, provider source
+operations, repository impact evidence, generated patch review, deterministic
+verification, and legacy API behavior checks.
+
+The application uses React 19, TypeScript, and Next.js and is deployed on
+Vercel.
+
+## Product message
+
+The primary public promise is:
+
+> **The AI review bot for breaking API changes.**
+
+Supporting copy should reinforce the complete workflow:
+
+> Watch official changes → find affected code → generate and verify the
+> migration → open a draft PR → developer decides.
+
+The visual and editorial rules are defined in [`../DESIGN.md`](../DESIGN.md).
+Legacy base-versus-head verification is supporting evidence, not the primary
+product story.
 
 ## Local development
 
 Requirements:
 
 - Node.js `>=22.13.0`
-- the Delta Code API, either locally or on Railway
+- the Delta Code API, locally or on Railway
 
 Install dependencies and start the development server:
 
@@ -29,27 +47,32 @@ the local frontend to the hosted API, create `frontend/.env`:
 NEXT_PUBLIC_DELTA_CODE_API_URL=https://web-production-e59907.up.railway.app
 ```
 
-All authenticated requests use `credentials: "include"` because GitHub sessions
-are stored in secure backend cookies.
+Authenticated requests use `credentials: "include"` because GitHub sessions
+are stored in secure backend cookies. The OpenAI key belongs only on the
+backend worker and must never use a `NEXT_PUBLIC_` variable.
 
 ## Product routes
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Public landing page |
-| `/product` | Product capabilities |
-| `/how-it-works` | Verification workflow |
-| `/docs` | Local and API documentation |
-| `/security` | Access and security model |
-| `/overview` | Authenticated workspace summary |
-| `/runs` | Searchable run history and per-repository grouping |
-| `/runs/{id}` | Run verdict, branch metadata, errors, retry, and evidence |
-| `/repositories` | Accessible public, private, and internal repositories |
-| `/settings/integrations` | GitHub account, installation, and permissions |
+| `/` | AI review bot landing page |
+| `/product` | Migration review capabilities and trust model |
+| `/how-it-works` | Provider-change-to-draft-PR workflow |
+| `/docs` | Local setup, API, and GPT-4o configuration |
+| `/security` | Repository, sandbox, model, and evidence boundaries |
+| `/migrations` | Migration review inbox |
+| `/migrations/{id}` | Impact, plan, patch, checks, attempts, and decisions |
+| `/changes/{id}` | Normalized provider change and provenance |
+| `/providers` | Official source health and synchronization |
+| `/overview` | Workspace summary and user-triggered AI triage brief |
+| `/runs` | Legacy API behavior-check history |
+| `/runs/{id}` | Reproduced request and response evidence |
+| `/repositories` | GitHub App repository access |
+| `/settings/integrations` | GitHub identity, installation, and permissions |
 | `/settings/account` | Account identity and appearance |
 
-Light mode is the default. Users can switch to the low-glare dark mode from the
-application sidebar, public header, or account settings.
+Light and dark themes share semantic colors for AI activity, verified evidence,
+warnings, blocked states, and destructive actions.
 
 ## Commands
 
@@ -72,7 +95,6 @@ Import the repository into Vercel and configure:
   `NEXT_PUBLIC_DELTA_CODE_API_URL=https://web-production-e59907.up.railway.app`
 
 After the first production deployment, copy the canonical Vercel URL into the
-Railway web service's `FRONTEND_URL` variable and redeploy Railway. This enables
-OAuth redirects and credentialed CORS for the new frontend. Preview domains
-that need authenticated API access must also be explicitly added to Railway's
+Railway web service's `FRONTEND_URL` variable and redeploy Railway. Preview
+domains that need authenticated API access must also be included in Railway's
 comma-separated `ALLOWED_ORIGINS` variable.

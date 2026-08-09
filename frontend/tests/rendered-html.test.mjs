@@ -81,9 +81,9 @@ test("server-renders the Delta Code landing page", async () => {
   const html = await response.text();
   assert.match(html, /<title>Delta Code<\/title>/i);
   assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"/i);
-  assert.match(html, /Ship API changes/);
-  assert.match(html, /without the guesswork/);
-  assert.match(html, /Everything you need to review API behavior/);
+  assert.match(html, /The AI review bot/);
+  assert.match(html, /for breaking API changes/);
+  assert.match(html, /Delta Code ships API migrations/);
   assert.match(html, /auth\/github\/login\?redirect_uri=%2Fmigrations/);
   assert.doesNotMatch(html, /codex-preview/);
   assert.doesNotMatch(html, /react-loading-skeleton/);
@@ -101,10 +101,10 @@ test("server-renders the expanded public product site", async () => {
   const [product, workflow, docs, security] = await Promise.all(
     responses.map((response) => response.text()),
   );
-  assert.match(product, /API regression testing your whole team can trust/);
-  assert.match(workflow, /A rigorous test loop/);
+  assert.match(product, /One review bot from provider change to verified PR/);
+  assert.match(workflow, /A provider change enters. A verified draft PR comes out/);
   assert.match(docs, /Local quickstart/);
-  assert.match(security, /Least-privilege repository access/);
+  assert.match(security, /Least privilege from source capture to pull request/);
 });
 
 test("server-renders the complete authenticated product routes", async () => {
@@ -139,6 +139,8 @@ test("server-renders the complete authenticated product routes", async () => {
     settingsResponse.text(),
   ]);
   assert.match(overview, /Workspace overview/);
+  assert.match(overview, /AI Triage/);
+  assert.match(overview, /No model request is being made|AI interpretation—not verification evidence/);
   assert.match(overview, /Repository health/);
   assert.match(runs, /Recent runs/);
   assert.match(runs, /By repo/);

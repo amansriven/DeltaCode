@@ -10021,3 +10021,275 @@ html[data-theme="dark"] .flow-difference {
 .bot-public-page .ai-system-copy > p {
   color: #93a2b7;
 }
+
+/* Light-theme reconciliation
+   Keep every workflow on the same neutral canvas and reserve dark surfaces for
+   dark mode, instead of letting newer review-bot components retain dark-only
+   presentation values. */
+:root[data-theme="light"] {
+  --canvas: #f3f6f9;
+  --canvas-soft: #edf2f6;
+  --surface: #ffffff;
+  --surface-raised: #f8fafc;
+  --surface-hover: #eaf2f6;
+  --border: #bdced9;
+  --border-soft: #d5e0e7;
+  --text: #122536;
+  --text-soft: #41586a;
+  --text-muted: #667b8b;
+  --accent: #168da8;
+  --accent-strong: #08738b;
+  --accent-soft: rgba(22, 141, 168, 0.1);
+  --shadow: 0 24px 64px rgba(32, 61, 78, 0.13);
+  --shadow-soft: 0 10px 28px rgba(32, 61, 78, 0.075);
+}
+
+:root[data-theme="light"] .experience-backdrop {
+  background:
+    radial-gradient(circle at 84% -10%, rgba(37, 154, 181, 0.1), transparent 34rem),
+    radial-gradient(circle at 6% 72%, rgba(63, 157, 132, 0.05), transparent 28rem),
+    linear-gradient(180deg, #f7fafc, #eff4f7);
+}
+
+:root[data-theme="light"] .app-sidebar {
+  border-right-color: #d3dee5;
+  background: rgba(249, 251, 252, 0.96);
+  box-shadow: 10px 0 32px rgba(42, 69, 84, 0.035);
+}
+
+:root[data-theme="light"] .app-header {
+  border-bottom-color: #d5e0e7;
+  background: rgba(243, 247, 249, 0.88);
+  box-shadow: 0 1px 12px rgba(42, 69, 84, 0.035);
+}
+
+:root[data-theme="light"] .dashboard-page {
+  background:
+    radial-gradient(circle at 88% -20%, rgba(22, 141, 168, 0.08), transparent 31rem),
+    linear-gradient(180deg, #f4f7f9, #eff4f7);
+}
+
+:root[data-theme="light"] .command-trigger,
+:root[data-theme="light"] .theme-toggle,
+:root[data-theme="light"] .search-field,
+:root[data-theme="light"] .select-field select,
+:root[data-theme="light"] .migration-search,
+:root[data-theme="light"] .inbox-selects select {
+  border-color: #ccd9e1;
+  background: #f5f8fa;
+}
+
+:root[data-theme="light"] .workspace-metric,
+:root[data-theme="light"] .ai-triage-panel,
+:root[data-theme="light"] .dashboard-panel,
+:root[data-theme="light"] .runs-panel,
+:root[data-theme="light"] .verdict-card,
+:root[data-theme="light"] .finding-card,
+:root[data-theme="light"] .settings-panel,
+:root[data-theme="light"] .integration-panel,
+:root[data-theme="light"] .inbox-metric,
+:root[data-theme="light"] .inbox-panel,
+:root[data-theme="light"] .provider-grid article,
+:root[data-theme="light"] .detail-card {
+  border-color: #d2dee5;
+  background-color: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 9px 26px rgba(38, 66, 82, 0.055);
+}
+
+:root[data-theme="light"] .sidebar-nav a.active {
+  border-color: rgba(22, 141, 168, 0.28);
+  background: rgba(22, 141, 168, 0.095);
+}
+
+:root[data-theme="light"] .preview-notice,
+:root[data-theme="light"] .migration-preview-note {
+  border-color: rgba(22, 141, 168, 0.19);
+  background: rgba(247, 251, 252, 0.76);
+}
+
+:root[data-theme="light"] .bot-public-page,
+:root[data-theme="light"] .bot-subpage {
+  --bot-blue: #356fd3;
+  --bot-blue-soft: rgba(53, 111, 211, 0.1);
+  --bot-mint: #218566;
+  --bot-mint-soft: rgba(33, 133, 102, 0.1);
+  --bot-amber: #a96d16;
+  --bot-panel: #ffffff;
+  --bot-panel-raised: #f7fafc;
+  --bot-line: #d5e0e8;
+}
+
+:root[data-theme="light"] .positioning-section {
+  border-bottom-color: var(--border-soft);
+}
+
+:root[data-theme="light"] .positioning-statement h2,
+:root[data-theme="light"] .legacy-proof-section h2,
+:root[data-theme="light"] .bot-workflow-grid h3,
+:root[data-theme="light"] .ai-system-copy h2 {
+  color: var(--text);
+}
+
+:root[data-theme="light"] .positioning-statement h2 em,
+:root[data-theme="light"] .positioning-copy a,
+:root[data-theme="light"] .legacy-proof-section .text-link {
+  color: #2e67c4;
+}
+
+:root[data-theme="light"] .positioning-copy p,
+:root[data-theme="light"] .legacy-proof-section > div:first-child > p,
+:root[data-theme="light"] .ai-system-copy > p,
+:root[data-theme="light"] .bot-workflow-grid p {
+  color: var(--text-soft);
+}
+
+:root[data-theme="light"] .positioning-metrics {
+  border-color: var(--border-soft);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--shadow-soft);
+}
+
+:root[data-theme="light"] .positioning-metrics span + span {
+  border-color: var(--border-soft);
+}
+
+:root[data-theme="light"] .positioning-metrics strong {
+  color: var(--text);
+}
+
+:root[data-theme="light"] .positioning-metrics small,
+:root[data-theme="light"] .bot-workflow-grid article > span,
+:root[data-theme="light"] .bot-workflow-grid code {
+  color: var(--text-muted);
+}
+
+:root[data-theme="light"] .bot-workflow-grid article {
+  border-color: var(--border-soft);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(244, 248, 250, 0.96));
+  box-shadow: var(--shadow-soft);
+}
+
+:root[data-theme="light"] .bot-workflow-grid article.workflow-ai {
+  border-color: rgba(53, 111, 211, 0.28);
+  background:
+    radial-gradient(circle at 82% 0%, rgba(53, 111, 211, 0.11), transparent 13rem),
+    linear-gradient(145deg, #fbfdff, #f1f6fb);
+}
+
+:root[data-theme="light"] .ai-system-section {
+  border-color: #cbd9e4;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(53, 111, 211, 0.1), transparent 26rem),
+    linear-gradient(135deg, #f9fbfd, #edf3f8);
+  box-shadow: 0 28px 72px rgba(39, 66, 84, 0.12);
+}
+
+:root[data-theme="light"] .ai-boundary-list span {
+  color: var(--text-soft);
+}
+
+:root[data-theme="light"] .model-trace-card {
+  border-color: #cbd8e3;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 20px 52px rgba(38, 63, 82, 0.13);
+}
+
+:root[data-theme="light"] .model-trace-card > div:first-child,
+:root[data-theme="light"] .model-trace-card li + li,
+:root[data-theme="light"] .model-trace-footer {
+  border-color: var(--border-soft);
+}
+
+:root[data-theme="light"] .model-trace-card > div:first-child,
+:root[data-theme="light"] .model-trace-card li > span,
+:root[data-theme="light"] .model-trace-footer {
+  color: var(--text-muted);
+}
+
+:root[data-theme="light"] .model-trace-card code {
+  color: var(--text-soft);
+}
+
+:root[data-theme="light"] .review-bot-preview {
+  color: var(--text);
+  border-color: #c3d2de;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(53, 111, 211, 0.09), transparent 19rem),
+    #ffffff;
+  box-shadow: 0 30px 80px rgba(35, 61, 80, 0.17), inset 0 1px rgba(255, 255, 255, 0.8);
+}
+
+:root[data-theme="light"] .review-bot-preview:hover {
+  border-color: #9eb4c5;
+  box-shadow: 0 38px 94px rgba(35, 61, 80, 0.2), inset 0 1px rgba(255, 255, 255, 0.9);
+}
+
+:root[data-theme="light"] .review-bot-topbar {
+  border-bottom-color: var(--border-soft);
+  background: rgba(244, 248, 251, 0.9);
+}
+
+:root[data-theme="light"] .review-bot-repo,
+:root[data-theme="light"] .review-bot-title p,
+:root[data-theme="light"] .trace-item small,
+:root[data-theme="light"] .review-bot-files code {
+  color: var(--text-muted);
+}
+
+:root[data-theme="light"] .review-bot-repo i {
+  color: var(--text-soft);
+  border-color: var(--border);
+  background: var(--surface-raised);
+}
+
+:root[data-theme="light"] .draft-pr-badge {
+  color: #7047b7;
+  border-color: rgba(112, 71, 183, 0.2);
+  background: rgba(112, 71, 183, 0.08);
+}
+
+:root[data-theme="light"] .review-bot-title h2,
+:root[data-theme="light"] .trace-item strong {
+  color: var(--text);
+}
+
+:root[data-theme="light"] .review-bot-title small {
+  color: var(--text-muted);
+}
+
+:root[data-theme="light"] .review-bot-title code {
+  color: #2e67c4;
+}
+
+:root[data-theme="light"] .review-bot-trace,
+:root[data-theme="light"] .review-bot-files {
+  border-color: var(--border-soft);
+  background: rgba(247, 250, 252, 0.82);
+}
+
+:root[data-theme="light"] .trace-item + .trace-item,
+:root[data-theme="light"] .review-bot-files > span + span {
+  border-color: var(--border-soft);
+}
+
+:root[data-theme="light"] .review-bot-decision {
+  color: var(--text-soft);
+  border-top-color: var(--border-soft);
+  background: rgba(33, 133, 102, 0.045);
+}
+
+:root[data-theme="light"] .review-bot-decision > span {
+  color: var(--text-soft);
+}
+
+:root[data-theme="light"] .review-bot-decision button {
+  color: var(--text-soft);
+  border-color: var(--border);
+  background: var(--surface-raised);
+}
+
+:root[data-theme="light"] .review-bot-decision button:last-child {
+  color: #ffffff;
+  border-color: #356fd3;
+  background: #356fd3;
+}

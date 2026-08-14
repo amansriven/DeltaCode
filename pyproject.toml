@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "delta-code"
 version = "0.1.0"
-description = "Evidence-first API regression detection for FastAPI pull requests."
+description = "Evidence-first AI migrations for breaking API changes."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

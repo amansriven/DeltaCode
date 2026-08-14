@@ -4,7 +4,7 @@ The Delta Code frontend presents an AI-powered, Dependabot-style API migration
 review bot. The public site explains the provider-change-to-draft-PR workflow;
 the authenticated product provides the migration review inbox, provider source
 operations, repository impact evidence, generated patch review, deterministic
-verification, and legacy API behavior checks.
+verification, and developer-controlled GitHub publishing.
 
 The application uses React 19, TypeScript, and Next.js and is deployed on
 Vercel.
@@ -21,8 +21,6 @@ Supporting copy should reinforce the complete workflow:
 > migration → open a draft PR → developer decides.
 
 The visual and editorial rules are defined in [`../DESIGN.md`](../DESIGN.md).
-Legacy base-versus-head verification is supporting evidence, not the primary
-product story.
 
 ## Local development
 
@@ -48,8 +46,10 @@ NEXT_PUBLIC_DELTA_CODE_API_URL=https://web-production-e59907.up.railway.app
 ```
 
 Authenticated requests use `credentials: "include"` because GitHub sessions
-are stored in secure backend cookies. The OpenAI key belongs only on the
-backend worker and must never use a `NEXT_PUBLIC_` variable.
+are stored in secure, first-party cookies. Browser API traffic uses the
+same-origin `/api/*` proxy, which forwards to `NEXT_PUBLIC_DELTA_CODE_API_URL`.
+The OpenAI key belongs only on the backend worker and must never use a
+`NEXT_PUBLIC_` variable.
 
 ## Product routes
 
@@ -64,9 +64,6 @@ backend worker and must never use a `NEXT_PUBLIC_` variable.
 | `/migrations/{id}` | Impact, plan, patch, checks, attempts, and decisions |
 | `/changes/{id}` | Normalized provider change and provenance |
 | `/providers` | Official source health and synchronization |
-| `/overview` | Workspace summary and user-triggered AI triage brief |
-| `/runs` | Legacy API behavior-check history |
-| `/runs/{id}` | Reproduced request and response evidence |
 | `/repositories` | GitHub App repository access |
 | `/settings/integrations` | GitHub identity, installation, and permissions |
 | `/settings/account` | Account identity and appearance |

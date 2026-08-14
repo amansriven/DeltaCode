@@ -275,16 +275,12 @@ Check kinds include:
 - build
 - unit test
 - generated migration test
-- behavioral verification
+- repository-defined integration tests
 - security/policy
 
 Each check is `passed`, `failed`, `skipped`, `timed_out`, `blocked`, or
 `infrastructure_error`. Repository policy determines required checks and
 whether a draft may be published with failures.
-
-The current base-versus-PR API runner can implement a behavioral check plugin
-for repositories whose application can be started through a supported
-capability. It is not mandatory for every repository.
 
 ## Evidence assembly contract
 

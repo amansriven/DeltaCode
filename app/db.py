@@ -7,36 +7,6 @@ DATABASE_URL = os.environ.get(
 )
 
 SCHEMA = """
-CREATE TABLE IF NOT EXISTS runs (
-    id SERIAL PRIMARY KEY,
-    repo TEXT NOT NULL,
-    pr_number INTEGER,
-    status TEXT NOT NULL DEFAULT 'pending',
-    result JSONB,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-ALTER TABLE runs ADD COLUMN IF NOT EXISTS clone_url TEXT;
-ALTER TABLE runs ADD COLUMN IF NOT EXISTS base_ref TEXT;
-ALTER TABLE runs ADD COLUMN IF NOT EXISTS base_sha TEXT;
-ALTER TABLE runs ADD COLUMN IF NOT EXISTS head_ref TEXT;
-ALTER TABLE runs ADD COLUMN IF NOT EXISTS head_sha TEXT;
-ALTER TABLE runs ADD COLUMN IF NOT EXISTS installation_id BIGINT;
-ALTER TABLE runs ADD COLUMN IF NOT EXISTS error TEXT;
-
-CREATE TABLE IF NOT EXISTS dashboard_ai_briefs (
-    github_user_id BIGINT NOT NULL,
-    run_digest TEXT NOT NULL CHECK (run_digest ~ '^[a-f0-9]{64}$'),
-    status TEXT NOT NULL CHECK (status IN ('queued', 'running', 'ready', 'failed')),
-    input_runs JSONB NOT NULL,
-    data JSONB,
-    error_code TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (github_user_id, run_digest)
-);
-
 CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,
     github_user_id BIGINT NOT NULL,
@@ -51,6 +21,16 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS github_name TEXT;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS repositories JSONB NOT NULL DEFAULT '[]';
+
+CREATE TABLE IF NOT EXISTS oauth_completion_tickets (
+    token_hash TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    redirect_to TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS oauth_completion_tickets_expiry
+ON oauth_completion_tickets (expires_at);
 
 CREATE TABLE IF NOT EXISTS workspaces (
     id TEXT PRIMARY KEY,
@@ -368,8 +348,6 @@ CREATE INDEX IF NOT EXISTS pull_request_records_status
 ON pull_request_records (status, updated_at);
 CREATE INDEX IF NOT EXISTS audit_events_workspace_feed
 ON audit_events (workspace_id, created_at DESC, id);
-CREATE INDEX IF NOT EXISTS dashboard_ai_briefs_user_feed
-ON dashboard_ai_briefs (github_user_id, updated_at DESC);
 """
 
 

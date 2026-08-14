@@ -9,13 +9,11 @@ evidence-rich draft pull request, and explicit developer decision.
 Phase 0 established the contracts. Phases 1–7 now implement the
 provider-neutral control plane, official-source ingestion, and deterministic
 repository intelligence, plus guarded generation and sandbox verification,
-GitHub publishing, and the migration review experience while preserving the
-legacy verification workflow.
+GitHub publishing, and the migration review experience.
 
 The current OpenAI runtime uses GPT-4o through strict, tool-free Responses API
 structured output. The same bounded client powers migration proposals,
-completed-patch review, semantic behavior cases, finding explanations, and a
-user-triggered dashboard triage brief. Model interpretation remains separate
+completed-patch review, and evidence-grounded explanations. Model interpretation remains separate
 from source provenance, call-site evidence, patch validation, sandbox results,
 and Git state.
 

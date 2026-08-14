@@ -1,4 +1,4 @@
-import { liveApiUrl } from "./data";
+import { apiBaseUrl } from "./data";
 
 export type MigrationStatus =
   | "queued"
@@ -526,7 +526,7 @@ async function readJson<T>(response: Response, fallback: string): Promise<T> {
 export async function fetchMigrations(cursor?: string, signal?: AbortSignal): Promise<CursorPage<MigrationSummary>> {
   const params = new URLSearchParams({ limit: "25" });
   if (cursor) params.set("cursor", cursor);
-  const response = await fetch(`${liveApiUrl}/migrations?${params}`, { signal, credentials: "include" });
+  const response = await fetch(`${apiBaseUrl}/migrations?${params}`, { signal, credentials: "include" });
   if (response.status === 404) {
     throw new Error("The connected API needs to be upgraded before migrations are available.");
   }
@@ -534,23 +534,23 @@ export async function fetchMigrations(cursor?: string, signal?: AbortSignal): Pr
 }
 
 export async function fetchMigration(id: string, signal?: AbortSignal): Promise<MigrationDetail> {
-  const response = await fetch(`${liveApiUrl}/migrations/${encodeURIComponent(id)}`, { signal, credentials: "include" });
+  const response = await fetch(`${apiBaseUrl}/migrations/${encodeURIComponent(id)}`, { signal, credentials: "include" });
   return readJson(response, "Migration could not be loaded");
 }
 
 export async function fetchChange(id: string, signal?: AbortSignal): Promise<ChangeDetail> {
-  const response = await fetch(`${liveApiUrl}/changes/${encodeURIComponent(id)}`, { signal, credentials: "include" });
+  const response = await fetch(`${apiBaseUrl}/changes/${encodeURIComponent(id)}`, { signal, credentials: "include" });
   return readJson(response, "Provider change could not be loaded");
 }
 
 export async function fetchPublication(id: string, signal?: AbortSignal): Promise<PublicationStatus | null> {
-  const response = await fetch(`${liveApiUrl}/migrations/${encodeURIComponent(id)}/publication`, { signal, credentials: "include" });
+  const response = await fetch(`${apiBaseUrl}/migrations/${encodeURIComponent(id)}/publication`, { signal, credentials: "include" });
   if (response.status === 404) return null;
   return readJson(response, "Publication status could not be loaded");
 }
 
 export async function fetchProviders(signal?: AbortSignal): Promise<CursorPage<ProviderSummary>> {
-  const response = await fetch(`${liveApiUrl}/providers?limit=100`, { signal, credentials: "include" });
+  const response = await fetch(`${apiBaseUrl}/providers?limit=100`, { signal, credentials: "include" });
   if (response.status === 404) {
     throw new Error("The connected API needs to be upgraded before providers are available.");
   }
@@ -567,7 +567,7 @@ export async function runMigrationCommand(
   expectedVersion: number,
   input: { reason?: string; instructions?: string; snooze_until?: string } = {},
 ): Promise<MigrationSummary | { status: string; version: number }> {
-  const response = await fetch(`${liveApiUrl}/migrations/${encodeURIComponent(migrationId)}/${action}`, {
+  const response = await fetch(`${apiBaseUrl}/migrations/${encodeURIComponent(migrationId)}/${action}`, {
     method: "POST",
     credentials: "include",
     headers: {

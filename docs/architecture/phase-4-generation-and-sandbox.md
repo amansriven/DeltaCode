@@ -71,8 +71,7 @@ OPENAI_API_KEY=...
 OPENAI_MODEL=gpt-4o
 ```
 
-The legacy dedicated-gateway fallback is used only when `OPENAI_API_KEY` is
-unset:
+The dedicated-gateway fallback is used only when `OPENAI_API_KEY` is unset:
 
 ```text
 MIGRATION_INTELLIGENCE_URL=https://...

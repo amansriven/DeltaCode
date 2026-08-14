@@ -113,15 +113,13 @@ The code-level Phase 7 review passed the following gates:
 This is not a penetration-test or infrastructure-isolation certification. The
 following residual risks remain release conditions:
 
-1. The legacy base-versus-head verifier executes configured repository code in
-   its trusted worker and must remain restricted to trusted repositories.
-2. Cloudflare Sandbox isolation, egress denial, image provenance, and teardown
+1. Cloudflare Sandbox isolation, egress denial, image provenance, and teardown
    require controlled-environment adversarial validation before enabling an
    untrusted multi-tenant beta.
-3. Artifact encryption and durable retention depend on hosted volume/object
+2. Artifact encryption and durable retention depend on hosted volume/object
    storage configuration.
-4. JavaScript/TypeScript matches are positive-only lexical evidence.
-5. Model dollar quotas and token pricing must be enforced and reported by the
+3. JavaScript/TypeScript matches are positive-only lexical evidence.
+4. Model dollar quotas and token pricing must be enforced and reported by the
    external gateway.
 6. Process-local metrics require a central scraper and alert rules.
 
@@ -137,4 +135,3 @@ following residual risks remain release conditions:
 5. Durable worker outcomes and durations are observable with bounded labels.
 6. Readiness distinguishes dependency failure from disabled optional features.
 7. Security gates and residual release risks are explicitly documented.
-

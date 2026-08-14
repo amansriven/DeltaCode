@@ -152,25 +152,12 @@ object storage rather than growing unbounded JSONB records. The existing
 PostgreSQL-backed worker can orchestrate the first vertical slice, provided
 jobs are idempotent and attempts are immutable.
 
-## Existing system disposition
+## Platform foundation
 
-The current repository is a useful foundation, not a disposable prototype:
-
-- GitHub App installation authentication and repository access are retained.
-- OAuth identity and repository-scoped dashboard authorization are retained.
-- Repository fetching is retained behind a new repository workspace contract.
-- PostgreSQL and background jobs are retained for initial orchestration.
-- OpenAPI comparison code becomes a deterministic provider/change or
-  behavioral-verification capability, depending on its input.
-- Base-versus-PR request execution becomes an optional behavioral verification
-  plugin.
-- GitHub Check publishing evolves into draft-PR and structured evidence
-  publishing.
-- Existing `runs` pages remain legacy verification views until migration inbox
-  APIs replace them.
-
-The existing worker currently executes repository code directly in its own
-environment. It must not be used for general multi-tenant migration execution.
+The product uses GitHub App repository access, OAuth identity, repository-scoped
+authorization, PostgreSQL persistence, durable background jobs, and isolated
+sandbox execution. Repository fetching is mediated by the repository workspace
+contract, and GitHub publishing always uses the exact verified migration artifact.
 
 ## Deterministic and model responsibilities
 

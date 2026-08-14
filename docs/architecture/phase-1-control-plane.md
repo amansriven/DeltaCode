@@ -7,9 +7,9 @@
 
 ## Delivered boundary
 
-Phase 1 introduces the provider-independent control plane alongside the legacy
-pull-request verification system. It does not ingest live provider sources or
-execute repository migrations; those remain Phase 2 and Phase 4 concerns.
+Phase 1 introduces the provider-independent control plane. It does not ingest
+live provider sources or execute repository migrations; those remain Phase 2
+and Phase 4 concerns.
 
 The implementation provides:
 
@@ -64,10 +64,9 @@ a different request or acting on a stale entity version returns HTTP 409.
 
 ## Persistence and compatibility
 
-The application startup schema remains additive. Existing `runs` and `sessions`
-records and all legacy endpoints are unchanged. Repository access visible in a
-GitHub session is synchronized into that user's control-plane workspace when a
-control-plane endpoint is first accessed.
+The application startup schema remains additive. Repository access visible in
+a GitHub session is synchronized into that user's control-plane workspace when
+a control-plane endpoint is first accessed.
 
 Large immutable source bodies, patches, and logs are intentionally absent from
 these tables; later phases store only their object references in control-plane

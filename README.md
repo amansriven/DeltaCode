@@ -74,9 +74,6 @@ specific context and produces schema-validated output for two jobs:
    evidence, identify grounded findings, and recommend approve, revise,
    snooze, or decline.
 
-The model also enriches the legacy API verifier with semantic test cases and
-plain-language explanations of reproduced behavior changes.
-
 AI is never the source of truth for whether a check passed. Delta Code keeps
 the authority boundary explicit:
 
@@ -154,8 +151,7 @@ The authenticated product includes:
 - repository impact evidence and analysis limitations;
 - AI-generated plans, patch intent, tests, and review recommendations;
 - deterministic sandbox checks and immutable attempt history;
-- draft-PR publishing and developer-controlled revision actions; and
-- legacy base-versus-head API behavior checks as supporting evidence.
+- draft-PR publishing and developer-controlled revision actions.
 
 ## Current capabilities
 
@@ -170,8 +166,6 @@ The authenticated product includes:
 - Fail-closed Cloudflare Sandbox execution and immutable verification evidence.
 - Exact-patch GitHub commits, owned branches, draft PRs, and Check Runs.
 - Migration inbox, provider operations, attempts, and developer decisions.
-- User-triggered, digest-cached GPT-4o dashboard triage for recent review runs.
-- OpenAPI-aware base-versus-PR behavioral verification and LLM enrichment.
 - Labeled analyzer benchmarks, operational metrics, and security review gates.
 
 ## Security and trust boundary
@@ -186,10 +180,6 @@ execution remains fail-closed until explicitly enabled after isolation
 configuration. Provider text, repository files, and developer notes are
 untrusted inputs to the model; credentials and customer secrets are excluded
 from prompts by default.
-
-The original API-comparison worker is retained as a legacy verifier and still
-executes checked-out application revisions in its worker environment. It is
-not the general migration execution boundary.
 
 ## Current scope
 
@@ -208,13 +198,12 @@ The active MVP is intentionally conservative:
 
 | Area | Technology |
 | --- | --- |
-| API, webhooks, and control plane | FastAPI and Pydantic |
+| API and control plane | FastAPI and Pydantic |
 | Persistence and background work | PostgreSQL and Procrastinate |
 | Migration intelligence | GPT-4o via the OpenAI Responses API |
 | Sandboxed verification | Cloudflare Sandbox Worker |
 | GitHub integration | GitHub Apps, OAuth, Checks, branches, and draft PRs |
 | Dashboard | React 19, Next.js, TypeScript, and custom CSS |
-| Legacy behavior verification | OpenAPI-derived requests and dual-revision execution |
 
 ## Documentation
 

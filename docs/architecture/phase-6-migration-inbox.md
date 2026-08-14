@@ -1,9 +1,7 @@
 # Phase 6: migration inbox
 
-Phase 6 makes the provider-neutral control plane the primary authenticated
-product experience. The legacy pull-request verifier remains available under
-`/overview` and `/runs`, but GitHub sign-in now returns developers to
-`/migrations`.
+Phase 6 makes the provider-neutral control plane the authenticated product
+experience. GitHub sign-in returns developers to `/migrations`.
 
 ## Implemented information architecture
 
@@ -13,7 +11,6 @@ product experience. The legacy pull-request verifier remains available under
 | `/migrations/{id}` | Repository impact, plan, patch, checks, attempts, recommendation, and actions | `GET /migrations/{id}`, `GET /changes/{id}`, `GET /migrations/{id}/publication` |
 | `/changes/{id}` | Authoritative sources and normalized before/after semantics | `GET /changes/{id}` |
 | `/providers` | Provider/source health and synchronization entry point | `GET /providers` |
-| `/runs` | Legacy base-versus-head verification | existing run APIs |
 
 The inbox answers the product RFC's core questions in one scan: provider,
 repository, risk, deadline, automation state, draft-PR state, and required

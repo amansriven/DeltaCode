@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import secrets
@@ -21,6 +22,7 @@ FRONTEND_URL = os.environ.get(
 ).rstrip("/")
 
 SESSION_TTL = timedelta(days=7)
+COMPLETION_TTL = timedelta(minutes=2)
 STATE_COOKIE = "oauth_state"
 REDIRECT_COOKIE = "oauth_redirect"
 SESSION_COOKIE = "session_id"
@@ -39,7 +41,7 @@ def _cookie_kwargs(request: Request) -> dict:
 
 def _safe_frontend_redirect(value: str | None) -> str:
     """Resolve a post-auth destination without allowing an external redirect."""
-    fallback = f"{FRONTEND_URL.rstrip('/')}/runs"
+    fallback = f"{FRONTEND_URL.rstrip('/')}/migrations"
     if not value:
         return fallback
 
@@ -139,6 +141,10 @@ def _github_display_name(user: dict) -> str | None:
     return normalized or None
 
 
+def _ticket_hash(ticket: str) -> str:
+    return hashlib.sha256(ticket.encode()).hexdigest()
+
+
 @router.get("/github/callback")
 def github_callback(
     request: Request,
@@ -205,15 +211,48 @@ def github_callback(
         )
 
     redirect_to = _safe_frontend_redirect(request.cookies.get(REDIRECT_COOKIE))
-    response = RedirectResponse(redirect_to)
+    completion_ticket = secrets.token_urlsafe(32)
+    with get_connection() as conn:
+        conn.execute(
+            "INSERT INTO oauth_completion_tickets "
+            "(token_hash, session_id, redirect_to, expires_at) VALUES (%s, %s, %s, %s)",
+            (
+                _ticket_hash(completion_ticket),
+                session_id,
+                redirect_to,
+                datetime.now(UTC) + COMPLETION_TTL,
+            ),
+        )
+
+    completion_url = f"{FRONTEND_URL}/api/auth/github/complete?" + urlencode(
+        {"ticket": completion_ticket}
+    )
+    response = RedirectResponse(completion_url)
+    response.delete_cookie(STATE_COOKIE, path="/")
+    response.delete_cookie(REDIRECT_COOKIE, path="/")
+    return response
+
+
+@router.get("/github/complete")
+def github_complete(request: Request, ticket: str):
+    with get_connection() as conn:
+        row = conn.execute(
+            "DELETE FROM oauth_completion_tickets "
+            "WHERE token_hash = %s AND expires_at > now() "
+            "RETURNING session_id, redirect_to",
+            (_ticket_hash(ticket),),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=400, detail="sign-in completion expired or invalid")
+
+    session_id, redirect_to = row
+    response = RedirectResponse(_safe_frontend_redirect(redirect_to))
     response.set_cookie(
         SESSION_COOKIE,
         session_id,
         max_age=int(SESSION_TTL.total_seconds()),
         **_cookie_kwargs(request),
     )
-    response.delete_cookie(STATE_COOKIE, path="/")
-    response.delete_cookie(REDIRECT_COOKIE, path="/")
     return response
 
 

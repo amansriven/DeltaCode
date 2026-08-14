@@ -2,31 +2,17 @@
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors keep public and dashboard navigation explicit. */
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ApiConnectionStatus,
-  AiTriageResponse,
   checkApiConnection,
   CurrentUser,
-  demoAiTriage,
-  demoDetails,
-  demoRuns,
-  fetchAiTriage,
   fetchMe,
-  fetchRun,
-  fetchRuns,
-  Finding,
-  FindingKind,
   githubLoginUrl,
   githubLoginUrlFor,
   githubRepositoryRefreshUrl,
-  generateAiTriage,
   liveApiUrl,
   RepositoryAccess,
-  RunDetail,
-  RunStatus,
-  RunSummary,
-  retryRun,
   signOut,
 } from "./lib/data";
 import {
@@ -38,7 +24,7 @@ import {
 
 const PRODUCT_NAME = "Delta Code";
 const GITHUB_INSTALL_URL = "https://github.com/apps/deltacodeapp/installations/new";
-type DashboardSection = "migrations" | "providers" | "overview" | "runs" | "repositories" | "integrations" | "settings";
+type DashboardSection = "migrations" | "providers" | "repositories" | "integrations" | "settings";
 type ThemePreference = "light" | "dark";
 
 const dashboardNavigation: Array<{
@@ -61,20 +47,6 @@ const dashboardNavigation: Array<{
     href: "/providers",
     icon: "⌁",
     description: "Official API and SDK source health",
-  },
-  {
-    section: "overview",
-    label: "Workspace",
-    href: "/overview",
-    icon: "◇",
-    description: "Review health, AI triage, and recent activity",
-  },
-  {
-    section: "runs",
-    label: "Behavior checks",
-    href: "/runs",
-    icon: "≋",
-    description: "Reproduced base-versus-head API evidence",
   },
   {
     section: "repositories",
@@ -537,60 +509,10 @@ function ProvidersPage() {
   );
 }
 
-function StatusBadge({ status }: { status: RunStatus }) {
-  const labels: Record<RunStatus, string> = {
-    pending: "Queued",
-    running: "Running",
-    done: "Complete",
-    failed: "Failed",
-  };
-  return (
-    <span className={`status-badge status-${status}`}>
-      <span className="status-dot" aria-hidden="true" />
-      {labels[status]}
-    </span>
-  );
-}
-
-function SeverityBadge({ kind }: { kind: FindingKind }) {
-  return (
-    <span className={`severity-badge severity-${kind}`}>
-      <span aria-hidden="true">{kind === "regression" ? "!" : "↕"}</span>
-      {kind === "regression" ? "Regression" : "Behavior changed"}
-    </span>
-  );
-}
-
-function formatRelativeDate(value: string) {
-  const timestamp = new Date(value).getTime();
-  const minutes = Math.round((Date.now() - timestamp) / 60000);
-  if (Math.abs(minutes) < 60) {
-    return `${Math.max(1, minutes)}m ago`;
-  }
-  const hours = Math.round(minutes / 60);
-  if (Math.abs(hours) < 24) {
-    return `${hours}h ago`;
-  }
-  const days = Math.round(hours / 24);
-  return `${days}d ago`;
-}
-
 function repoParts(repo: string) {
   const [owner, name] = repo.split("/");
   return { owner: owner || "repository", name: name || repo };
 }
-
-const previewUser: CurrentUser = {
-  login: "preview-user",
-  name: "Preview account",
-  avatar_url: null,
-  accessible_repos: [...new Set(demoRuns.map((run) => run.repo))],
-  repositories: [...new Set(demoRuns.map((run) => run.repo))].map((full_name, index) => ({
-    full_name,
-    private: index !== 2,
-    visibility: index === 2 ? "public" : "private",
-  })),
-};
 
 function repositoriesForUser(user: CurrentUser | null): RepositoryAccess[] {
   if (!user) return [];
@@ -603,17 +525,15 @@ function repositoriesForUser(user: CurrentUser | null): RepositoryAccess[] {
 }
 
 function useWorkspaceData() {
-  const [runs, setRuns] = useState<RunSummary[]>(liveApiUrl ? [] : demoRuns);
-  const [user, setUser] = useState<CurrentUser | null>(liveApiUrl ? null : previewUser);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(Boolean(liveApiUrl));
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!liveApiUrl) return;
     const controller = new AbortController();
-    Promise.all([fetchRuns(controller.signal), fetchMe(controller.signal)])
-      .then(([runData, identity]) => {
-        setRuns(runData);
+    fetchMe(controller.signal)
+      .then((identity) => {
         setUser(identity);
         setError(identity ? "" : "Sign in with GitHub to view this workspace.");
       })
@@ -627,7 +547,6 @@ function useWorkspaceData() {
   }, []);
 
   return {
-    runs,
     user,
     repositories: repositoriesForUser(user),
     loading,
@@ -732,117 +651,6 @@ function InteractiveLandingShell({ children }: { children: React.ReactNode }) {
         <span /><span /><span />
       </div>
       {children}
-    </div>
-  );
-}
-
-function EvidencePreview() {
-  const scenarios = [
-    {
-      label: "Required field",
-      title: "PR #128 · verification",
-      state: "Regression",
-      kind: "regression" as const,
-      caseName: "omit_discount",
-      method: "POST",
-      path: "/items",
-      baseStatus: "201",
-      baseBody: '{ "discount": 0.0 }',
-      prStatus: "422",
-      prBody: '{ "detail": "Field required" }',
-    },
-    {
-      label: "Status drift",
-      title: "PR #204 · verification",
-      state: "Behavior changed",
-      kind: "status_code_changed" as const,
-      caseName: "unknown_user",
-      method: "GET",
-      path: "/users/unknown",
-      baseStatus: "404",
-      baseBody: '{ "detail": "Not found" }',
-      prStatus: "200",
-      prBody: '{ "id": null }',
-    },
-    {
-      label: "Safe change",
-      title: "PR #219 · verification",
-      state: "No regression",
-      kind: "safe" as const,
-      caseName: "health_contract",
-      method: "GET",
-      path: "/health",
-      baseStatus: "200",
-      baseBody: '{ "status": "ok" }',
-      prStatus: "200",
-      prBody: '{ "status": "ok" }',
-    },
-  ];
-  const [activeScenario, setActiveScenario] = useState(0);
-  const scenario = scenarios[activeScenario];
-
-  return (
-    <div className="evidence-window" aria-label="Interactive API behavior comparison">
-      <div className="window-bar">
-        <span className="window-lights" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-        <span>{scenario.title}</span>
-        <span className={`verified-label verified-${scenario.kind}`}>{scenario.state}</span>
-      </div>
-      <div className="evidence-content">
-        <div className="finding-heading">
-          {scenario.kind === "safe" ? (
-            <span className="severity-badge severity-safe"><span>✓</span>No regression</span>
-          ) : (
-            <SeverityBadge kind={scenario.kind} />
-          )}
-          <span className="case-name">{scenario.caseName}</span>
-        </div>
-        <div className="request-line">
-          <span className={`method method-${scenario.method.toLowerCase()}`}>{scenario.method}</span>
-          <code>{scenario.path}</code>
-        </div>
-        <div className="preview-compare">
-          <div className="response-preview response-base">
-            <div>
-              <span>BASE</span>
-              <strong className={scenario.baseStatus.startsWith("2") ? "code-success" : "code-danger"}>
-                {scenario.baseStatus}
-              </strong>
-            </div>
-            <code>{scenario.baseBody}</code>
-          </div>
-          <div className="compare-arrow" aria-hidden="true">
-            →
-          </div>
-          <div className="response-preview response-pr">
-            <div>
-              <span>PR</span>
-              <strong className={scenario.prStatus === scenario.baseStatus ? "code-success" : "code-danger"}>
-                {scenario.prStatus}
-              </strong>
-            </div>
-            <code>{scenario.prBody}</code>
-          </div>
-        </div>
-        <div className="scenario-switcher" aria-label="Comparison examples">
-          {scenarios.map((item, index) => (
-            <button
-              key={item.label}
-              type="button"
-              className={activeScenario === index ? "active" : ""}
-              aria-pressed={activeScenario === index}
-              onClick={() => setActiveScenario(index)}
-            >
-              <i aria-hidden="true" />
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
@@ -1004,16 +812,6 @@ function LandingPage() {
         </div>
       </section>
 
-      <section className="legacy-proof-section">
-        <div>
-          <span className="section-kicker">Behavioral proof when it matters</span>
-          <h2>The original API verifier is now part of the trust layer.</h2>
-          <p>Delta Code can still generate semantic cases, run identical requests against base and head, and attach reproduced behavior changes to the review.</p>
-          <a className="text-link" href="/runs">Explore behavior checks →</a>
-        </div>
-        <div className="legacy-evidence-preview"><EvidencePreview /></div>
-      </section>
-
       <section className="final-cta bot-final-cta">
         <div className="cta-orb" aria-hidden="true" />
         <span className="section-kicker">The next API migration can arrive as a PR</span>
@@ -1172,12 +970,12 @@ function DocsPage() {
             <span><b>GET</b><code>/auth/me</code><small>Current GitHub identity and repositories</small></span>
             <span><b>GET</b><code>/migrations</code><small>Workspace-scoped migration review inbox</small></span>
             <span><b>POST</b><code>/migrations/&#123;id&#125;/generate</code><small>Queue a bounded AI migration attempt</small></span>
-            <span><b>GET</b><code>/runs</code><small>Recent authorized verification runs</small></span>
-            <span><b>GET</b><code>/runs/&#123;id&#125;</code><small>Complete run evidence and branch context</small></span>
-            <span><b>POST</b><code>/runs/&#123;id&#125;/retry</code><small>Requeue a verification run</small></span>
+            <span><b>GET</b><code>/providers</code><small>Configured provider sources and sync health</small></span>
+            <span><b>GET</b><code>/migrations/&#123;id&#125;</code><small>Migration evidence, patch, checks, and history</small></span>
+            <span><b>POST</b><code>/migrations/&#123;id&#125;/publish</code><small>Publish an approved migration as a draft pull request</small></span>
           </div>
           <h2 id="ai">AI assistance</h2>
-          <p>Set <code>OPENAI_API_KEY</code> on the backend worker to enable GPT-4o migration planning, patch review, semantic API cases, and evidence-grounded explanations. The key must never be exposed through a browser or <code>NEXT_PUBLIC_</code> variable.</p>
+          <p>Set <code>OPENAI_API_KEY</code> on the backend worker to enable GPT-4o migration planning, patch review, and evidence-grounded explanations. The key must never be exposed through a browser or <code>NEXT_PUBLIC_</code> variable.</p>
           <pre><code>{`OPENAI_API_KEY=your-server-side-key\nOPENAI_MODEL=gpt-4o\nLLM_DAILY_BUDGET_USD=1.00\nLLM_TOTAL_BUDGET_USD=9.00`}</code></pre>
           <p>Model requests use strict structured output, no model tools, bounded context and output, <code>store: false</code>, retry limits, and request-level cost limits. Repository and provider text is treated as untrusted data.</p>
         </article>
@@ -1273,7 +1071,7 @@ function LoginPage() {
 }
 
 function OnboardingPage() {
-  const [user, setUser] = useState<CurrentUser | null>(liveApiUrl ? null : previewUser);
+  const [user, setUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
     if (!liveApiUrl) return;
@@ -1347,1097 +1145,6 @@ function OnboardingPage() {
   );
 }
 
-function DashboardSummary({ runs }: { runs: RunSummary[] }) {
-  const completed = runs.filter((run) => run.status === "done");
-  const regressions = runs.filter((run) => run.highest_severity === "regression");
-  const active = runs.filter((run) => run.status === "running" || run.status === "pending");
-  return (
-    <div className="summary-grid">
-      <article>
-        <span>PRs verified</span>
-        <strong>{completed.length}</strong>
-        <small>{liveApiUrl ? "across recent runs" : "in this preview"}</small>
-      </article>
-      <article>
-        <span>Regressions reproduced</span>
-        <strong className="summary-danger">{regressions.length}</strong>
-        <small>with request evidence</small>
-      </article>
-      <article>
-        <span>Runs in progress</span>
-        <strong className="summary-running">{active.length}</strong>
-        <small>queued or executing</small>
-      </article>
-    </div>
-  );
-}
-
-function WorkspaceMetric({
-  label,
-  value,
-  note,
-  tone = "default",
-  href,
-}: {
-  label: string;
-  value: string | number;
-  note: string;
-  tone?: "default" | "danger" | "running" | "success";
-  href: string;
-}) {
-  return (
-    <a className={`workspace-metric metric-${tone}`} href={href}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{note}</small>
-      <i aria-hidden="true" />
-    </a>
-  );
-}
-
-function MiniActivityChart({ runs }: { runs: RunSummary[] }) {
-  const weekdayLabels = ["S", "M", "T", "W", "T", "F", "S"];
-  const days = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date();
-    date.setUTCHours(0, 0, 0, 0);
-    date.setUTCDate(date.getUTCDate() - (6 - index));
-    const next = new Date(date);
-    next.setUTCDate(next.getUTCDate() + 1);
-    const count = runs.filter((run) => {
-      const timestamp = new Date(run.created_at).getTime();
-      return timestamp >= date.getTime() && timestamp < next.getTime();
-    }).length;
-    return {
-      label: weekdayLabels[date.getUTCDay()],
-      count,
-    };
-  });
-  const max = Math.max(1, ...days.map((day) => day.count));
-
-  return (
-    <div className="activity-chart" aria-label="Runs during the last seven days">
-      {days.map((day, index) => (
-        <span key={`${day.label}-${index}`}>
-          <i style={{ height: `${Math.max(10, (day.count / max) * 100)}%` }} />
-          <small>{day.label}</small>
-          <b className="sr-only">{day.count} runs</b>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function AiTriagePanel({
-  triage,
-  loading,
-  generating,
-  error,
-  hasRuns,
-  onGenerate,
-}: {
-  triage: AiTriageResponse | null;
-  loading: boolean;
-  generating: boolean;
-  error: string;
-  hasRuns: boolean;
-  onGenerate: () => void;
-}) {
-  const working = generating || triage?.status === "queued" || triage?.status === "running";
-  const brief = triage?.status === "ready" ? triage.brief : undefined;
-  const briefRunCount = triage?.run_count ?? 0;
-
-  return (
-    <section className="ai-triage-panel" aria-labelledby="ai-triage-title">
-      <div className="ai-triage-heading">
-        <div className="ai-triage-mark" aria-hidden="true">✦</div>
-        <div>
-          <span className="section-kicker">Evidence-guided intelligence</span>
-          <h2 id="ai-triage-title">AI Triage</h2>
-        </div>
-        <span className="ai-model-pill">GPT-4o</span>
-      </div>
-
-      {loading ? (
-        <div className="ai-triage-empty" role="status">
-          <span className="loading-spinner" aria-hidden="true" />
-          <div><strong>Checking for a cached brief</strong><p>No model request is being made.</p></div>
-        </div>
-      ) : working ? (
-        <div className="ai-triage-empty" role="status">
-          <span className="loading-spinner" aria-hidden="true" />
-          <div><strong>Building your triage brief</strong><p>The worker is summarizing up to 20 recent runs.</p></div>
-        </div>
-      ) : error || triage?.status === "failed" ? (
-        <div className="ai-triage-empty ai-triage-failed" role="alert">
-          <span aria-hidden="true">!</span>
-          <div>
-            <strong>AI triage is temporarily unavailable</strong>
-            <p>{error || "The model request did not complete. Verified run evidence is unaffected."}</p>
-          </div>
-          <button className="button button-quiet" type="button" onClick={onGenerate}>Try again</button>
-        </div>
-      ) : brief ? (
-        <div className="ai-triage-result">
-          <div className="ai-triage-summary">
-            <span>Current brief</span>
-            <h3>{brief.headline}</h3>
-            <p>{brief.summary}</p>
-            <small>
-              Based on {briefRunCount} recent {briefRunCount === 1 ? "run" : "runs"}
-              {triage?.updated_at ? ` · ${formatRelativeDate(triage.updated_at)}` : ""}
-            </small>
-          </div>
-          <div className="ai-priority-list">
-            {brief.priorities.length ? brief.priorities.map((priority) => (
-              <a href={`/runs/${priority.run_id}`} key={priority.run_id}>
-                <span className={`ai-urgency urgency-${priority.urgency}`}>{priority.urgency}</span>
-                <strong>{priority.title}</strong>
-                <p>{priority.reason}</p>
-                <i aria-hidden="true">→</i>
-              </a>
-            )) : (
-              <div className="ai-no-priorities">
-                <strong>No runs need immediate review</strong>
-                <p>The current evidence did not produce a triage priority.</p>
-              </div>
-            )}
-          </div>
-          {brief.watch_items.length > 0 && (
-            <div className="ai-watch-list">
-              <strong>Keep watching</strong>
-              {brief.watch_items.map((item) => <p key={item}>• {item}</p>)}
-            </div>
-          )}
-          <div className="ai-triage-meta">
-            <span>AI interpretation—not verification evidence</span>
-            <span>{brief.input_tokens + brief.output_tokens} tokens · ${brief.estimated_cost_usd.toFixed(6)}</span>
-          </div>
-        </div>
-      ) : (
-        <div className="ai-triage-empty">
-          <span aria-hidden="true">◇</span>
-          <div>
-            <strong>Turn recent run evidence into a focused review queue</strong>
-            <p>Generated only when you ask, then cached until the underlying runs change.</p>
-          </div>
-          <button
-            className="button button-primary"
-            type="button"
-            disabled={!hasRuns}
-            onClick={onGenerate}
-          >
-            {hasRuns ? "Generate AI brief" : "No runs to summarize"}
-          </button>
-        </div>
-      )}
-    </section>
-  );
-}
-
-function OverviewPage() {
-  const { runs, user, repositories, loading, error } = useWorkspaceData();
-  const [triage, setTriage] = useState<AiTriageResponse | null>(liveApiUrl ? null : demoAiTriage);
-  const [triageLoading, setTriageLoading] = useState(Boolean(liveApiUrl));
-  const [triageGenerating, setTriageGenerating] = useState(false);
-  const [triageError, setTriageError] = useState("");
-  const [triageRefresh, setTriageRefresh] = useState(0);
-  const activeRuns = runs.filter((run) => run.status === "pending" || run.status === "running");
-  const completedRuns = runs.filter((run) => run.status === "done");
-  const regressionRuns = completedRuns.filter((run) => (run.finding_count ?? 0) > 0);
-  const passingRuns = completedRuns.filter((run) => (run.finding_count ?? 0) === 0);
-  const passRate = completedRuns.length
-    ? `${Math.round((passingRuns.length / completedRuns.length) * 100)}%`
-    : "—";
-
-  useEffect(() => {
-    if (!liveApiUrl || loading) return;
-    const controller = new AbortController();
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    let active = true;
-
-    const load = async () => {
-      try {
-        const result = await fetchAiTriage(controller.signal);
-        if (!active) return;
-        setTriage(result);
-        setTriageError("");
-        setTriageLoading(false);
-        if (result.status === "queued" || result.status === "running") {
-          timer = setTimeout(load, 1500);
-        } else {
-          setTriageGenerating(false);
-        }
-      } catch (reason) {
-        if (!active || (reason instanceof Error && reason.name === "AbortError")) return;
-        setTriageError(reason instanceof Error ? reason.message : "AI triage could not be loaded.");
-        setTriageLoading(false);
-        setTriageGenerating(false);
-      }
-    };
-
-    load();
-    return () => {
-      active = false;
-      controller.abort();
-      if (timer) clearTimeout(timer);
-    };
-  }, [loading, triageRefresh]);
-
-  const handleGenerateTriage = async () => {
-    if (!liveApiUrl || triageGenerating) return;
-    setTriageGenerating(true);
-    setTriageError("");
-    try {
-      const result = await generateAiTriage();
-      setTriage(result);
-      if (result.status === "queued" || result.status === "running") {
-        setTriageRefresh((value) => value + 1);
-      } else {
-        setTriageGenerating(false);
-      }
-    } catch (reason) {
-      setTriageError(reason instanceof Error ? reason.message : "AI triage could not be generated.");
-      setTriageGenerating(false);
-    }
-  };
-
-  const repositoryHealth = repositories
-    .map((repository) => {
-      const repositoryRuns = runs.filter((run) => run.repo === repository.full_name);
-      const latest = [...repositoryRuns].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      )[0];
-      return { repository, latest, runCount: repositoryRuns.length };
-    })
-    .sort((a, b) => {
-      if (!a.latest) return 1;
-      if (!b.latest) return -1;
-      return new Date(b.latest.created_at).getTime() - new Date(a.latest.created_at).getTime();
-    });
-
-  return (
-    <main className="dashboard-page">
-      <AppHeader active="overview" />
-      <div className="dashboard-content overview-content">
-        <div className="overview-welcome">
-          <div>
-            <span className="section-kicker">Workspace overview</span>
-            <h1>{user ? `Welcome back, ${userDisplayName(user)}` : "Your API change workspace"}</h1>
-            <p>
-              {repositories.length} {repositories.length === 1 ? "repository" : "repositories"} accessible
-              {" · "}
-              {activeRuns.length} {activeRuns.length === 1 ? "run" : "runs"} active
-            </p>
-          </div>
-          <a className="button button-primary" href="/runs">Review runs →</a>
-        </div>
-        {!liveApiUrl && (
-          <div className="demo-banner">
-            <span className="demo-banner-icon" aria-hidden="true">◇</span>
-            <div>
-              <strong>Product preview</strong>
-              <p>Connect the live API to replace this representative workspace with your GitHub data.</p>
-            </div>
-          </div>
-        )}
-        {error && (
-          <div className="error-state overview-error" role="alert">
-            <span aria-hidden="true">!</span>
-            <div>
-              <h2>Workspace unavailable</h2>
-              <p>{error}</p>
-              {error.includes("Sign in") && (
-                <a className="button button-primary" href={githubLoginUrlFor("/overview")}>Continue with GitHub</a>
-              )}
-            </div>
-          </div>
-        )}
-        <section className="workspace-metrics" aria-label="Workspace metrics">
-          <WorkspaceMetric
-            label="Accessible repositories"
-            value={loading ? "…" : repositories.length}
-            note="GitHub App access"
-            href="/repositories"
-          />
-          <WorkspaceMetric
-            label="Active runs"
-            value={loading ? "…" : activeRuns.length}
-            note={activeRuns[0]?.repo || "No runs executing"}
-            tone="running"
-            href="/runs"
-          />
-          <WorkspaceMetric
-            label="Runs with changes"
-            value={loading ? "…" : regressionRuns.length}
-            note="In the recent API window"
-            tone={regressionRuns.length ? "danger" : "success"}
-            href="/runs"
-          />
-          <WorkspaceMetric
-            label="Recent pass rate"
-            value={loading ? "…" : passRate}
-            note={`${completedRuns.length} completed runs`}
-            tone="success"
-            href="/runs"
-          />
-        </section>
-        <AiTriagePanel
-          triage={triage}
-          loading={triageLoading}
-          generating={triageGenerating}
-          error={triageError}
-          hasRuns={runs.length > 0}
-          onGenerate={handleGenerateTriage}
-        />
-        <div className="overview-grid">
-          <section className="overview-panel repository-health-panel">
-            <div className="panel-title-row">
-              <div>
-                <span className="section-kicker">At a glance</span>
-                <h2>Repository health</h2>
-              </div>
-              <a href="/repositories">View all →</a>
-            </div>
-            {loading ? (
-              <div className="loading-state compact-loading" role="status">
-                <span className="loading-spinner" aria-hidden="true" />
-                Loading repository health…
-              </div>
-            ) : repositoryHealth.length ? (
-              <div className="repository-health-list">
-                {repositoryHealth.slice(0, 6).map(({ repository, latest, runCount }) => (
-                  <a
-                    key={repository.full_name}
-                    href={latest ? `/runs/${latest.id}` : "/repositories"}
-                  >
-                    <span className={`health-dot health-${latest?.status || "idle"}`} />
-                    <span>
-                      <strong>{repository.full_name}</strong>
-                      <small>
-                        {latest ? `${formatRelativeDate(latest.created_at)} · ${runCount} recent runs` : "No runs yet"}
-                      </small>
-                    </span>
-                    {latest ? <RunVerdict run={latest} /> : <b>Ready</b>}
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state compact-empty">
-                <h2>No repositories connected</h2>
-                <p>Choose repositories through the GitHub App installation.</p>
-              </div>
-            )}
-          </section>
-          <section className="overview-panel activity-panel">
-            <div className="panel-title-row">
-              <div>
-                <span className="section-kicker">Past seven days</span>
-                <h2>Run activity</h2>
-              </div>
-              <strong>{runs.length}</strong>
-            </div>
-            <MiniActivityChart runs={runs} />
-            <p>Activity reflects the recent run window returned by the Delta Code API.</p>
-          </section>
-        </div>
-        <section className="runs-panel overview-runs" aria-labelledby="overview-runs-title">
-          <div className="runs-panel-header">
-            <div>
-              <h2 id="overview-runs-title">Recent runs</h2>
-              <span>{Math.min(runs.length, 6)} shown</span>
-            </div>
-            <a className="text-link" href="/runs">View all runs →</a>
-          </div>
-          {loading ? (
-            <div className="loading-state" role="status">
-              <span className="loading-spinner" aria-hidden="true" />
-              Loading recent runs…
-            </div>
-          ) : (
-            <RunsTable runs={runs.slice(0, 6)} />
-          )}
-        </section>
-      </div>
-    </main>
-  );
-}
-
-function RunVerdict({ run }: { run: RunSummary }) {
-  if (run.status === "pending" || run.status === "running") {
-    return <span className="verdict-muted">Awaiting result</span>;
-  }
-  if (run.status === "failed") {
-    return <span className="verdict-danger">Run failed</span>;
-  }
-  if (run.finding_count === 0 || run.highest_severity === "none") {
-    return <span className="verdict-safe">No changes found</span>;
-  }
-  if (run.highest_severity === "regression") {
-    return (
-      <span className="verdict-danger">
-        {run.finding_count ?? "—"} regression{run.finding_count === 1 ? "" : "s"}
-      </span>
-    );
-  }
-  if (run.highest_severity === "status_code_changed") {
-    return <span className="verdict-warning">{run.finding_count ?? "—"} behavior change</span>;
-  }
-  return <span className="verdict-muted">View result</span>;
-}
-
-function RunsTable({ runs }: { runs: RunSummary[] }) {
-  if (runs.length === 0) {
-    return (
-      <div className="empty-state">
-        <span className="empty-icon" aria-hidden="true">
-          Δ
-        </span>
-        <h2>No runs match this view</h2>
-        <p>Try clearing your search or choosing a different status.</p>
-      </div>
-    );
-  }
-  return (
-    <div className="runs-table-wrap">
-      <table className="runs-table">
-        <thead>
-          <tr>
-            <th>Repository</th>
-            <th>Pull request</th>
-            <th>Status</th>
-            <th>Verdict</th>
-            <th>Started</th>
-            <th>
-              <span className="sr-only">Open run</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {runs.map((run) => {
-            const repo = repoParts(run.repo);
-            return (
-              <tr key={run.id}>
-                <td data-label="Repository">
-                  <a className="repo-cell" href={`/runs/${run.id}`}>
-                    <span className="repo-mark" aria-hidden="true">
-                      {repo.name.slice(0, 2).toUpperCase()}
-                    </span>
-                    <span>
-                      <strong>{repo.name}</strong>
-                      <small>{repo.owner}</small>
-                    </span>
-                  </a>
-                </td>
-                <td data-label="Pull request">
-                  {run.pr_number ? (
-                    <a
-                      className="pr-link"
-                      href={`https://github.com/${run.repo}/pull/${run.pr_number}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      #{run.pr_number} <span aria-hidden="true">↗</span>
-                    </a>
-                  ) : (
-                    "Manual run"
-                  )}
-                </td>
-                <td data-label="Status">
-                  <StatusBadge status={run.status} />
-                </td>
-                <td data-label="Verdict">
-                  <RunVerdict run={run} />
-                </td>
-                <td data-label="Started">
-                  <time dateTime={run.created_at} title={new Date(run.created_at).toLocaleString()}>
-                    {formatRelativeDate(run.created_at)}
-                  </time>
-                </td>
-                <td className="row-action">
-                  <a href={`/runs/${run.id}`} aria-label={`Open run ${run.id}`}>
-                    →
-                  </a>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function RunsPage() {
-  const [runs, setRuns] = useState<RunSummary[]>(demoRuns);
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<"all" | RunStatus>("all");
-  const [loading, setLoading] = useState(Boolean(liveApiUrl));
-  const [error, setError] = useState("");
-  const [view, setView] = useState<"runs" | "repos">("runs");
-
-  useEffect(() => {
-    if (!liveApiUrl) return;
-    const controller = new AbortController();
-    fetchRuns(controller.signal)
-      .then((data) => {
-        setRuns(data);
-        setError("");
-      })
-      .catch((reason: Error) => {
-        if (reason.name !== "AbortError") {
-          setRuns([]);
-          setError(reason.message || "Delta Code could not reach the runs API. Check the backend connection and try again.");
-        }
-      })
-      .finally(() => setLoading(false));
-    return () => controller.abort();
-  }, []);
-
-  const visibleRuns = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    return runs.filter((run) => {
-      const matchesQuery =
-        !normalized ||
-        run.repo.toLowerCase().includes(normalized) ||
-        String(run.pr_number ?? "").includes(normalized);
-      return matchesQuery && (status === "all" || run.status === status);
-    });
-  }, [query, runs, status]);
-
-  const groupedRuns = useMemo(() => {
-    const groups = new Map<string, RunSummary[]>();
-    visibleRuns.forEach((run) => {
-      groups.set(run.repo, [...(groups.get(run.repo) ?? []), run]);
-    });
-    return [...groups.entries()]
-      .map(([repo, repoRuns]) => ({
-        repo,
-        runs: repoRuns,
-        regressions: repoRuns.filter((run) => run.highest_severity === "regression").length,
-        lastRun: repoRuns.reduce(
-          (latest, run) =>
-            new Date(run.created_at).getTime() > new Date(latest).getTime()
-              ? run.created_at
-              : latest,
-          repoRuns[0].created_at,
-        ),
-      }))
-      .sort((a, b) => new Date(b.lastRun).getTime() - new Date(a.lastRun).getTime());
-  }, [visibleRuns]);
-
-  return (
-    <main className="dashboard-page">
-      <AppHeader active="runs" />
-      <div className="dashboard-content">
-        <div className="page-heading">
-          <div>
-            <span className="section-kicker">Verification activity</span>
-            <h1>Runs</h1>
-            <p>Concrete API behavior observed across your pull requests.</p>
-          </div>
-          <a className="button button-quiet" href="/settings/integrations">
-            Manage repositories
-          </a>
-        </div>
-        {!liveApiUrl && (
-          <div className="demo-banner">
-            <span className="demo-banner-icon" aria-hidden="true">
-              ◇
-            </span>
-            <div>
-              <strong>You’re exploring a product preview.</strong>
-              <p>These runs use representative data shaped exactly like the current Delta Code API.</p>
-            </div>
-          </div>
-        )}
-        <DashboardSummary runs={runs} />
-        <section className="runs-panel" aria-labelledby="recent-runs-title">
-          <div className="runs-panel-header">
-            <div>
-              <h2 id="recent-runs-title">{view === "runs" ? "Recent runs" : "Repositories"}</h2>
-              <span>{visibleRuns.length} shown</span>
-            </div>
-            <div className="filters">
-              <div className="view-toggle" aria-label="Runs view">
-                <button
-                  type="button"
-                  className={view === "runs" ? "active" : ""}
-                  aria-pressed={view === "runs"}
-                  onClick={() => setView("runs")}
-                >
-                  Runs
-                </button>
-                <button
-                  type="button"
-                  className={view === "repos" ? "active" : ""}
-                  aria-pressed={view === "repos"}
-                  onClick={() => setView("repos")}
-                >
-                  By repo
-                </button>
-              </div>
-              <label className="search-field">
-                <span className="sr-only">Search runs</span>
-                <span aria-hidden="true">⌕</span>
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search repository or PR"
-                />
-              </label>
-              <label className="select-field">
-                <span className="sr-only">Filter by status</span>
-                <select
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value as "all" | RunStatus)}
-                >
-                  <option value="all">All statuses</option>
-                  <option value="pending">Queued</option>
-                  <option value="running">Running</option>
-                  <option value="done">Complete</option>
-                  <option value="failed">Failed</option>
-                </select>
-              </label>
-            </div>
-          </div>
-          {error ? (
-            <div className="error-state" role="alert">
-              <span aria-hidden="true">!</span>
-              <div>
-                <h2>{error.includes("Sign in") ? "Sign in required" : "Runs are temporarily unavailable"}</h2>
-                <p>{error}</p>
-                {error.includes("Sign in") && (
-                  <a className="button button-primary" href={githubLoginUrlFor("/runs")}>
-                    Continue with GitHub
-                  </a>
-                )}
-              </div>
-            </div>
-          ) : loading ? (
-            <div className="loading-state" role="status">
-              <span className="loading-spinner" aria-hidden="true" />
-              Loading verification runs…
-            </div>
-          ) : view === "repos" ? (
-            <RepoGroups groups={groupedRuns} />
-          ) : (
-            <RunsTable runs={visibleRuns} />
-          )}
-        </section>
-      </div>
-    </main>
-  );
-}
-
-function RepoGroups({
-  groups,
-}: {
-  groups: Array<{
-    repo: string;
-    runs: RunSummary[];
-    regressions: number;
-    lastRun: string;
-  }>;
-}) {
-  if (groups.length === 0) {
-    return (
-      <div className="empty-state">
-        <span className="empty-icon" aria-hidden="true">Δ</span>
-        <h2>No repositories match this view</h2>
-        <p>Try clearing your search or choosing a different status.</p>
-      </div>
-    );
-  }
-  return (
-    <div className="repo-groups">
-      <p className="data-window-note">Based on the 50 most recent runs available.</p>
-      {groups.map((group) => {
-        const repo = repoParts(group.repo);
-        return (
-          <section className="repo-group" key={group.repo}>
-            <div className="repo-group-header">
-              <div className="repo-cell">
-                <span className="repo-mark" aria-hidden="true">
-                  {repo.name.slice(0, 2).toUpperCase()}
-                </span>
-                <span>
-                  <strong>{repo.name}</strong>
-                  <small>{repo.owner}</small>
-                </span>
-              </div>
-              <dl>
-                <div><dt>Runs</dt><dd>{group.runs.length}</dd></div>
-                <div><dt>Regressions</dt><dd className={group.regressions ? "summary-danger" : ""}>{group.regressions}</dd></div>
-                <div>
-                  <dt>Last run</dt>
-                  <dd title={new Date(group.lastRun).toLocaleString()}>{formatRelativeDate(group.lastRun)}</dd>
-                </div>
-              </dl>
-            </div>
-            <RunsTable runs={group.runs} />
-          </section>
-        );
-      })}
-    </div>
-  );
-}
-
-function JsonBlock({ value }: { value: unknown }) {
-  if (typeof value === "undefined") {
-    return <code className="json-block json-empty">No request body</code>;
-  }
-  return <pre className="json-block">{JSON.stringify(value, null, 2)}</pre>;
-}
-
-function ResponsePanel({
-  label,
-  branch,
-  response,
-  tone,
-}: {
-  label: string;
-  branch: string;
-  response: Finding["base_response"];
-  tone: "base" | "pr";
-}) {
-  const successful = response.status_code >= 200 && response.status_code < 300;
-  return (
-    <section className={`response-panel response-panel-${tone}`}>
-      <div className="response-panel-header">
-        <div>
-          <span>{label}</span>
-          <code>{branch}</code>
-        </div>
-        <strong className={successful ? "code-success" : "code-danger"}>
-          {response.status_code}
-        </strong>
-      </div>
-      <JsonBlock value={response.body} />
-    </section>
-  );
-}
-
-function FindingCard({
-  finding,
-  index,
-  baseRef,
-  headRef,
-}: {
-  finding: Finding;
-  index: number;
-  baseRef: string;
-  headRef: string;
-}) {
-  return (
-    <article className={`finding-card finding-${finding.kind}`}>
-      <div className="finding-card-header">
-        <div>
-          <span className="finding-index">Finding {String(index + 1).padStart(2, "0")}</span>
-          <h2>{finding.case.replaceAll("_", " ")}</h2>
-        </div>
-        <SeverityBadge kind={finding.kind} />
-      </div>
-      <div className="request-panel">
-        <div className="request-panel-title">
-          <span>Reproduced request</span>
-          <div className="request-line">
-            <span className={`method method-${finding.request.method.toLowerCase()}`}>
-              {finding.request.method}
-            </span>
-            <code>{finding.request.path}</code>
-          </div>
-        </div>
-        <JsonBlock value={finding.request.json} />
-      </div>
-      <div className="response-comparison">
-        <ResponsePanel
-          label="Base response"
-          branch={baseRef}
-          response={finding.base_response}
-          tone="base"
-        />
-        <div className="comparison-divider" aria-hidden="true">
-          <span>→</span>
-        </div>
-        <ResponsePanel
-          label="PR response"
-          branch={headRef}
-          response={finding.pr_response}
-          tone="pr"
-        />
-      </div>
-    </article>
-  );
-}
-
-function RunState({ run }: { run: RunDetail }) {
-  if (run.status === "pending" || run.status === "running") {
-    return (
-      <div className="run-progress-state">
-        <span className="run-progress-visual" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-        <span className="section-kicker">{run.status === "pending" ? "Queued" : "Running now"}</span>
-        <h2>{run.status === "pending" ? "Waiting for an available worker" : "Comparing both API versions"}</h2>
-        <p>
-          Delta Code is generating changed-endpoint cases and running the same
-          requests against the base and PR branches. This page refreshes automatically.
-        </p>
-      </div>
-    );
-  }
-  if (run.status === "failed") {
-    return (
-      <div className="error-state detail-error" role="alert">
-        <span aria-hidden="true">!</span>
-        <div>
-          <h2>This verification run failed</h2>
-          {run.error ? (
-            <details className="traceback" open>
-              <summary>Error details</summary>
-              <pre>{run.error}</pre>
-            </details>
-          ) : (
-            <p>The backend did not provide an error message.</p>
-          )}
-        </div>
-      </div>
-    );
-  }
-  if (run.result && run.result.findings.length === 0) {
-    return (
-      <div className="clean-state">
-        <span aria-hidden="true">✓</span>
-        <h2>No behavioral differences reproduced</h2>
-        <p>The generated edge-case requests returned equivalent status codes on both branches.</p>
-      </div>
-    );
-  }
-  return null;
-}
-
-function RunDetailPage({ runId }: { runId: number }) {
-  const fallback = demoDetails[runId];
-  const [run, setRun] = useState<RunDetail | undefined>(fallback);
-  const [loading, setLoading] = useState(Boolean(liveApiUrl));
-  const [error, setError] = useState("");
-  const [retrying, setRetrying] = useState(false);
-  const [retryError, setRetryError] = useState("");
-  const [reloadKey, setReloadKey] = useState(0);
-
-  useEffect(() => {
-    if (!liveApiUrl || !Number.isFinite(runId)) return;
-    let active = true;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const controller = new AbortController();
-
-    const load = async () => {
-      try {
-        const data = await fetchRun(runId, controller.signal);
-        if (!active) return;
-        setRun(data);
-        setError("");
-        setLoading(false);
-        if (data.status === "pending" || data.status === "running") {
-          timer = setTimeout(load, 3500);
-        }
-      } catch (reason) {
-        if (!active || (reason instanceof Error && reason.name === "AbortError")) return;
-        setError(reason instanceof Error ? reason.message : "The run could not be loaded.");
-        setLoading(false);
-      }
-    };
-    load();
-    return () => {
-      active = false;
-      controller.abort();
-      if (timer) clearTimeout(timer);
-    };
-  }, [reloadKey, runId]);
-
-  const handleRetry = async () => {
-    if (!liveApiUrl) return;
-    setRetrying(true);
-    setRetryError("");
-    try {
-      await retryRun(runId);
-      setRun((current) =>
-        current ? { ...current, status: "pending", result: null, error: undefined } : current,
-      );
-      setReloadKey((key) => key + 1);
-    } catch (reason) {
-      setRetryError(reason instanceof Error ? reason.message : "The run could not be retried.");
-    } finally {
-      setRetrying(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <main className="dashboard-page">
-        <AppHeader active="runs" />
-        <div className="detail-loading" role="status">
-          <span className="loading-spinner" aria-hidden="true" />
-          Loading run evidence…
-        </div>
-      </main>
-    );
-  }
-
-  if (error || !run) {
-    return (
-      <main className="dashboard-page">
-        <AppHeader active="runs" />
-        <div className="not-found-state">
-          <span aria-hidden="true">404</span>
-          <h1>Run not found</h1>
-          <p>{error || "This preview does not include the requested run."}</p>
-          <a className="button button-primary" href="/runs">
-            Back to runs
-          </a>
-        </div>
-      </main>
-    );
-  }
-
-  const findings = run.result?.findings ?? [];
-  const regressions = findings.filter((finding) => finding.kind === "regression").length;
-  const repo = repoParts(run.repo);
-  return (
-    <main className="dashboard-page">
-      <AppHeader active="runs" />
-      <div className="detail-content">
-        <a className="back-link detail-back" href="/runs">
-          ← All runs
-        </a>
-        <section className="run-overview">
-          <div className="run-title">
-            <div className="repo-mark repo-mark-large" aria-hidden="true">
-              {repo.name.slice(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <span className="section-kicker">{repo.owner}</span>
-              <h1>{repo.name}</h1>
-              <div className="run-subtitle">
-                <span>Run #{run.id}</span>
-                <span>·</span>
-                {run.pr_number ? (
-                  <a
-                    href={`https://github.com/${run.repo}/pull/${run.pr_number}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Pull request #{run.pr_number} ↗
-                  </a>
-                ) : (
-                  <span>Manual run</span>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="run-actions">
-            <StatusBadge status={run.status} />
-            {liveApiUrl && (
-              <button
-                className="button button-quiet button-small"
-                type="button"
-                disabled={retrying || run.status === "pending" || run.status === "running"}
-                onClick={handleRetry}
-              >
-                {retrying ? "Retrying…" : "Retry run"}
-              </button>
-            )}
-          </div>
-        </section>
-        {retryError && <p className="action-error" role="alert">{retryError}</p>}
-        <section
-          className={`verdict-card ${
-            run.status === "failed" || regressions > 0
-              ? "verdict-card-danger"
-              : findings.length
-                ? "verdict-card-warning"
-                : run.status === "done"
-                  ? "verdict-card-safe"
-                  : ""
-          }`}
-        >
-          <div className="verdict-icon" aria-hidden="true">
-            {run.status === "failed" || regressions > 0
-              ? "!"
-              : findings.length
-                ? "↕"
-                : run.status === "done"
-                  ? "✓"
-                  : "…"}
-          </div>
-          <div>
-            <span>Verification verdict</span>
-            <h2>
-              {run.status !== "done"
-                ? run.status === "failed"
-                  ? "Verification failed"
-                  : "Verification in progress"
-                : regressions > 0
-                  ? `${regressions} regression reproduced`
-                  : findings.length
-                    ? `${findings.length} behavior change observed`
-                    : "No behavior changes reproduced"}
-            </h2>
-            <p>
-              {regressions > 0
-                ? "A request that succeeded on the base branch failed on this pull request."
-                : findings.length
-                  ? "At least one request returned a different status code between branches."
-                  : "The tested edge cases behaved consistently across both branches."}
-            </p>
-          </div>
-          <div className="run-meta">
-            <span>
-              Base
-              <code>{run.base_ref || "base"}</code>
-              <small title={run.base_sha}>{run.base_sha?.slice(0, 7) || "—"}</small>
-            </span>
-            <i aria-hidden="true">→</i>
-            <span>
-              Pull request
-              <code>{run.head_ref || "head"}</code>
-              <small title={run.head_sha}>{run.head_sha?.slice(0, 7) || "—"}</small>
-            </span>
-          </div>
-        </section>
-        <RunState run={run} />
-        {findings.length > 0 && (
-          <section className="findings-section" aria-labelledby="findings-title">
-            <div className="findings-heading">
-              <div>
-                <span className="section-kicker">Request evidence</span>
-                <h2 id="findings-title">
-                  {findings.length} reproduced {findings.length === 1 ? "difference" : "differences"}
-                </h2>
-              </div>
-              <p>Same request. Two branches. Observable result.</p>
-            </div>
-            <div className="findings-list">
-              {findings.map((finding, index) => (
-                <FindingCard
-                  key={`${finding.case}-${index}`}
-                  finding={finding}
-                  index={index}
-                  baseRef={run.base_ref || "base"}
-                  headRef={run.head_ref || "head"}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
-    </main>
-  );
-}
-
 function RepositoryVisibilityBadge({ repository }: { repository: RepositoryAccess }) {
   const visibility =
     repository.visibility === "internal"
@@ -2468,7 +1175,7 @@ function RepositoryVisibilityBadge({ repository }: { repository: RepositoryAcces
 }
 
 function RepositoriesPage() {
-  const { runs, repositories, loading, error } = useWorkspaceData();
+  const { repositories, loading, error } = useWorkspaceData();
   const [query, setQuery] = useState("");
   const [visibility, setVisibility] = useState<"all" | "public" | "private" | "internal">("all");
   const normalizedQuery = query.trim().toLowerCase();
@@ -2494,25 +1201,17 @@ function RepositoriesPage() {
           <div>
             <span className="section-kicker">GitHub App access</span>
             <h1>Repositories</h1>
-            <p>See every repository Delta Code can access and its latest verification state.</p>
+            <p>Manage the repositories Delta Code can analyze and migrate.</p>
           </div>
-          <a
-            className="button button-primary"
-            href={GITHUB_INSTALL_URL}
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a className="button button-primary" href={GITHUB_INSTALL_URL} target="_blank" rel="noreferrer">
             Choose repositories ↗
           </a>
         </div>
         <aside className="access-explainer">
           <span aria-hidden="true">⌁</span>
           <div>
-            <strong>Repository access and verification activity are different.</strong>
-            <p>
-              GitHub controls which repositories appear here. A repository can be accessible
-              before it has a Delta Code run.
-            </p>
+            <strong>Access stays repository-scoped.</strong>
+            <p>GitHub controls this list. Delta Code can only analyze repositories selected in the GitHub App installation.</p>
           </div>
           <a href={githubRepositoryRefreshUrl}>Refresh access</a>
         </aside>
@@ -2526,22 +1225,11 @@ function RepositoriesPage() {
               <label className="search-field">
                 <span aria-hidden="true">⌕</span>
                 <span className="sr-only">Search repositories</span>
-                <input
-                  type="search"
-                  value={query}
-                  placeholder="Search repositories"
-                  onChange={(event) => setQuery(event.target.value)}
-                />
+                <input type="search" value={query} placeholder="Search repositories" onChange={(event) => setQuery(event.target.value)} />
               </label>
               <div className="visibility-filter" aria-label="Repository visibility">
                 {(["all", "private", "public", "internal"] as const).map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className={visibility === option ? "active" : ""}
-                    aria-pressed={visibility === option}
-                    onClick={() => setVisibility(option)}
-                  >
+                  <button key={option} type="button" className={visibility === option ? "active" : ""} aria-pressed={visibility === option} onClick={() => setVisibility(option)}>
                     {option[0].toUpperCase() + option.slice(1)}
                   </button>
                 ))}
@@ -2554,61 +1242,27 @@ function RepositoriesPage() {
               <div>
                 <h2>Repository access unavailable</h2>
                 <p>{error}</p>
-                {error.includes("Sign in") && (
-                  <a className="button button-primary" href={githubLoginUrlFor("/repositories")}>Continue with GitHub</a>
-                )}
+                {error.includes("Sign in") && <a className="button button-primary" href={githubLoginUrlFor("/repositories")}>Continue with GitHub</a>}
               </div>
             </div>
           ) : loading ? (
-            <div className="loading-state" role="status">
-              <span className="loading-spinner" aria-hidden="true" />
-              Loading repository access…
-            </div>
+            <div className="loading-state" role="status"><span className="loading-spinner" aria-hidden="true" />Loading repository access…</div>
           ) : visibleRepositories.length ? (
-            <div className="repository-directory-list">
+            <div className="repository-directory-list repository-access-list">
               <div className="repository-directory-head" aria-hidden="true">
-                <span>Repository</span>
-                <span>Visibility</span>
-                <span>Latest run</span>
-                <span>Recent runs</span>
-                <span />
+                <span>Repository</span><span>Visibility</span><span>Access</span><span />
               </div>
               {visibleRepositories.map((repository) => {
-                const repositoryRuns = runs.filter((run) => run.repo === repository.full_name);
-                const latest = [...repositoryRuns].sort(
-                  (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-                )[0];
                 const parts = repoParts(repository.full_name);
                 return (
                   <article key={repository.full_name}>
                     <div className="repo-cell">
-                      <span className="repo-mark" aria-hidden="true">
-                        {parts.name.slice(0, 2).toUpperCase()}
-                      </span>
-                      <span>
-                        <strong>{parts.name}</strong>
-                        <small>{parts.owner}</small>
-                      </span>
+                      <span className="repo-mark" aria-hidden="true">{parts.name.slice(0, 2).toUpperCase()}</span>
+                      <span><strong>{parts.name}</strong><small>{parts.owner}</small></span>
                     </div>
                     <RepositoryVisibilityBadge repository={repository} />
-                    <div className="repository-latest-run">
-                      {latest ? (
-                        <>
-                          <RunVerdict run={latest} />
-                          <small>{formatRelativeDate(latest.created_at)}</small>
-                        </>
-                      ) : (
-                        <span className="verdict-muted">No runs yet</span>
-                      )}
-                    </div>
-                    <strong className="repository-run-count">{repositoryRuns.length}</strong>
-                    <a
-                      className="repository-open"
-                      href={latest ? `/runs/${latest.id}` : "/runs"}
-                      aria-label={`View runs for ${repository.full_name}`}
-                    >
-                      →
-                    </a>
+                    <span className="integration-state connected"><i /> Authorized</span>
+                    <a className="repository-open" href={`https://github.com/${repository.full_name}`} target="_blank" rel="noreferrer" aria-label={`Open ${repository.full_name} on GitHub`}>↗</a>
                   </article>
                 );
               })}
@@ -2976,15 +1630,11 @@ export default function DeltaCodeApp({ route }: { route: string[] }) {
   else if (path === "onboarding") page = <OnboardingPage />;
   else if (path === "migrations") page = <MigrationInboxPage />;
   else if (path === "providers") page = <ProvidersPage />;
-  else if (path === "overview") page = <OverviewPage />;
-  else if (path === "runs") page = <RunsPage />;
   else if (path === "repositories") page = <RepositoriesPage />;
   if (path.startsWith("migrations/")) {
     page = <MigrationPage migrationId={path.split("/")[1]} />;
   } else if (path.startsWith("changes/")) {
     page = <ChangePage changeId={path.split("/")[1]} />;
-  } else if (path.startsWith("runs/")) {
-    page = <RunDetailPage runId={Number(path.split("/")[1])} />;
   } else if (path === "settings" || path === "settings/account") {
     page = <SettingsPage tab="account" />;
   } else if (path === "settings/integrations") {

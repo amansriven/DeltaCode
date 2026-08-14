@@ -122,43 +122,23 @@ test("server-renders the expanded public product site", async () => {
 
 test("server-renders the complete authenticated product routes", async () => {
   const [
-    overviewResponse,
-    runsResponse,
-    detailResponse,
     repositoriesResponse,
     integrationsResponse,
     settingsResponse,
   ] = await Promise.all([
-    render("/overview"),
-    render("/runs"),
-    render("/runs/14"),
     render("/repositories"),
     render("/settings/integrations"),
     render("/settings/account"),
   ]);
-  assert.equal(overviewResponse.status, 200);
-  assert.equal(runsResponse.status, 200);
-  assert.equal(detailResponse.status, 200);
   assert.equal(repositoriesResponse.status, 200);
   assert.equal(integrationsResponse.status, 200);
   assert.equal(settingsResponse.status, 200);
 
-  const [overview, runs, detail, repositories, integrations, settings] = await Promise.all([
-    overviewResponse.text(),
-    runsResponse.text(),
-    detailResponse.text(),
+  const [repositories, integrations, settings] = await Promise.all([
     repositoriesResponse.text(),
     integrationsResponse.text(),
     settingsResponse.text(),
   ]);
-  assert.match(overview, /Workspace overview/);
-  assert.match(overview, /AI Triage/);
-  assert.match(overview, /No model request is being made|AI interpretation—not verification evidence/);
-  assert.match(overview, /Repository health/);
-  assert.match(runs, /Recent runs/);
-  assert.match(runs, /By repo/);
-  assert.match(runs, /Loading verification runs|You’re exploring a product preview/);
-  assert.match(detail, /Loading run evidence|Verification verdict/);
   assert.match(repositories, /Repository directory/);
   assert.match(repositories, /Loading repository access|Product preview|GitHub App access/);
   assert.match(integrations, /Connected services/);
@@ -192,17 +172,6 @@ test("server-renders the migration inbox and review workflow", async () => {
   assert.match(change, /Loading normalized provider change|Normalized provider change/);
   assert.match(providers, /Source operations/);
   assert.match(providers, /Provider preview|Source health/);
-});
-
-test("starter preview implementation is removed", async () => {
-  const { access, readFile } = await import("node:fs/promises");
-  await assert.rejects(access(new URL("../app/_sites-preview", templateRoot)));
-
-  const packageJson = await readFile(new URL("../package.json", import.meta.url), "utf8");
-  const appSource = await readFile(new URL("../app/DeltaCodeApp.tsx", import.meta.url), "utf8");
-  assert.doesNotMatch(packageJson, /react-loading-skeleton/);
-  assert.match(appSource, /github\.com\/apps\/deltacodeapp\/installations\/new/);
-  assert.match(appSource, /github\.com\/amansriven\/DeltaCode/);
 });
 
 test("GitHub identity uses the authenticated user's name and avatar fallback", async () => {

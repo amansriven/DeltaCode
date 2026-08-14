@@ -9,8 +9,8 @@ verifies a bounded patch, opens a draft pull request, and waits for a developer
 decision.
 
 The product is not presented as a generic coding agent or a generic API test
-dashboard. Base-versus-head verification is a trust layer within the broader
-migration workflow.
+dashboard. Deterministic migration evidence is the trust layer within the
+workflow.
 
 ## Message hierarchy
 

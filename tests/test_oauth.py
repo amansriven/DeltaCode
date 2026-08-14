@@ -68,9 +68,9 @@ def test_frontend_redirect_rejects_external_destinations(monkeypatch):
 
     assert (
         oauth._safe_frontend_redirect("https://attacker.example/collect")
-        == "https://delta.example/runs"
+        == "https://delta.example/migrations"
     )
-    assert oauth._safe_frontend_redirect("//attacker.example/collect") == "https://delta.example/runs"
+    assert oauth._safe_frontend_redirect("//attacker.example/collect") == "https://delta.example/migrations"
 
 
 def test_login_redirects_to_github_and_preserves_destination(monkeypatch):
@@ -100,11 +100,39 @@ def test_local_oauth_cookie_works_over_http(monkeypatch):
     assert cookie_kwargs["samesite"] == "lax"
 
 
+def test_completion_ticket_sets_first_party_session_and_is_consumed(monkeypatch):
+    class Result:
+        def fetchone(self):
+            return ("session-123", "https://delta.example/settings/account")
+
+    class Connection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def execute(self, query, params):
+            assert "DELETE FROM oauth_completion_tickets" in query
+            assert params == (oauth._ticket_hash("one-time-ticket"),)
+            return Result()
+
+    monkeypatch.setattr(oauth, "get_connection", Connection)
+    monkeypatch.setattr(oauth, "FRONTEND_URL", "https://delta.example")
+
+    response = oauth.github_complete(FakeRequest(), "one-time-ticket")
+
+    assert response.headers["location"] == "https://delta.example/settings/account"
+    assert "session_id=session-123" in response.headers["set-cookie"]
+    assert "HttpOnly" in response.headers["set-cookie"]
+    assert "Secure" in response.headers["set-cookie"]
+
+
 def test_login_fails_cleanly_when_github_is_not_configured(monkeypatch):
     monkeypatch.setattr(oauth, "CLIENT_ID", None)
 
     try:
-        oauth.github_login(FakeRequest(), "/runs")
+        oauth.github_login(FakeRequest(), "/migrations")
     except Exception as exc:
         assert exc.status_code == 503
         assert exc.detail == "GitHub sign-in is not configured"

@@ -83,7 +83,6 @@ them in `frontend/.env*` or in a `NEXT_PUBLIC_*` variable.
 ```bash
 export GITHUB_APP_ID="..."
 export GITHUB_PRIVATE_KEY="..."
-export GITHUB_WEBHOOK_SECRET="..."
 export GITHUB_OAUTH_CLIENT_ID="..."
 export GITHUB_OAUTH_CLIENT_SECRET="..."
 export GITHUB_OAUTH_CALLBACK_URL="http://localhost:8000/auth/github/callback"
@@ -97,7 +96,7 @@ export LLM_TOTAL_BUDGET_USD="9.00"
 export LLM_MAX_REQUEST_COST_USD="0.20"
 export LLM_MAX_INPUT_BYTES="120000"
 export LLM_MAX_RETRIES="1"
-# Optional legacy dedicated-gateway fallback when OPENAI_API_KEY is unset.
+# Optional dedicated-gateway fallback when OPENAI_API_KEY is unset.
 export MIGRATION_INTELLIGENCE_URL="https://your-gateway.example"
 export MIGRATION_INTELLIGENCE_TOKEN="..."
 export SANDBOX_EXECUTOR_URL="https://your-sandbox-worker.example.workers.dev"
@@ -120,9 +119,8 @@ without GitHub credentials.
 
 For Railway, set `OPENAI_API_KEY` on the background `worker` service only. The
 browser and Vercel frontend never need the key. GPT-4o enrichments are optional:
-if the key is absent, request-case generation and finding explanations continue
-with deterministic evidence alone. Migration generation requires either the
-OpenAI key or the legacy dedicated-gateway variables.
+if the key is absent, AI migration generation is unavailable. Migration
+generation requires either the OpenAI key or the dedicated-gateway variables.
 
 The authenticated dashboard opens at `/migrations`. With
 `NEXT_PUBLIC_DELTA_CODE_API_URL` unset it uses clearly labeled preview

@@ -22,6 +22,15 @@ CREATE TABLE IF NOT EXISTS sessions (
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS github_name TEXT;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS repositories JSONB NOT NULL DEFAULT '[]';
 
+CREATE TABLE IF NOT EXISTS oauth_login_states (
+    state_hash TEXT PRIMARY KEY,
+    redirect_to TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS oauth_login_states_expiry
+ON oauth_login_states (expires_at);
+
 CREATE TABLE IF NOT EXISTS oauth_completion_tickets (
     token_hash TEXT PRIMARY KEY,
     session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,

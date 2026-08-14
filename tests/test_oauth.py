@@ -74,20 +74,33 @@ def test_frontend_redirect_rejects_external_destinations(monkeypatch):
 
 
 def test_login_redirects_to_github_and_preserves_destination(monkeypatch):
+    statements = []
+
+    class Connection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def execute(self, query, params=None):
+            statements.append((query, params))
+
     monkeypatch.setattr(oauth, "CLIENT_ID", "client id")
     monkeypatch.setattr(oauth, "CALLBACK_URL", "https://api.delta.example/auth/github/callback")
     monkeypatch.setattr(oauth, "FRONTEND_URL", "https://delta.example")
+    monkeypatch.setattr(oauth, "get_connection", Connection)
 
     response = oauth.github_login(FakeRequest(), "/settings/account")
 
     assert response.status_code == 307
     assert response.headers["location"].startswith("https://github.com/login/oauth/authorize?")
     assert "client_id=client+id" in response.headers["location"]
-    cookies = response.headers.getlist("set-cookie")
-    assert any("oauth_state=" in cookie and "Secure" in cookie for cookie in cookies)
+    assert not response.headers.getlist("set-cookie")
     assert any(
-        "oauth_redirect=" in cookie and "delta.example/settings/account" in cookie
-        for cookie in cookies
+        "INSERT INTO oauth_login_states" in query
+        and params[1] == "https://delta.example/settings/account"
+        for query, params in statements
     )
 
 

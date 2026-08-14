@@ -23,9 +23,8 @@ FRONTEND_URL = os.environ.get(
 
 SESSION_TTL = timedelta(days=7)
 COMPLETION_TTL = timedelta(minutes=2)
-STATE_COOKIE = "oauth_state"
-REDIRECT_COOKIE = "oauth_redirect"
 SESSION_COOKIE = "session_id"
+STATE_TTL = timedelta(minutes=10)
 
 
 def _cookie_kwargs(request: Request) -> dict:
@@ -61,6 +60,18 @@ def github_login(request: Request, redirect_uri: str | None = None):
         raise HTTPException(status_code=503, detail="GitHub sign-in is not configured")
 
     state = secrets.token_urlsafe(24)
+    with get_connection() as conn:
+        conn.execute("DELETE FROM oauth_login_states WHERE expires_at <= now()")
+        conn.execute(
+            "INSERT INTO oauth_login_states (state_hash, redirect_to, expires_at) "
+            "VALUES (%s, %s, %s)",
+            (
+                _ticket_hash(state),
+                _safe_frontend_redirect(redirect_uri),
+                datetime.now(UTC) + STATE_TTL,
+            ),
+        )
+
     callback_url = CALLBACK_URL or str(request.url_for("github_callback"))
     authorize_url = "https://github.com/login/oauth/authorize?" + urlencode(
         {
@@ -70,11 +81,6 @@ def github_login(request: Request, redirect_uri: str | None = None):
         }
     )
     response = RedirectResponse(authorize_url)
-    cookie_kwargs = _cookie_kwargs(request)
-    response.set_cookie(STATE_COOKIE, state, max_age=600, **cookie_kwargs)
-    response.set_cookie(
-        REDIRECT_COOKIE, _safe_frontend_redirect(redirect_uri), max_age=600, **cookie_kwargs
-    )
     return response
 
 
@@ -154,8 +160,16 @@ def github_callback(
 ):
     if error:
         raise HTTPException(status_code=400, detail="GitHub sign-in was cancelled")
-    if state != request.cookies.get(STATE_COOKIE):
+    if not state:
         raise HTTPException(status_code=400, detail="invalid oauth state")
+    with get_connection() as conn:
+        state_row = conn.execute(
+            "DELETE FROM oauth_login_states "
+            "WHERE state_hash = %s AND expires_at > now() RETURNING redirect_to",
+            (_ticket_hash(state),),
+        ).fetchone()
+    if state_row is None:
+        raise HTTPException(status_code=400, detail="invalid or expired oauth state")
     if not code or not CLIENT_ID or not CLIENT_SECRET:
         raise HTTPException(status_code=503, detail="GitHub sign-in is not configured")
 
@@ -210,7 +224,7 @@ def github_callback(
             ),
         )
 
-    redirect_to = _safe_frontend_redirect(request.cookies.get(REDIRECT_COOKIE))
+    redirect_to = _safe_frontend_redirect(state_row[0])
     completion_ticket = secrets.token_urlsafe(32)
     with get_connection() as conn:
         conn.execute(
@@ -228,8 +242,6 @@ def github_callback(
         {"ticket": completion_ticket}
     )
     response = RedirectResponse(completion_url)
-    response.delete_cookie(STATE_COOKIE, path="/")
-    response.delete_cookie(REDIRECT_COOKIE, path="/")
     return response
 
 

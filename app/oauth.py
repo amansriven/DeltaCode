@@ -2,7 +2,7 @@ import json
 import os
 import secrets
 from datetime import UTC, datetime, timedelta
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlencode, urljoin, urlparse
 
 import httpx
 from fastapi import APIRouter, HTTPException, Request
@@ -25,7 +25,16 @@ STATE_COOKIE = "oauth_state"
 REDIRECT_COOKIE = "oauth_redirect"
 SESSION_COOKIE = "session_id"
 
-_cookie_kwargs = dict(httponly=True, secure=True, samesite="none", path="/")
+
+def _cookie_kwargs(request: Request) -> dict:
+    """Use cross-site cookies in production without breaking local HTTP OAuth."""
+    secure = request.url.scheme == "https" or os.environ.get("COOKIE_SECURE", "").lower() == "true"
+    return {
+        "httponly": True,
+        "secure": secure,
+        "samesite": "none" if secure else "lax",
+        "path": "/",
+    }
 
 
 def _safe_frontend_redirect(value: str | None) -> str:
@@ -46,15 +55,23 @@ def _safe_frontend_redirect(value: str | None) -> str:
 
 @router.get("/github/login")
 def github_login(request: Request, redirect_uri: str | None = None):
+    if not CLIENT_ID:
+        raise HTTPException(status_code=503, detail="GitHub sign-in is not configured")
+
     state = secrets.token_urlsafe(24)
-    authorize_url = (
-        "https://github.com/login/oauth/authorize"
-        f"?client_id={CLIENT_ID}&redirect_uri={CALLBACK_URL}&state={state}"
+    callback_url = CALLBACK_URL or str(request.url_for("github_callback"))
+    authorize_url = "https://github.com/login/oauth/authorize?" + urlencode(
+        {
+            "client_id": CLIENT_ID,
+            "redirect_uri": callback_url,
+            "state": state,
+        }
     )
     response = RedirectResponse(authorize_url)
-    response.set_cookie(STATE_COOKIE, state, max_age=600, **_cookie_kwargs)
+    cookie_kwargs = _cookie_kwargs(request)
+    response.set_cookie(STATE_COOKIE, state, max_age=600, **cookie_kwargs)
     response.set_cookie(
-        REDIRECT_COOKIE, _safe_frontend_redirect(redirect_uri), max_age=600, **_cookie_kwargs
+        REDIRECT_COOKIE, _safe_frontend_redirect(redirect_uri), max_age=600, **cookie_kwargs
     )
     return response
 
@@ -123,30 +140,46 @@ def _github_display_name(user: dict) -> str | None:
 
 
 @router.get("/github/callback")
-def github_callback(request: Request, code: str, state: str):
+def github_callback(
+    request: Request,
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+):
+    if error:
+        raise HTTPException(status_code=400, detail="GitHub sign-in was cancelled")
     if state != request.cookies.get(STATE_COOKIE):
         raise HTTPException(status_code=400, detail="invalid oauth state")
+    if not code or not CLIENT_ID or not CLIENT_SECRET:
+        raise HTTPException(status_code=503, detail="GitHub sign-in is not configured")
 
-    token_resp = httpx.post(
+    callback_url = CALLBACK_URL or str(request.url_for("github_callback"))
+    token_response = httpx.post(
         "https://github.com/login/oauth/access_token",
         headers={"Accept": "application/json"},
         data={
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
             "code": code,
-            "redirect_uri": CALLBACK_URL,
+            "redirect_uri": callback_url,
         },
         timeout=10.0,
-    ).json()
+    )
+    token_response.raise_for_status()
+    token_resp = token_response.json()
     user_token = token_resp.get("access_token")
     if not user_token:
         raise HTTPException(status_code=400, detail=f"oauth exchange failed: {token_resp}")
 
-    user = httpx.get(
+    user_response = httpx.get(
         "https://api.github.com/user",
         headers={"Authorization": f"Bearer {user_token}", "Accept": "application/vnd.github+json"},
         timeout=10.0,
-    ).json()
+    )
+    user_response.raise_for_status()
+    user = user_response.json()
+    if not isinstance(user.get("id"), int) or not isinstance(user.get("login"), str):
+        raise HTTPException(status_code=502, detail="GitHub returned an invalid user profile")
 
     repositories = _fetch_repository_access(user_token)
     accessible_repos = [repo["full_name"] for repo in repositories]
@@ -174,7 +207,10 @@ def github_callback(request: Request, code: str, state: str):
     redirect_to = _safe_frontend_redirect(request.cookies.get(REDIRECT_COOKIE))
     response = RedirectResponse(redirect_to)
     response.set_cookie(
-        SESSION_COOKIE, session_id, max_age=int(SESSION_TTL.total_seconds()), **_cookie_kwargs
+        SESSION_COOKIE,
+        session_id,
+        max_age=int(SESSION_TTL.total_seconds()),
+        **_cookie_kwargs(request),
     )
     response.delete_cookie(STATE_COOKIE, path="/")
     response.delete_cookie(REDIRECT_COOKIE, path="/")

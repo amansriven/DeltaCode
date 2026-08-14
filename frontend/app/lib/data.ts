@@ -348,10 +348,16 @@ export async function retryRun(
 }
 
 const githubLoginBaseUrl = `${liveApiUrl}/auth/github/login`;
-export const githubLoginUrl =
-  `${githubLoginBaseUrl}?redirect_uri=${encodeURIComponent("/migrations")}`;
+export function githubLoginUrlFor(redirectPath: string): string {
+  const safePath = redirectPath.startsWith("/") && !redirectPath.startsWith("//")
+    ? redirectPath
+    : "/migrations";
+  return `${githubLoginBaseUrl}?redirect_uri=${encodeURIComponent(safePath)}`;
+}
+
+export const githubLoginUrl = githubLoginUrlFor("/migrations");
 export const githubRepositoryRefreshUrl =
-  `${githubLoginBaseUrl}?redirect_uri=${encodeURIComponent("/settings/integrations")}`;
+  githubLoginUrlFor("/settings/integrations");
 
 export interface CurrentUser {
   login: string;

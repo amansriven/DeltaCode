@@ -1534,26 +1534,53 @@ select:focus-visible {
 }
 
 .error-state {
-  min-height: 180px;
+  width: min(100%, 560px);
+  min-height: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 30px;
+  justify-content: flex-start;
+  gap: 18px;
+  margin: 36px auto;
+  padding: 24px;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
 }
 
 .error-state > span {
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 123, 114, 0.25);
-  border-radius: 9px;
-  color: var(--danger);
-  background: var(--danger-soft);
-  font-weight: 800;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+  border-radius: 11px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 11px;
+  font-weight: 820;
+}
+
+.error-state > div {
+  min-width: 0;
+}
+
+.error-state .button {
+  width: fit-content;
+  margin-top: 18px;
+  padding-inline: 20px;
+}
+
+.migration-error h2 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.migration-error p {
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .detail-content {

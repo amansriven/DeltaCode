@@ -1,6 +1,14 @@
 from app import oauth
 
 
+class FakeRequest:
+    def __init__(self, scheme="https"):
+        self.url = type("URL", (), {"scheme": scheme})()
+
+    def url_for(self, _name):
+        return "https://api.delta.example/auth/github/callback"
+
+
 def test_github_display_name_normalizes_optional_profile_name():
     assert oauth._github_display_name({"name": "  The Octocat  "}) == "The Octocat"
     assert oauth._github_display_name({"name": "   "}) is None
@@ -63,6 +71,45 @@ def test_frontend_redirect_rejects_external_destinations(monkeypatch):
         == "https://delta.example/runs"
     )
     assert oauth._safe_frontend_redirect("//attacker.example/collect") == "https://delta.example/runs"
+
+
+def test_login_redirects_to_github_and_preserves_destination(monkeypatch):
+    monkeypatch.setattr(oauth, "CLIENT_ID", "client id")
+    monkeypatch.setattr(oauth, "CALLBACK_URL", "https://api.delta.example/auth/github/callback")
+    monkeypatch.setattr(oauth, "FRONTEND_URL", "https://delta.example")
+
+    response = oauth.github_login(FakeRequest(), "/settings/account")
+
+    assert response.status_code == 307
+    assert response.headers["location"].startswith("https://github.com/login/oauth/authorize?")
+    assert "client_id=client+id" in response.headers["location"]
+    cookies = response.headers.getlist("set-cookie")
+    assert any("oauth_state=" in cookie and "Secure" in cookie for cookie in cookies)
+    assert any(
+        "oauth_redirect=" in cookie and "delta.example/settings/account" in cookie
+        for cookie in cookies
+    )
+
+
+def test_local_oauth_cookie_works_over_http(monkeypatch):
+    monkeypatch.delenv("COOKIE_SECURE", raising=False)
+
+    cookie_kwargs = oauth._cookie_kwargs(FakeRequest("http"))
+
+    assert cookie_kwargs["secure"] is False
+    assert cookie_kwargs["samesite"] == "lax"
+
+
+def test_login_fails_cleanly_when_github_is_not_configured(monkeypatch):
+    monkeypatch.setattr(oauth, "CLIENT_ID", None)
+
+    try:
+        oauth.github_login(FakeRequest(), "/runs")
+    except Exception as exc:
+        assert exc.status_code == 503
+        assert exc.detail == "GitHub sign-in is not configured"
+    else:
+        raise AssertionError("Expected unconfigured GitHub sign-in to fail")
 
 
 def test_repository_access_preserves_visibility(monkeypatch):

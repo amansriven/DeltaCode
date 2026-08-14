@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors keep route transitions explicit in the catch-all app shell. */
 import { useEffect, useMemo, useState } from "react";
-import { githubLoginUrl, liveApiUrl } from "./lib/data";
+import { githubLoginUrlFor, liveApiUrl } from "./lib/data";
 import {
   AttemptSummary,
   ChangeDetail,
@@ -298,7 +298,7 @@ export function MigrationInbox() {
           </div>
         </div>
         {error ? (
-          <div className="error-state migration-error" role="alert"><span aria-hidden="true">!</span><div><h2>Migration inbox unavailable</h2><p>{error}</p>{error.includes("Sign in") && <a className="button button-primary" href={githubLoginUrl}>Continue with GitHub</a>}</div></div>
+          <div className="error-state migration-error" role="alert"><span aria-hidden="true">GH</span><div><h2>Sign in to open your migration inbox</h2><p>{error}</p>{error.includes("Sign in") && <a className="button button-primary" href={githubLoginUrlFor("/migrations")}>Continue with GitHub <span aria-hidden="true">→</span></a>}</div></div>
         ) : loading ? (
           <div className="loading-state" role="status"><span className="loading-spinner" aria-hidden="true" />Loading migration work…</div>
         ) : groupBy === "none" ? <MigrationTable migrations={visible} /> : (

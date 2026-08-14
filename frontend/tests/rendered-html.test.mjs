@@ -85,8 +85,21 @@ test("server-renders the Delta Code landing page", async () => {
   assert.match(html, /for breaking API changes/);
   assert.match(html, /Delta Code ships API migrations/);
   assert.match(html, /auth\/github\/login\?redirect_uri=%2Fmigrations/);
+  assert.match(html, /Connect GitHub/);
+  assert.doesNotMatch(html, /Install the bot|Install the GitHub bot/);
   assert.doesNotMatch(html, /codex-preview/);
   assert.doesNotMatch(html, /react-loading-skeleton/);
+});
+
+test("login starts the real GitHub OAuth flow", async () => {
+  const response = await render("/login");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /Continue with GitHub/);
+  assert.match(html, /href="[^"]*\/auth\/github\/login\?redirect_uri=%2Fmigrations"/);
+  assert.doesNotMatch(html, /Preview GitHub sign-in/);
+  assert.doesNotMatch(html, /href="\/onboarding"[^>]*>[^<]*Preview GitHub sign-in/);
 });
 
 test("server-renders the expanded public product site", async () => {

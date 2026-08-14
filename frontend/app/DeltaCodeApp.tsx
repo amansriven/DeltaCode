@@ -18,6 +18,7 @@ import {
   Finding,
   FindingKind,
   githubLoginUrl,
+  githubLoginUrlFor,
   githubRepositoryRefreshUrl,
   generateAiTriage,
   liveApiUrl,
@@ -192,7 +193,7 @@ function PublicHeader() {
         </a>
         <ThemeToggle compact />
         <a className="button button-primary button-small" href={githubLoginUrl}>
-          Install the bot <span aria-hidden="true">↗</span>
+          Get started <span aria-hidden="true">→</span>
         </a>
       </nav>
     </header>
@@ -919,7 +920,7 @@ function LandingPage() {
             </p>
             <div className="hero-actions">
               <a className="button button-primary button-large" href={githubLoginUrl}>
-                Install the GitHub bot <span aria-hidden="true">→</span>
+                Connect GitHub <span aria-hidden="true">→</span>
               </a>
               <a className="button button-quiet button-large" href="/migrations">
                 Open the review inbox
@@ -1019,7 +1020,7 @@ function LandingPage() {
         <h2>Let the bot do the migration.<br />Keep the decision yours.</h2>
         <p>Connect GitHub and turn provider changes into verified, reviewable work before they become emergency upgrades.</p>
         <div>
-          <a className="button button-primary button-large" href={githubLoginUrl}>Install Delta Code <span>→</span></a>
+          <a className="button button-primary button-large" href={githubLoginUrl}>Get started with GitHub <span>→</span></a>
           <a className="button button-quiet button-large" href="/docs">Read the architecture</a>
         </div>
       </section>
@@ -1059,7 +1060,7 @@ function ProductPage() {
         description="Delta Code combines official-source monitoring, repository impact analysis, GPT-4o migration intelligence, sandbox verification, and draft-PR publishing in one developer-controlled workflow."
       >
         <div className="subpage-actions">
-          <a className="button button-primary button-large" href={githubLoginUrl}>Install the review bot →</a>
+          <a className="button button-primary button-large" href={githubLoginUrl}>Get started with GitHub →</a>
           <a className="button button-quiet button-large" href="/how-it-works">Explore the workflow</a>
         </div>
       </PublicPageHero>
@@ -1241,15 +1242,17 @@ function LoginPage() {
           verification evidence, and draft pull requests for repositories where
           Delta Code is installed.
         </p>
-        <div className="preview-notice">
-          <span aria-hidden="true">i</span>
-          This preview demonstrates the sign-in flow. It does not request GitHub permissions.
-        </div>
-        <a className="button button-primary button-full" href="/onboarding">
+        {!liveApiUrl && (
+          <div className="preview-notice" role="status">
+            <span aria-hidden="true">i</span>
+            Connect the Delta Code API to enable GitHub sign-in in this preview.
+          </div>
+        )}
+        <a className="button button-primary button-full" href={githubLoginUrl}>
           <span className="github-button-mark" aria-hidden="true">
             GH
           </span>
-          Preview GitHub sign-in
+          Continue with GitHub
         </a>
         <div className="auth-divider">
           <span />
@@ -1264,7 +1267,7 @@ function LoginPage() {
           receives access to repositories you explicitly select.
         </p>
       </section>
-      <p className="auth-footer">Protected access will be enforced by secure server-side sessions.</p>
+      <p className="auth-footer">Authentication is handled by GitHub and a secure server-side session.</p>
     </main>
   );
 }
@@ -1644,7 +1647,7 @@ function OverviewPage() {
               <h2>Workspace unavailable</h2>
               <p>{error}</p>
               {error.includes("Sign in") && (
-                <a className="button button-primary" href={githubLoginUrl}>Continue with GitHub</a>
+                <a className="button button-primary" href={githubLoginUrlFor("/overview")}>Continue with GitHub</a>
               )}
             </div>
           </div>
@@ -2005,7 +2008,7 @@ function RunsPage() {
                 <h2>{error.includes("Sign in") ? "Sign in required" : "Runs are temporarily unavailable"}</h2>
                 <p>{error}</p>
                 {error.includes("Sign in") && (
-                  <a className="button button-primary" href={githubLoginUrl}>
+                  <a className="button button-primary" href={githubLoginUrlFor("/runs")}>
                     Continue with GitHub
                   </a>
                 )}
@@ -2552,7 +2555,7 @@ function RepositoriesPage() {
                 <h2>Repository access unavailable</h2>
                 <p>{error}</p>
                 {error.includes("Sign in") && (
-                  <a className="button button-primary" href={githubLoginUrl}>Continue with GitHub</a>
+                  <a className="button button-primary" href={githubLoginUrlFor("/repositories")}>Continue with GitHub</a>
                 )}
               </div>
             </div>
@@ -2647,7 +2650,7 @@ function IntegrationsPage() {
               <h2>GitHub connection unavailable</h2>
               <p>{error}</p>
               {error.includes("Sign in") && (
-                <a className="button button-primary" href={githubLoginUrl}>Continue with GitHub</a>
+                <a className="button button-primary" href={githubLoginUrlFor("/settings/integrations")}>Continue with GitHub</a>
               )}
             </div>
           </div>
@@ -2677,7 +2680,7 @@ function IntegrationsPage() {
                   <span>
                     <strong>{user ? userDisplayName(user) : "Sign in"}</strong>
                     <a
-                      href={user ? `https://github.com/${user.login}` : githubLoginUrl}
+                      href={user ? `https://github.com/${user.login}` : githubLoginUrlFor("/settings/integrations")}
                       target={user ? "_blank" : undefined}
                       rel={user ? "noreferrer" : undefined}
                     >
@@ -2826,7 +2829,7 @@ function SettingsPage({ tab }: { tab: "account" | "repositories" }) {
             <div>
               <h2>Sign in required</h2>
               <p>Sign in with GitHub to manage your account and repository access.</p>
-              <a className="button button-primary" href={githubLoginUrl}>Continue with GitHub</a>
+              <a className="button button-primary" href={githubLoginUrlFor(`/settings/${tab}`)}>Continue with GitHub</a>
             </div>
           </div>
         ) : tab === "account" ? (

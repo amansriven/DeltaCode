@@ -4,7 +4,9 @@ import threading
 from collections import defaultdict
 from time import monotonic
 
-JOB_KINDS = frozenset({"ingestion", "repository_analysis", "generation", "publication"})
+JOB_KINDS = frozenset(
+    {"ingestion", "repository_analysis", "generation", "publication", "workspace_intelligence"}
+)
 JOB_STATUSES = frozenset({"completed", "failed", "skipped"})
 
 

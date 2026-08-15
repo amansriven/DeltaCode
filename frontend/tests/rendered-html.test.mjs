@@ -125,19 +125,23 @@ test("server-renders the complete authenticated product routes", async () => {
     repositoriesResponse,
     integrationsResponse,
     settingsResponse,
+    intelligenceResponse,
   ] = await Promise.all([
     render("/repositories"),
     render("/settings/integrations"),
     render("/settings/account"),
+    render("/intelligence"),
   ]);
   assert.equal(repositoriesResponse.status, 200);
   assert.equal(integrationsResponse.status, 200);
   assert.equal(settingsResponse.status, 200);
+  assert.equal(intelligenceResponse.status, 200);
 
-  const [repositories, integrations, settings] = await Promise.all([
+  const [repositories, integrations, settings, intelligence] = await Promise.all([
     repositoriesResponse.text(),
     integrationsResponse.text(),
     settingsResponse.text(),
+    intelligenceResponse.text(),
   ]);
   assert.match(repositories, /Repository directory/);
   assert.match(repositories, /Loading repository access|Product preview|GitHub App access/);
@@ -146,6 +150,8 @@ test("server-renders the complete authenticated product routes", async () => {
   assert.match(settings, /Settings sections/);
   assert.match(settings, /Account/);
   assert.match(settings, /Loading settings|Sign in required/);
+  assert.match(intelligence, /AI briefing/);
+  assert.match(intelligence, /Analyzing migration evidence|Evidence-grounded briefing/);
 });
 
 test("server-renders the migration inbox and review workflow", async () => {

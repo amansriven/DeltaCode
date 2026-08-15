@@ -90,6 +90,8 @@ export FRONTEND_URL="http://localhost:3000"
 export ARTIFACT_STORAGE_ROOT="$PWD/.delta-code-artifacts"
 export OPENAI_API_KEY="..."
 export OPENAI_MODEL="gpt-4o"
+# Set on the web service when the API and worker use separate environments.
+export WORKSPACE_INTELLIGENCE_ENABLED="true"
 # Process-local safety brakes. Also configure a hard project budget at OpenAI.
 export LLM_DAILY_BUDGET_USD="1.00"
 export LLM_TOTAL_BUDGET_USD="9.00"
@@ -117,8 +119,10 @@ export GENERATION_MAX_SANDBOX_DURATION_MS="600000"
 Do not commit those values. Basic pages and the signed-out live-API state work
 without GitHub credentials.
 
-For Railway, set `OPENAI_API_KEY` on the background `worker` service only. The
-browser and Vercel frontend never need the key. GPT-4o enrichments are optional:
+For Railway, set `OPENAI_API_KEY` on the background `worker` service and set
+`WORKSPACE_INTELLIGENCE_ENABLED=true` on the `web` service so it can expose the
+generation action without sharing the key. The browser and Vercel frontend
+never need the key. GPT-4o enrichments are optional:
 if the key is absent, AI migration generation is unavailable. Migration
 generation requires either the OpenAI key or the dedicated-gateway variables.
 

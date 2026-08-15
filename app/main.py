@@ -14,6 +14,7 @@ from app.oauth import FRONTEND_URL
 from app.oauth import router as oauth_router
 from app.procrastinate_app import procrastinate_app
 from app.repository_intelligence import router as repository_intelligence_router
+from app.workspace_intelligence import router as workspace_intelligence_router
 
 
 @asynccontextmanager
@@ -34,6 +35,7 @@ app.include_router(repository_intelligence_router)
 app.include_router(migration_generation_router)
 app.include_router(github_publishing_router)
 app.include_router(hardening_router)
+app.include_router(workspace_intelligence_router)
 
 allowed_origins = {
     FRONTEND_URL,

@@ -333,6 +333,23 @@ CREATE TABLE IF NOT EXISTS idempotency_records (
 ALTER TABLE idempotency_records
 ADD COLUMN IF NOT EXISTS request_hash TEXT NOT NULL DEFAULT '';
 
+CREATE TABLE IF NOT EXISTS workspace_ai_briefs (
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    migration_digest TEXT NOT NULL CHECK (migration_digest ~ '^[a-f0-9]{64}$'),
+    status TEXT NOT NULL CHECK (status IN ('queued', 'running', 'ready', 'failed')),
+    input_migrations JSONB NOT NULL,
+    data JSONB,
+    model TEXT,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    cached_input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    cost_usd NUMERIC(12, 6) NOT NULL DEFAULT 0,
+    error_code TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, migration_digest)
+);
+
 CREATE INDEX IF NOT EXISTS change_events_workspace_feed
 ON change_events (workspace_id, created_at DESC, id);
 CREATE INDEX IF NOT EXISTS provider_sources_workspace_feed
@@ -357,6 +374,8 @@ CREATE INDEX IF NOT EXISTS pull_request_records_status
 ON pull_request_records (status, updated_at);
 CREATE INDEX IF NOT EXISTS audit_events_workspace_feed
 ON audit_events (workspace_id, created_at DESC, id);
+CREATE INDEX IF NOT EXISTS workspace_ai_briefs_feed
+ON workspace_ai_briefs (workspace_id, updated_at DESC);
 """
 
 

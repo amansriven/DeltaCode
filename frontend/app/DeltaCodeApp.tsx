@@ -20,11 +20,12 @@ import {
   MigrationDetailView,
   MigrationInbox,
   ProvidersOverview,
+  WorkspaceIntelligence,
 } from "./MigrationWorkspace";
 
 const PRODUCT_NAME = "Delta Code";
 const GITHUB_INSTALL_URL = "https://github.com/apps/deltacodeapp/installations/new";
-type DashboardSection = "migrations" | "providers" | "repositories" | "integrations" | "settings";
+type DashboardSection = "migrations" | "intelligence" | "providers" | "repositories" | "integrations" | "settings";
 type ThemePreference = "light" | "dark";
 
 const dashboardNavigation: Array<{
@@ -40,6 +41,13 @@ const dashboardNavigation: Array<{
     href: "/migrations",
     icon: "△",
     description: "AI migration PRs and developer decisions",
+  },
+  {
+    section: "intelligence",
+    label: "AI briefing",
+    href: "/intelligence",
+    icon: "✦",
+    description: "OpenAI priorities and portfolio risk",
   },
   {
     section: "providers",
@@ -505,6 +513,15 @@ function ProvidersPage() {
     <main className="dashboard-page">
       <AppHeader active="providers" />
       <ProvidersOverview />
+    </main>
+  );
+}
+
+function IntelligencePage() {
+  return (
+    <main className="dashboard-page">
+      <AppHeader active="intelligence" />
+      <WorkspaceIntelligence />
     </main>
   );
 }
@@ -975,8 +992,8 @@ function DocsPage() {
             <span><b>POST</b><code>/migrations/&#123;id&#125;/publish</code><small>Publish an approved migration as a draft pull request</small></span>
           </div>
           <h2 id="ai">AI assistance</h2>
-          <p>Set <code>OPENAI_API_KEY</code> on the backend worker to enable GPT-4o migration planning, patch review, and evidence-grounded explanations. The key must never be exposed through a browser or <code>NEXT_PUBLIC_</code> variable.</p>
-          <pre><code>{`OPENAI_API_KEY=your-server-side-key\nOPENAI_MODEL=gpt-4o\nLLM_DAILY_BUDGET_USD=1.00\nLLM_TOTAL_BUDGET_USD=9.00`}</code></pre>
+          <p>Set <code>OPENAI_API_KEY</code> on the Railway worker and <code>WORKSPACE_INTELLIGENCE_ENABLED=true</code> on the Railway web service. Vercel only needs the backend API URL; the key must never be exposed through a browser or <code>NEXT_PUBLIC_</code> variable.</p>
+          <pre><code>{`OPENAI_API_KEY=your-server-side-key\nOPENAI_MODEL=gpt-4o\nWORKSPACE_INTELLIGENCE_ENABLED=true\nLLM_DAILY_BUDGET_USD=1.00\nLLM_TOTAL_BUDGET_USD=9.00`}</code></pre>
           <p>Model requests use strict structured output, no model tools, bounded context and output, <code>store: false</code>, retry limits, and request-level cost limits. Repository and provider text is treated as untrusted data.</p>
         </article>
       </div>
@@ -1629,6 +1646,7 @@ export default function DeltaCodeApp({ route }: { route: string[] }) {
   else if (path === "login") page = <LoginPage />;
   else if (path === "onboarding") page = <OnboardingPage />;
   else if (path === "migrations") page = <MigrationInboxPage />;
+  else if (path === "intelligence") page = <IntelligencePage />;
   else if (path === "providers") page = <ProvidersPage />;
   else if (path === "repositories") page = <RepositoriesPage />;
   if (path.startsWith("migrations/")) {

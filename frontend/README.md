@@ -49,7 +49,8 @@ Authenticated requests use `credentials: "include"` because GitHub sessions
 are stored in secure, first-party cookies. Browser API traffic uses the
 same-origin `/api/*` proxy, which forwards to `NEXT_PUBLIC_DELTA_CODE_API_URL`.
 The OpenAI key belongs only on the backend worker and must never use a
-`NEXT_PUBLIC_` variable.
+`NEXT_PUBLIC_` variable. In split web/worker deployments, set
+`WORKSPACE_INTELLIGENCE_ENABLED=true` on the web service.
 
 ## Product routes
 
@@ -62,6 +63,7 @@ The OpenAI key belongs only on the backend worker and must never use a
 | `/security` | Repository, sandbox, model, and evidence boundaries |
 | `/migrations` | Migration review inbox |
 | `/migrations/{id}` | Impact, plan, patch, checks, attempts, and decisions |
+| `/intelligence` | GPT-4o workspace briefing, priorities, risks, and usage |
 | `/changes/{id}` | Normalized provider change and provenance |
 | `/providers` | Official source health and synchronization |
 | `/repositories` | GitHub App repository access |

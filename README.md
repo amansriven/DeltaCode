@@ -166,6 +166,8 @@ The authenticated product includes:
 - Fail-closed Cloudflare Sandbox execution and immutable verification evidence.
 - Exact-patch GitHub commits, owned branches, draft PRs, and Check Runs.
 - Migration inbox, provider operations, attempts, and developer decisions.
+- Digest-cached GPT-4o workspace briefings with ranked priorities, portfolio
+  risks, evidence links, and per-generation token and cost reporting.
 - Labeled analyzer benchmarks, operational metrics, and security review gates.
 
 ## Security and trust boundary

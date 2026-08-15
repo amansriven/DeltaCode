@@ -4,6 +4,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { githubLoginUrlFor, liveApiUrl } from "./lib/data";
 import {
+  demoWorkspaceBrief,
+  fetchWorkspaceBrief,
+  generateWorkspaceBrief,
+  WorkspaceBriefResponse,
+} from "./lib/intelligence";
+import {
   AttemptSummary,
   ChangeDetail,
   demoChanges,
@@ -138,6 +144,118 @@ function InboxMetrics({ migrations }: { migrations: MigrationSummary[] }) {
   );
 }
 
+function BriefLoading() {
+  return (
+    <div className="brief-loading" role="status">
+      <span className="ai-orbit" aria-hidden="true"><i /><i /><i /></span>
+      <div><strong>Analyzing migration evidence</strong><small>Prioritizing deadlines, risk, checks, and developer decisions…</small></div>
+    </div>
+  );
+}
+
+export function WorkspaceIntelligence() {
+  const [response, setResponse] = useState<WorkspaceBriefResponse | null>(
+    liveApiUrl ? null : demoWorkspaceBrief,
+  );
+  const [loading, setLoading] = useState(Boolean(liveApiUrl));
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState("");
+  const responseStatus = response?.status;
+
+  useEffect(() => {
+    if (!liveApiUrl) return;
+    const controller = new AbortController();
+    fetchWorkspaceBrief(controller.signal)
+      .then(setResponse)
+      .catch((reason: Error) => {
+        if (reason.name !== "AbortError") setError(reason.message);
+      })
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!liveApiUrl || !responseStatus || !["queued", "running"].includes(responseStatus)) return;
+    const timer = window.setInterval(() => {
+      fetchWorkspaceBrief()
+        .then((next) => {
+          setResponse(next);
+          if (!["queued", "running"].includes(next.status)) setGenerating(false);
+        })
+        .catch((reason: Error) => {
+          setError(reason.message);
+          setGenerating(false);
+        });
+    }, 2200);
+    return () => window.clearInterval(timer);
+  }, [responseStatus]);
+
+  async function generate(refresh: boolean) {
+    setError("");
+    setGenerating(true);
+    try {
+      setResponse(await generateWorkspaceBrief(refresh));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "AI briefing could not be generated.");
+      setGenerating(false);
+    }
+  }
+
+  const brief = response?.brief;
+  const usage = response?.usage;
+  const isWorking = generating || responseStatus === "queued" || responseStatus === "running";
+  return (
+    <div className="dashboard-content intelligence-content" id="main-content">
+      <div className="intelligence-heading">
+        <div>
+          <span className="section-kicker">OpenAI workspace intelligence</span>
+          <h1>AI briefing</h1>
+          <p>Turn live migration evidence into an executive-ready priority brief.</p>
+        </div>
+        <div className="intelligence-heading-actions">
+          <span className={`model-availability ${response?.configured ? "available" : "unavailable"}`}><i />{response?.configured ? "OpenAI configured" : "API key required"}</span>
+          <button className="button button-primary" type="button" disabled={isWorking || loading || response?.configured === false || response?.migration_count === 0} onClick={() => generate(response?.status === "ready")}>
+            {isWorking ? "Generating…" : response?.status === "ready" ? "Refresh briefing" : "Generate briefing"}
+          </button>
+        </div>
+      </div>
+      {!liveApiUrl && <div className="demo-banner"><span className="demo-banner-icon">◇</span><div><strong>Board-ready preview</strong><p>Connect the live API and OpenAI key to generate this briefing from your workspace.</p></div></div>}
+      {error && <div className="error-state intelligence-error" role="alert"><span>!</span><div><h2>AI briefing unavailable</h2><p>{error}</p>{error.includes("Sign in") && <a className="button button-primary" href={githubLoginUrlFor("/intelligence")}>Continue with GitHub</a>}</div></div>}
+      {loading ? <BriefLoading /> : response?.configured === false ? (
+        <section className="intelligence-empty">
+          <span className="ai-empty-mark" aria-hidden="true">✦</span>
+          <div><span className="section-kicker">One configuration step</span><h2>Connect the model layer</h2><p>Set <code>OPENAI_API_KEY</code> on the worker and <code>WORKSPACE_INTELLIGENCE_ENABLED=true</code> on the web service. Briefings use strict structured output and never expose the key to the browser.</p></div>
+          <a className="button button-quiet" href="/docs#ai">Open setup guide →</a>
+        </section>
+      ) : isWorking ? <BriefLoading /> : !brief ? (
+        <section className="intelligence-empty">
+          <span className="ai-empty-mark" aria-hidden="true">✦</span>
+          <div><span className="section-kicker">Migration portfolio</span><h2>{response?.migration_count ? "Your evidence is ready to analyze" : "No migrations to analyze yet"}</h2><p>{response?.migration_count ? `${response.migration_count} migrations will be ranked by urgency, risk, and required action.` : "Connect a provider and repository to create the first migration."}</p></div>
+          {Boolean(response?.migration_count) && <button className="button button-primary" type="button" onClick={() => generate(false)}>Generate briefing</button>}
+        </section>
+      ) : (
+        <>
+          <section className="brief-hero">
+            <div className="brief-hero-copy"><span className="brief-live"><i /> Evidence-grounded briefing</span><h2>{brief.headline}</h2><p>{brief.executive_summary}</p><div className="brief-attention"><span>Attention now</span><strong>{brief.attention_summary}</strong></div></div>
+            <aside className="brief-model-card"><div><span className="openai-mark">✦</span><span><small>Generated with</small><strong>{response.model || "gpt-4o"}</strong></span></div><dl><div><dt>Migrations</dt><dd>{response.migration_count}</dd></div><div><dt>Tokens</dt><dd>{((usage?.input_tokens || 0) + (usage?.output_tokens || 0)).toLocaleString()}</dd></div><div><dt>Est. cost</dt><dd>${(usage?.estimated_cost_usd || 0).toFixed(4)}</dd></div></dl><small>{response.updated_at ? `Updated ${new Date(response.updated_at).toLocaleString()}` : "Generated just now"}</small></aside>
+          </section>
+          <div className="intelligence-grid">
+            <section className="brief-section priority-section">
+              <div className="brief-section-heading"><div><span className="section-kicker">Ranked by the model</span><h2>Priority queue</h2></div><span>{brief.priorities.length} items</span></div>
+              <div className="brief-priority-list">{brief.priorities.map((priority, index) => <a href={`/migrations/${priority.migration_id}`} key={priority.migration_id} className={`brief-priority priority-${priority.urgency}`}><span className="priority-rank">{String(index + 1).padStart(2, "0")}</span><div><span className="priority-meta"><i />{priority.urgency} · {priority.recommended_action}</span><h3>{priority.title}</h3><p>{priority.reason}</p><ul>{priority.evidence.map((item) => <li key={item}>{item}</li>)}</ul></div><span className="priority-open">→</span></a>)}</div>
+            </section>
+            <aside className="brief-side-stack">
+              <section className="brief-section"><div className="brief-section-heading"><div><span className="section-kicker">Across the portfolio</span><h2>Risk signals</h2></div></div><div className="portfolio-risk-list">{brief.portfolio_risks.map((risk) => <article key={risk.title}><span>!</span><div><strong>{risk.title}</strong><p>{risk.detail}</p><small>{risk.affected_migration_ids.length} linked {risk.affected_migration_ids.length === 1 ? "migration" : "migrations"}</small></div></article>)}</div></section>
+              <section className="brief-section"><div className="brief-section-heading"><div><span className="section-kicker">Recommended sequence</span><h2>Next actions</h2></div></div><ol className="next-action-list">{brief.next_actions.map((action, index) => <li key={`${action.label}-${index}`}><i>{index + 1}</i><div><strong>{action.label}</strong><p>{action.detail}</p>{action.migration_id && <a href={`/migrations/${action.migration_id}`}>Open evidence →</a>}</div></li>)}</ol></section>
+            </aside>
+          </div>
+          <footer className="brief-footnote"><span>✦</span><p><strong>AI interpretation, deterministic evidence.</strong> This briefing prioritizes stored migration records; it does not replace verification results or developer approval.</p></footer>
+        </>
+      )}
+    </div>
+  );
+}
+
 function MigrationTable({ migrations }: { migrations: MigrationSummary[] }) {
   if (!migrations.length) {
     return (
@@ -261,7 +379,7 @@ export function MigrationInbox() {
           <h1>Migration inbox</h1>
           <p>Review affected repositories, verified patches, and draft pull requests from one queue.</p>
         </div>
-        <a className="button button-quiet" href="/providers">Provider health</a>
+        <div className="migration-heading-actions"><a className="button button-primary" href="/intelligence">Open AI briefing <span aria-hidden="true">✦</span></a><a className="button button-quiet" href="/providers">Provider health</a></div>
       </div>
       {!liveApiUrl && (
         <div className="demo-banner migration-preview-banner">

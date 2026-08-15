@@ -9362,9 +9362,9 @@ html[data-theme="dark"] .flow-difference {
 .migration-heading-actions { gap: 10px; }
 
 .intelligence-content {
-  width: min(1240px, calc(100% - 48px));
-  margin: 0 auto;
-  padding-block: 42px 72px;
+  width: min(calc(100% - 248px), 1240px);
+  margin: 0 0 0 max(248px, calc(248px + (100vw - 248px - 1240px) / 2));
+  padding-block: 104px 72px;
 }
 
 .intelligence-heading {
@@ -9572,8 +9572,16 @@ html[data-theme="dark"] .flow-difference {
   .brief-model-card dd { margin-top: 5px; }
 }
 
+@media (max-width: 900px) {
+  .intelligence-content {
+    width: 100%;
+    margin: 0 auto;
+    padding-inline: 20px;
+  }
+}
+
 @media (max-width: 720px) {
-  .intelligence-content { width: min(100% - 28px, 1240px); padding-top: 28px; }
+  .intelligence-content { width: min(100% - 28px, 1240px); padding-top: 90px; }
   .intelligence-heading { align-items: flex-start; flex-direction: column; }
   .intelligence-heading-actions { width: 100%; flex-wrap: wrap; }
   .intelligence-heading-actions .button { flex: 1; }

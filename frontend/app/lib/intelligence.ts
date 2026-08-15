@@ -43,56 +43,6 @@ export interface WorkspaceBriefResponse {
   updated_at?: string | null;
 }
 
-export const demoWorkspaceBrief: WorkspaceBriefResponse = {
-  status: "ready",
-  configured: true,
-  migration_digest: "preview",
-  migration_count: 4,
-  model: "gpt-4o",
-  updated_at: "2026-08-15T15:30:00Z",
-  usage: {
-    input_tokens: 1834,
-    cached_input_tokens: 0,
-    output_tokens: 518,
-    estimated_cost_usd: 0.009765,
-  },
-  brief: {
-    headline: "Two migrations need a decision before the next provider deadline",
-    executive_summary: "The portfolio is stable, but the Stripe checkout migration is waiting for review and the Auth0 token change remains blocked on a failed integration check. Resolving those two items clears the highest-risk work; the remaining migrations can stay in the normal queue.",
-    attention_summary: "2 decisions · 1 blocked migration · 1 draft PR ready",
-    priorities: [
-      {
-        migration_id: "migration-checkout-source",
-        title: "Review the Stripe payment-source migration",
-        urgency: "critical",
-        recommended_action: "review",
-        reason: "The provider deadline is near and a verified patch is ready for developer review.",
-        evidence: ["High-risk provider change", "Verification checks completed", "Developer decision required"],
-      },
-      {
-        migration_id: "migration-auth-token",
-        title: "Unblock the Auth0 token revision",
-        urgency: "high",
-        recommended_action: "revise",
-        reason: "The current attempt cannot advance while its integration check remains blocked.",
-        evidence: ["Blocked migration state", "Integration check requires attention"],
-      },
-    ],
-    portfolio_risks: [
-      {
-        title: "Deadline concentration",
-        detail: "The highest-risk provider changes land in the same review window, increasing coordination pressure.",
-        affected_migration_ids: ["migration-checkout-source", "migration-auth-token"],
-      },
-    ],
-    next_actions: [
-      { label: "Review verified checkout patch", detail: "Confirm evidence and approve or request a revision.", migration_id: "migration-checkout-source" },
-      { label: "Resolve blocked integration check", detail: "Inspect the failed check before regenerating the Auth0 migration.", migration_id: "migration-auth-token" },
-      { label: "Confirm repository coverage", detail: "Verify every critical provider has at least one connected repository.", migration_id: null },
-    ],
-  },
-};
-
 async function parseResponse(response: Response): Promise<WorkspaceBriefResponse> {
   if (response.status === 401) throw new Error("Sign in with GitHub to use AI briefing.");
   if (!response.ok) {
@@ -103,7 +53,7 @@ async function parseResponse(response: Response): Promise<WorkspaceBriefResponse
 }
 
 export async function fetchWorkspaceBrief(signal?: AbortSignal): Promise<WorkspaceBriefResponse> {
-  if (!liveApiUrl) return demoWorkspaceBrief;
+  if (!liveApiUrl) throw new Error("The live Delta Code API is not configured.");
   const response = await fetch(`${apiBaseUrl}/intelligence/briefing`, {
     signal,
     credentials: "include",

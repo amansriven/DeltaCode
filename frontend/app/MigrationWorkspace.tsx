@@ -4,7 +4,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { githubLoginUrlFor, liveApiUrl } from "./lib/data";
 import {
-  demoWorkspaceBrief,
   fetchWorkspaceBrief,
   generateWorkspaceBrief,
   WorkspaceBriefResponse,
@@ -154,9 +153,7 @@ function BriefLoading() {
 }
 
 export function WorkspaceIntelligence() {
-  const [response, setResponse] = useState<WorkspaceBriefResponse | null>(
-    liveApiUrl ? null : demoWorkspaceBrief,
-  );
+  const [response, setResponse] = useState<WorkspaceBriefResponse | null>(null);
   const [loading, setLoading] = useState(Boolean(liveApiUrl));
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -213,15 +210,20 @@ export function WorkspaceIntelligence() {
           <p>Turn live migration evidence into an executive-ready priority brief.</p>
         </div>
         <div className="intelligence-heading-actions">
-          <span className={`model-availability ${response?.configured ? "available" : "unavailable"}`}><i />{response?.configured ? "OpenAI configured" : "API key required"}</span>
-          <button className="button button-primary" type="button" disabled={isWorking || loading || response?.configured === false || response?.migration_count === 0} onClick={() => generate(response?.status === "ready")}>
+          <span className={`model-availability ${response?.configured ? "available" : "unavailable"}`}><i />{response?.configured ? "OpenAI configured" : !liveApiUrl ? "Backend required" : "API key required"}</span>
+          <button className="button button-primary" type="button" disabled={!liveApiUrl || isWorking || loading || response?.configured === false || response?.migration_count === 0} onClick={() => generate(response?.status === "ready")}>
             {isWorking ? "Generating…" : response?.status === "ready" ? "Refresh briefing" : "Generate briefing"}
           </button>
         </div>
       </div>
-      {!liveApiUrl && <div className="demo-banner"><span className="demo-banner-icon">◇</span><div><strong>Board-ready preview</strong><p>Connect the live API and OpenAI key to generate this briefing from your workspace.</p></div></div>}
       {error && <div className="error-state intelligence-error" role="alert"><span>!</span><div><h2>AI briefing unavailable</h2><p>{error}</p>{error.includes("Sign in") && <a className="button button-primary" href={githubLoginUrlFor("/intelligence")}>Continue with GitHub</a>}</div></div>}
-      {loading ? <BriefLoading /> : response?.configured === false ? (
+      {!liveApiUrl ? (
+        <section className="intelligence-empty">
+          <span className="ai-empty-mark" aria-hidden="true">✦</span>
+          <div><span className="section-kicker">Live data required</span><h2>Connect the Delta Code backend</h2><p>Set <code>NEXT_PUBLIC_DELTA_CODE_API_URL</code> to the Railway web-service URL. AI briefing never substitutes canned model output.</p></div>
+          <a className="button button-quiet" href="/docs#ai">Open setup guide →</a>
+        </section>
+      ) : loading ? <BriefLoading /> : response?.configured === false ? (
         <section className="intelligence-empty">
           <span className="ai-empty-mark" aria-hidden="true">✦</span>
           <div><span className="section-kicker">One configuration step</span><h2>Connect the model layer</h2><p>Set <code>OPENAI_API_KEY</code> on the worker and <code>WORKSPACE_INTELLIGENCE_ENABLED=true</code> on the web service. Briefings use strict structured output and never expose the key to the browser.</p></div>

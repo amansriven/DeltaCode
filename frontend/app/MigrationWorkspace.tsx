@@ -200,6 +200,11 @@ export function WorkspaceIntelligence() {
 
   const brief = response?.brief;
   const usage = response?.usage;
+  const workspaceSignals = (response?.migration_count || 0)
+    + (response?.repository_count || 0)
+    + (response?.provider_count || 0)
+    + (response?.source_count || 0)
+    + (response?.change_count || 0);
   const isWorking = generating || responseStatus === "queued" || responseStatus === "running";
   return (
     <div className="dashboard-content intelligence-content" id="main-content">
@@ -211,7 +216,7 @@ export function WorkspaceIntelligence() {
         </div>
         <div className="intelligence-heading-actions">
           <span className={`model-availability ${response?.configured ? "available" : "unavailable"}`}><i />{response?.configured ? "OpenAI configured" : !liveApiUrl ? "Backend required" : "API key required"}</span>
-          <button className="button button-primary" type="button" disabled={!liveApiUrl || isWorking || loading || response?.configured === false || response?.migration_count === 0} onClick={() => generate(response?.status === "ready")}>
+          <button className="button button-primary" type="button" disabled={!liveApiUrl || isWorking || loading || response?.configured === false || workspaceSignals === 0} onClick={() => generate(response?.status === "ready")}>
             {isWorking ? "Generating…" : response?.status === "ready" ? "Refresh briefing" : "Generate briefing"}
           </button>
         </div>
@@ -232,19 +237,19 @@ export function WorkspaceIntelligence() {
       ) : isWorking ? <BriefLoading /> : !brief ? (
         <section className="intelligence-empty">
           <span className="ai-empty-mark" aria-hidden="true">✦</span>
-          <div><span className="section-kicker">Migration portfolio</span><h2>{response?.migration_count ? "Your evidence is ready to analyze" : "No migrations to analyze yet"}</h2><p>{response?.migration_count ? `${response.migration_count} migrations will be ranked by urgency, risk, and required action.` : "Connect a provider and repository to create the first migration."}</p></div>
-          {Boolean(response?.migration_count) && <button className="button button-primary" type="button" onClick={() => generate(false)}>Generate briefing</button>}
+          <div><span className="section-kicker">{response?.migration_count ? "Migration portfolio" : "Workspace readiness"}</span><h2>{response?.migration_count ? "Your evidence is ready to analyze" : response?.repository_count ? `${response.repository_count} repositories are ready for an AI readiness scan` : "Connect your first repository"}</h2><p>{response?.migration_count ? `${response.migration_count} migrations will be ranked by urgency, risk, and required action.` : response?.repository_count ? "Generate a real, evidence-grounded plan for connecting provider sources and producing the first migration." : "Install Delta Code on at least one repository to create a grounded workspace briefing."}</p></div>
+          {workspaceSignals > 0 && <button className="button button-primary" type="button" onClick={() => generate(false)}>{response?.migration_count ? "Generate briefing" : "Generate readiness brief"}</button>}
         </section>
       ) : (
         <>
           <section className="brief-hero">
             <div className="brief-hero-copy"><span className="brief-live"><i /> Evidence-grounded briefing</span><h2>{brief.headline}</h2><p>{brief.executive_summary}</p><div className="brief-attention"><span>Attention now</span><strong>{brief.attention_summary}</strong></div></div>
-            <aside className="brief-model-card"><div><span className="openai-mark">✦</span><span><small>Generated with</small><strong>{response.model || "gpt-4o"}</strong></span></div><dl><div><dt>Migrations</dt><dd>{response.migration_count}</dd></div><div><dt>Tokens</dt><dd>{((usage?.input_tokens || 0) + (usage?.output_tokens || 0)).toLocaleString()}</dd></div><div><dt>Est. cost</dt><dd>${(usage?.estimated_cost_usd || 0).toFixed(4)}</dd></div></dl><small>{response.updated_at ? `Updated ${new Date(response.updated_at).toLocaleString()}` : "Generated just now"}</small></aside>
+            <aside className="brief-model-card"><div><span className="openai-mark">✦</span><span><small>Generated with</small><strong>{response.model || "gpt-4o"}</strong></span></div><dl><div><dt>{response.migration_count ? "Migrations" : "Repositories"}</dt><dd>{response.migration_count || response.repository_count}</dd></div><div><dt>Tokens</dt><dd>{((usage?.input_tokens || 0) + (usage?.output_tokens || 0)).toLocaleString()}</dd></div><div><dt>Est. cost</dt><dd>${(usage?.estimated_cost_usd || 0).toFixed(4)}</dd></div></dl><small>{response.updated_at ? `Updated ${new Date(response.updated_at).toLocaleString()}` : "Generated just now"}</small></aside>
           </section>
           <div className="intelligence-grid">
             <section className="brief-section priority-section">
               <div className="brief-section-heading"><div><span className="section-kicker">Ranked by the model</span><h2>Priority queue</h2></div><span>{brief.priorities.length} items</span></div>
-              <div className="brief-priority-list">{brief.priorities.map((priority, index) => <a href={`/migrations/${priority.migration_id}`} key={priority.migration_id} className={`brief-priority priority-${priority.urgency}`}><span className="priority-rank">{String(index + 1).padStart(2, "0")}</span><div><span className="priority-meta"><i />{priority.urgency} · {priority.recommended_action}</span><h3>{priority.title}</h3><p>{priority.reason}</p><ul>{priority.evidence.map((item) => <li key={item}>{item}</li>)}</ul></div><span className="priority-open">→</span></a>)}</div>
+              <div className="brief-priority-list">{brief.priorities.map((priority, index) => <article key={`${priority.migration_id || "readiness"}-${index}`} className={`brief-priority priority-${priority.urgency}`}><span className="priority-rank">{String(index + 1).padStart(2, "0")}</span><div><span className="priority-meta"><i />{priority.urgency} · {priority.recommended_action}</span><h3>{priority.title}</h3><p>{priority.reason}</p><ul>{priority.evidence.map((item) => <li key={item}>{item}</li>)}</ul></div>{priority.migration_id ? <a className="priority-open" aria-label={`Open ${priority.title}`} href={`/migrations/${priority.migration_id}`}>→</a> : <span className="priority-open readiness-priority-mark" aria-hidden="true">✦</span>}</article>)}</div>
             </section>
             <aside className="brief-side-stack">
               <section className="brief-section"><div className="brief-section-heading"><div><span className="section-kicker">Across the portfolio</span><h2>Risk signals</h2></div></div><div className="portfolio-risk-list">{brief.portfolio_risks.map((risk) => <article key={risk.title}><span>!</span><div><strong>{risk.title}</strong><p>{risk.detail}</p><small>{risk.affected_migration_ids.length} linked {risk.affected_migration_ids.length === 1 ? "migration" : "migrations"}</small></div></article>)}</div></section>

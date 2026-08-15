@@ -8,9 +8,9 @@ from app.db import get_connection
 from app.openai_responses import OpenAIUsage
 
 
-def migration_snapshot(workspace_id: str) -> tuple[str, list[dict]]:
+def workspace_snapshot(workspace_id: str) -> tuple[str, dict]:
     with get_connection() as conn:
-        rows = conn.execute(
+        migration_rows = conn.execute(
             """SELECT m.data, a.data
                FROM migrations m
                LEFT JOIN migration_attempts a
@@ -19,19 +19,57 @@ def migration_snapshot(workspace_id: str) -> tuple[str, list[dict]]:
                ORDER BY m.updated_at DESC, m.id DESC LIMIT 50""",
             (workspace_id,),
         ).fetchall()
+        repository_rows = conn.execute(
+            """SELECT data FROM repositories WHERE workspace_id = %s AND enabled = TRUE
+               ORDER BY updated_at DESC, id DESC LIMIT 100""",
+            (workspace_id,),
+        ).fetchall()
+        provider_rows = conn.execute(
+            """SELECT data FROM providers WHERE workspace_id = %s
+               ORDER BY updated_at DESC, id DESC LIMIT 50""",
+            (workspace_id,),
+        ).fetchall()
+        source_rows = conn.execute(
+            """SELECT data FROM provider_sources WHERE workspace_id = %s
+               ORDER BY updated_at DESC, id DESC LIMIT 100""",
+            (workspace_id,),
+        ).fetchall()
+        change_rows = conn.execute(
+            """SELECT data FROM change_events WHERE workspace_id = %s
+               ORDER BY updated_at DESC, id DESC LIMIT 50""",
+            (workspace_id,),
+        ).fetchall()
     migrations = []
-    for migration_data, attempt_data in rows:
+    for migration_data, attempt_data in migration_rows:
         migration = dict(migration_data)
         migration["attempts"] = [attempt_data] if attempt_data else []
         migrations.append(migration)
+    snapshot = {
+        "repositories": [row[0] for row in repository_rows],
+        "providers": [row[0] for row in provider_rows],
+        "sources": [row[0] for row in source_rows],
+        "changes": [row[0] for row in change_rows],
+        "migrations": migrations,
+    }
     digest = hashlib.sha256(
-        json.dumps(migrations, sort_keys=True, separators=(",", ":"), default=str).encode()
+        json.dumps(snapshot, sort_keys=True, separators=(",", ":"), default=str).encode()
     ).hexdigest()
-    return digest, migrations
+    return digest, snapshot
+
+
+def _snapshot_counts(snapshot: dict) -> dict:
+    return {
+        "migration_count": len(snapshot["migrations"]),
+        "repository_count": len(snapshot["repositories"]),
+        "provider_count": len(snapshot["providers"]),
+        "source_count": len(snapshot["sources"]),
+        "change_count": len(snapshot["changes"]),
+    }
 
 
 def get_brief(workspace_id: str) -> dict:
-    digest, migrations = migration_snapshot(workspace_id)
+    digest, snapshot = workspace_snapshot(workspace_id)
+    counts = _snapshot_counts(snapshot)
     with get_connection() as conn:
         row = conn.execute(
             """SELECT status, data, model, input_tokens, cached_input_tokens,
@@ -44,13 +82,13 @@ def get_brief(workspace_id: str) -> dict:
         return {
             "status": "not_generated",
             "migration_digest": digest,
-            "migration_count": len(migrations),
+            **counts,
         }
     status, data, model, input_tokens, cached_tokens, output_tokens, cost, error, updated_at = row
     return {
         "status": status,
         "migration_digest": digest,
-        "migration_count": len(migrations),
+        **counts,
         "brief": data,
         "model": model,
         "usage": {
@@ -65,9 +103,10 @@ def get_brief(workspace_id: str) -> dict:
 
 
 def queue_brief(workspace_id: str, *, refresh: bool) -> dict:
-    digest, migrations = migration_snapshot(workspace_id)
-    if not migrations:
-        return {"status": "not_generated", "migration_digest": digest, "migration_count": 0}
+    digest, snapshot = workspace_snapshot(workspace_id)
+    counts = _snapshot_counts(snapshot)
+    if not any(counts.values()):
+        return {"status": "not_generated", "migration_digest": digest, **counts}
     now = datetime.now(UTC)
     with get_connection() as conn:
         existing = conn.execute(
@@ -86,12 +125,12 @@ def queue_brief(workspace_id: str, *, refresh: bool) -> dict:
                  data = NULL, model = NULL, input_tokens = 0, cached_input_tokens = 0,
                  output_tokens = 0, cost_usd = 0, error_code = NULL,
                  updated_at = EXCLUDED.updated_at""",
-            (workspace_id, digest, json.dumps(migrations), now, now),
+            (workspace_id, digest, json.dumps(snapshot), now, now),
         )
-    return {"status": "queued", "migration_digest": digest, "migration_count": len(migrations)}
+    return {"status": "queued", "migration_digest": digest, **counts}
 
 
-def claim_brief(workspace_id: str, digest: str) -> list[dict] | None:
+def claim_brief(workspace_id: str, digest: str) -> dict | None:
     with get_connection() as conn:
         row = conn.execute(
             """SELECT input_migrations FROM workspace_ai_briefs

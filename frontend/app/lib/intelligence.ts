@@ -7,10 +7,10 @@ export interface WorkspaceBrief {
   executive_summary: string;
   attention_summary: string;
   priorities: Array<{
-    migration_id: string;
+    migration_id: string | null;
     title: string;
     urgency: "critical" | "high" | "medium" | "low";
-    recommended_action: "review" | "generate" | "revise" | "publish" | "monitor";
+    recommended_action: "connect" | "scan" | "review" | "generate" | "revise" | "publish" | "monitor";
     reason: string;
     evidence: string[];
   }>;
@@ -31,6 +31,10 @@ export interface WorkspaceBriefResponse {
   configured: boolean;
   migration_digest: string;
   migration_count: number;
+  repository_count: number;
+  provider_count: number;
+  source_count: number;
+  change_count: number;
   brief?: WorkspaceBrief | null;
   model?: string | null;
   usage?: {

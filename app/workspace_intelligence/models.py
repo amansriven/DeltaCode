@@ -8,10 +8,12 @@ from app.control_plane.models import ContractModel
 
 
 class BriefPriority(ContractModel):
-    migration_id: str
+    migration_id: str | None = None
     title: str = Field(min_length=1, max_length=140)
     urgency: Literal["critical", "high", "medium", "low"]
-    recommended_action: Literal["review", "generate", "revise", "publish", "monitor"]
+    recommended_action: Literal[
+        "connect", "scan", "review", "generate", "revise", "publish", "monitor"
+    ]
     reason: str = Field(min_length=1, max_length=600)
     evidence: list[str] = Field(min_length=1, max_length=3)
 

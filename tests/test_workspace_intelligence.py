@@ -79,6 +79,50 @@ def test_workspace_brief_rejects_unknown_migration_references():
         service.generate_workspace_brief(MIGRATIONS, client)
 
 
+def test_workspace_readiness_brief_uses_real_repository_inventory():
+    class ReadinessClient(FakeClient):
+        def generate_json(self, **kwargs):
+            assert '"name":"acme/api"' in kwargs["user_input"]
+            return {
+                "headline": "Repository access is ready; provider evidence is next",
+                "executive_summary": "One repository is connected with no provider source yet.",
+                "attention_summary": "1 repository · 0 provider sources",
+                "priorities": [
+                    {
+                        "migration_id": None,
+                        "title": "Connect an official provider source",
+                        "urgency": "high",
+                        "recommended_action": "connect",
+                        "reason": (
+                            "Provider evidence is required before migrations can be detected."
+                        ),
+                        "evidence": ["1 connected repository", "0 configured providers"],
+                    }
+                ],
+                "portfolio_risks": [],
+                "next_actions": [
+                    {
+                        "label": "Add a provider source",
+                        "detail": "Connect an official changelog or OpenAPI source.",
+                        "migration_id": None,
+                    }
+                ],
+            }
+
+    snapshot = {
+        "repositories": [{"id": "repo-1", "full_name": "acme/api"}],
+        "providers": [],
+        "sources": [],
+        "changes": [],
+        "migrations": [],
+    }
+    brief, model, _usage = service.generate_workspace_brief(snapshot, ReadinessClient())
+
+    assert brief.priorities[0].migration_id is None
+    assert brief.priorities[0].recommended_action == "connect"
+    assert model == "gpt-4o"
+
+
 def test_generate_route_queues_durable_task(monkeypatch):
     queued = []
     monkeypatch.setattr(router, "FRONTEND_URL", "https://delta.example")

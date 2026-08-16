@@ -11,7 +11,14 @@ from app.oauth import FRONTEND_URL, get_session
 
 from .github import GitHubReadError, list_recent_pull_requests
 from .models import GeneratePullRequestOverviewRequest
-from .store import get_overview, overview_statuses, queue_overview, repository_installation
+from .store import (
+    get_overview,
+    get_overview_attempt,
+    list_overview_attempts,
+    overview_statuses,
+    queue_overview,
+    repository_installation,
+)
 from .tasks import generate_pull_request_ai_overview
 
 router = APIRouter(prefix="/pull-requests", tags=["pull-request-intelligence"])
@@ -72,6 +79,43 @@ def pull_request_overview(
     return {**get_overview(workspace_id, full_name, pull_number), "configured": _configured()}
 
 
+@router.get("/{owner}/{repository}/{pull_number}/overview/history")
+def pull_request_overview_history(
+    owner: str,
+    repository: str,
+    pull_number: int,
+    context: Annotated[tuple[str, dict], Depends(_context)],
+):
+    workspace_id, session = context
+    full_name = _repository_name(owner, repository)
+    if repository_installation(session, full_name) is None:
+        raise HTTPException(status_code=404, detail="pull request repository is unavailable")
+    return {
+        "items": list_overview_attempts(workspace_id, full_name, pull_number),
+        "configured": _configured(),
+    }
+
+
+@router.get("/{owner}/{repository}/{pull_number}/overview/history/{attempt_id}")
+def pull_request_overview_attempt(
+    owner: str,
+    repository: str,
+    pull_number: int,
+    attempt_id: str,
+    context: Annotated[tuple[str, dict], Depends(_context)],
+):
+    workspace_id, session = context
+    full_name = _repository_name(owner, repository)
+    if repository_installation(session, full_name) is None:
+        raise HTTPException(status_code=404, detail="pull request repository is unavailable")
+    attempt = get_overview_attempt(
+        workspace_id, full_name, pull_number, attempt_id
+    )
+    if attempt is None:
+        raise HTTPException(status_code=404, detail="pull request review attempt not found")
+    return {**attempt, "configured": _configured()}
+
+
 @router.post(
     "/{owner}/{repository}/{pull_number}/overview",
     status_code=status.HTTP_202_ACCEPTED,
@@ -95,10 +139,12 @@ def generate_overview(
     response = queue_overview(
         workspace_id, full_name, pull_number, installation_id, refresh=body.refresh
     )
-    if response["status"] == "queued":
+    enqueue_task = response.pop("_enqueue_task", False)
+    if enqueue_task:
         generate_pull_request_ai_overview.defer(
             workspace_id=workspace_id,
             repository_full_name=full_name,
             pull_number=pull_number,
+            attempt_id=response["attempt_id"],
         )
     return {**response, "configured": True}

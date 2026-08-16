@@ -9721,6 +9721,22 @@ html[data-theme="dark"] .flow-difference {
 .pr-ai-consent > span { color: var(--accent); }
 .pr-ai-consent p { margin: 0; color: var(--text-muted); font-size: 9px; line-height: 1.5; }
 .pr-ai-consent strong { color: var(--text-soft); }
+.pr-review-history { margin: 14px 24px 0; padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: color-mix(in srgb, var(--surface-2) 82%, transparent); }
+.pr-review-history > header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.pr-review-history h3 { margin: 3px 0 0; font-size: 19px; }
+.pr-review-history > header > span, .pr-review-history > p { color: var(--text-muted); font-size: 13px; }
+.pr-review-history > div { display: grid; gap: 8px; }
+.pr-review-history button { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 11px; width: 100%; padding: 12px; color: var(--text); text-align: left; border: 1px solid var(--line); border-radius: 12px; background: transparent; cursor: pointer; }
+.pr-review-history button:hover, .pr-review-history button.active { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.pr-review-history button:disabled { cursor: default; opacity: .72; }
+.pr-review-history button > i { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+.pr-review-history button > i.state-ready { background: var(--success); }
+.pr-review-history button > i.state-running, .pr-review-history button > i.state-queued { background: var(--accent); box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 60%, transparent); }
+.pr-review-history button > i.state-failed { background: var(--danger); }
+.pr-review-history button span { min-width: 0; }
+.pr-review-history button strong, .pr-review-history button small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr-review-history button small { margin-top: 3px; color: var(--text-muted); font-size: 11px; }
+.pr-review-history button b { color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: capitalize; }
 .pr-overview-loading { display: flex; align-items: center; justify-content: center; gap: 17px; min-height: 420px; color: var(--text-soft); }
 .pr-overview-loading div { display: grid; gap: 5px; }
 .pr-overview-loading small { color: var(--text-muted); }
@@ -9798,6 +9814,9 @@ html[data-theme="dark"] .flow-difference {
 }
 
 @media (max-width: 760px) {
+  .pr-review-history { margin-inline: 14px; padding: 14px; }
+  .pr-review-history button { grid-template-columns: auto minmax(0,1fr); }
+  .pr-review-history button > b { grid-column: 2; }
   .repository-scope-list,
   .pr-radar-metrics,
   .pr-overview-grid,

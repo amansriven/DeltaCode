@@ -17,6 +17,7 @@ export interface PullRequestSummary {
   updated_at: string;
   ai_overview: {
     status: PullRequestOverviewStatus;
+    attempt_id?: string | null;
     head_sha?: string | null;
     model?: string | null;
     updated_at?: string | null;
@@ -54,6 +55,7 @@ export interface PullRequestOverviewResponse {
   configured: boolean;
   repository_full_name: string;
   pull_number: number;
+  attempt_id?: string | null;
   head_sha?: string | null;
   pull_updated_at?: string | null;
   overview?: PullRequestOverview | null;
@@ -68,6 +70,19 @@ export interface PullRequestOverviewResponse {
   updated_at?: string | null;
 }
 
+export interface PullRequestOverviewAttempt {
+  attempt_id: string;
+  status: PullRequestOverviewStatus;
+  head_sha?: string | null;
+  model?: string | null;
+  headline?: string | null;
+  verdict?: PullRequestOverview["verdict"] | null;
+  usage?: PullRequestOverviewResponse["usage"];
+  error_code?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 async function parseResponse<T>(response: Response): Promise<T> {
   if (response.status === 401) throw new Error("Sign in with GitHub to review pull requests.");
   if (!response.ok) {
@@ -77,16 +92,42 @@ async function parseResponse<T>(response: Response): Promise<T> {
   return response.json();
 }
 
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs: number,
+  timeoutMessage: string,
+): Promise<Response> {
+  const controller = new AbortController();
+  let timedOut = false;
+  const abortFromCaller = () => controller.abort();
+  if (init.signal?.aborted) controller.abort();
+  else init.signal?.addEventListener("abort", abortFromCaller, { once: true });
+  const timeout = globalThis.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (timedOut) throw new Error(timeoutMessage);
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeout);
+    init.signal?.removeEventListener("abort", abortFromCaller);
+  }
+}
+
 export async function fetchRecentPullRequests(signal?: AbortSignal): Promise<{
   items: PullRequestSummary[];
   configured: boolean;
 }> {
   if (!liveApiUrl) throw new Error("The live Delta Code API is not configured.");
-  const response = await fetch(`${apiBaseUrl}/pull-requests?limit=30`, {
+  const response = await fetchWithTimeout(`${apiBaseUrl}/pull-requests?limit=30`, {
     signal,
     credentials: "include",
     cache: "no-store",
-  });
+  }, 45_000, "Loading recent pull requests timed out. Please try refreshing the list.");
   return parseResponse(response);
 }
 
@@ -100,11 +141,11 @@ export async function fetchPullRequestOverview(
   pullNumber: number,
   signal?: AbortSignal,
 ): Promise<PullRequestOverviewResponse> {
-  const response = await fetch(overviewUrl(repository, pullNumber), {
+  const response = await fetchWithTimeout(overviewUrl(repository, pullNumber), {
     signal,
     credentials: "include",
     cache: "no-store",
-  });
+  }, 20_000, "Loading this PR review timed out. A background review may still be running; refresh to check its status.");
   return parseResponse(response);
 }
 
@@ -113,11 +154,38 @@ export async function generatePullRequestOverview(
   pullNumber: number,
   refresh = false,
 ): Promise<PullRequestOverviewResponse> {
-  const response = await fetch(overviewUrl(repository, pullNumber), {
+  const response = await fetchWithTimeout(overviewUrl(repository, pullNumber), {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh }),
-  });
+  }, 20_000, "Starting the background review timed out. Refresh before retrying; it may already be queued.");
+  return parseResponse(response);
+}
+
+export async function fetchPullRequestOverviewHistory(
+  repository: string,
+  pullNumber: number,
+  signal?: AbortSignal,
+): Promise<{ items: PullRequestOverviewAttempt[]; configured: boolean }> {
+  const response = await fetchWithTimeout(`${overviewUrl(repository, pullNumber)}/history`, {
+    signal,
+    credentials: "include",
+    cache: "no-store",
+  }, 20_000, "Loading review history timed out. Please try again.");
+  return parseResponse(response);
+}
+
+export async function fetchPullRequestOverviewAttempt(
+  repository: string,
+  pullNumber: number,
+  attemptId: string,
+): Promise<PullRequestOverviewResponse> {
+  const response = await fetchWithTimeout(
+    `${overviewUrl(repository, pullNumber)}/history/${encodeURIComponent(attemptId)}`,
+    { credentials: "include", cache: "no-store" },
+    20_000,
+    "Loading this saved review timed out. Please try again.",
+  );
   return parseResponse(response);
 }

@@ -371,6 +371,53 @@ CREATE TABLE IF NOT EXISTS pull_request_ai_overviews (
     PRIMARY KEY (workspace_id, repository_full_name, pull_number)
 );
 
+ALTER TABLE pull_request_ai_overviews
+ADD COLUMN IF NOT EXISTS current_attempt_id TEXT;
+
+CREATE TABLE IF NOT EXISTS pull_request_ai_overview_attempts (
+    id TEXT NOT NULL,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    repository_full_name TEXT NOT NULL,
+    pull_number INTEGER NOT NULL CHECK (pull_number > 0),
+    installation_id BIGINT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('queued', 'running', 'ready', 'failed')),
+    head_sha TEXT,
+    pull_updated_at TIMESTAMPTZ,
+    input_snapshot JSONB,
+    data JSONB,
+    model TEXT,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    cached_input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    cost_usd NUMERIC(12, 6) NOT NULL DEFAULT 0,
+    error_code TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, id)
+);
+
+INSERT INTO pull_request_ai_overview_attempts
+    (id, workspace_id, repository_full_name, pull_number, installation_id,
+     status, head_sha, pull_updated_at, input_snapshot, data, model,
+     input_tokens, cached_input_tokens, output_tokens, cost_usd, error_code,
+     created_at, updated_at)
+SELECT COALESCE(
+           current_attempt_id,
+           'legacy-' || md5(workspace_id || ':' || repository_full_name || ':' || pull_number::text)
+       ),
+       workspace_id, repository_full_name, pull_number, installation_id,
+       status, head_sha, pull_updated_at, input_snapshot, data, model,
+       input_tokens, cached_input_tokens, output_tokens, cost_usd, error_code,
+       created_at, updated_at
+FROM pull_request_ai_overviews
+WHERE TRUE
+ON CONFLICT (workspace_id, id) DO NOTHING;
+
+UPDATE pull_request_ai_overviews
+SET current_attempt_id =
+    'legacy-' || md5(workspace_id || ':' || repository_full_name || ':' || pull_number::text)
+WHERE current_attempt_id IS NULL;
+
 CREATE TABLE IF NOT EXISTS workspace_ai_chat_messages (
     id TEXT NOT NULL,
     workspace_id TEXT NOT NULL REFERENCES workspaces(id),
@@ -419,6 +466,9 @@ CREATE INDEX IF NOT EXISTS workspace_ai_briefs_feed
 ON workspace_ai_briefs (workspace_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS pull_request_ai_overviews_feed
 ON pull_request_ai_overviews (workspace_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS pull_request_ai_overview_attempts_feed
+ON pull_request_ai_overview_attempts
+   (workspace_id, repository_full_name, pull_number, created_at DESC);
 CREATE INDEX IF NOT EXISTS workspace_ai_chat_thread_feed
 ON workspace_ai_chat_messages (workspace_id, thread_id, created_at);
 """

@@ -12,8 +12,11 @@ import {
 import { askDelta, DashboardChatMessage, fetchDeltaThread } from "./lib/dashboardChat";
 import {
   fetchPullRequestOverview,
+  fetchPullRequestOverviewAttempt,
+  fetchPullRequestOverviewHistory,
   fetchRecentPullRequests,
   generatePullRequestOverview,
+  PullRequestOverviewAttempt,
   PullRequestOverviewResponse,
   PullRequestSummary,
 } from "./lib/pullRequests";
@@ -857,11 +860,20 @@ export function ChangeDetailView({ changeId }: { changeId: string }) {
   );
 }
 
-function PullRequestOverviewLoading() {
+function PullRequestOverviewLoading({
+  stage,
+}: {
+  stage: "restoring" | "queued" | "running";
+}) {
+  const copy = stage === "restoring"
+    ? ["Restoring saved review", "Checking background progress and loading review history…"]
+    : stage === "queued"
+      ? ["Queued for background review", "The worker will continue even if you leave this page."]
+      : ["Analyzing the pull request", "Reading the diff, checks, commits, and discussion. You can safely leave."];
   return (
     <div className="pr-overview-loading" role="status">
       <span className="ai-orbit" aria-hidden="true"><i /><i /><i /></span>
-      <div><strong>Reading the pull request</strong><small>Reviewing the diff, checks, commits, and discussion…</small></div>
+      <div><strong>{copy[0]}</strong><small>{copy[1]}</small></div>
     </div>
   );
 }
@@ -870,6 +882,7 @@ export function PullRequestIntelligence() {
   const [pullRequests, setPullRequests] = useState<PullRequestSummary[]>([]);
   const [selectedKey, setSelectedKey] = useState("");
   const [overview, setOverview] = useState<PullRequestOverviewResponse | null>(null);
+  const [overviewHistory, setOverviewHistory] = useState<PullRequestOverviewAttempt[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(Boolean(liveApiUrl));
   const [overviewLoading, setOverviewLoading] = useState(false);
@@ -909,6 +922,15 @@ export function PullRequestIntelligence() {
         if (reason.name !== "AbortError") setError(reason.message);
       })
       .finally(() => setOverviewLoading(false));
+    fetchPullRequestOverviewHistory(
+      selected.repository_full_name,
+      selected.number,
+      controller.signal,
+    )
+      .then((response) => setOverviewHistory(response.items))
+      .catch((reason: Error) => {
+        if (reason.name !== "AbortError") setOverviewHistory([]);
+      });
     return () => controller.abort();
   }, [selected]);
 
@@ -919,7 +941,18 @@ export function PullRequestIntelligence() {
       fetchPullRequestOverview(selected.repository_full_name, selected.number)
         .then((next) => {
           setOverview(next);
-          if (!["queued", "running"].includes(next.status)) setGenerating(false);
+          setPullRequests((current) => current.map((item) => (
+            item.repository_full_name === selected.repository_full_name
+              && item.number === selected.number
+              ? { ...item, ai_overview: { ...item.ai_overview, ...next } }
+              : item
+          )));
+          if (!["queued", "running"].includes(next.status)) {
+            setGenerating(false);
+            fetchPullRequestOverviewHistory(selected.repository_full_name, selected.number)
+              .then((response) => setOverviewHistory(response.items))
+              .catch(() => undefined);
+          }
         })
         .catch((reason: Error) => {
           setError(reason.message);
@@ -934,11 +967,26 @@ export function PullRequestIntelligence() {
     setError("");
     setGenerating(true);
     try {
-      setOverview(await generatePullRequestOverview(
+      const next = await generatePullRequestOverview(
         selected.repository_full_name,
         selected.number,
         refresh,
-      ));
+      );
+      setOverview(next);
+      setPullRequests((current) => current.map((item) => (
+        item.repository_full_name === selected.repository_full_name
+          && item.number === selected.number
+          ? { ...item, ai_overview: { ...item.ai_overview, ...next } }
+          : item
+      )));
+      setOverviewHistory((current) => next.attempt_id && !current.some(
+        (item) => item.attempt_id === next.attempt_id,
+      ) ? [{
+          attempt_id: next.attempt_id,
+          status: next.status,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }, ...current] : current);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The PR overview could not be generated.");
       setGenerating(false);
@@ -964,9 +1012,27 @@ export function PullRequestIntelligence() {
 
   function selectPullRequest(key: string) {
     setOverview(null);
+    setOverviewHistory([]);
     setOverviewLoading(true);
     setError("");
     setSelectedKey(key);
+  }
+
+  async function openOverviewAttempt(attemptId: string) {
+    if (!selected || isWorking) return;
+    setOverviewLoading(true);
+    setError("");
+    try {
+      setOverview(await fetchPullRequestOverviewAttempt(
+        selected.repository_full_name,
+        selected.number,
+        attemptId,
+      ));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Review history could not be loaded.");
+    } finally {
+      setOverviewLoading(false);
+    }
   }
 
   const normalizedQuery = query.trim().toLowerCase();
@@ -1012,8 +1078,9 @@ export function PullRequestIntelligence() {
             </aside>
             <section className="pr-overview-panel">
               {selected && <header className="pr-selected-header"><div><span className="pr-selected-repo">{selected.repository_full_name} <i>#{selected.number}</i></span><h2>{selected.title}</h2><p><span className={selected.draft ? "draft" : "open"}>{selected.draft ? "Draft" : "Open"}</span> opened by @{selected.author.login} · {selected.head.ref} → {selected.base.ref}</p></div><a href={selected.html_url} target="_blank" rel="noreferrer" className="button button-quiet">Open on GitHub ↗</a></header>}
-              {selected && <div className="pr-ai-consent"><span aria-hidden="true">✦</span><p><strong>User-triggered model review.</strong> Clicking generate sends this PR’s bounded diff, checks, commits, and discussion to OpenAI. Delta Code does not post comments or approve the pull request.</p><button className="button button-primary" type="button" disabled={isWorking || overviewLoading || overview?.configured === false} onClick={() => analyze(overviewStatus === "ready")}>{isWorking ? "Analyzing PR…" : overviewStatus === "ready" ? "Refresh overview" : "Generate AI overview"}</button></div>}
-              {overviewLoading ? <PullRequestOverviewLoading /> : isWorking ? <PullRequestOverviewLoading /> : overviewStatus === "failed" ? (
+              {selected && <div className="pr-ai-consent"><span aria-hidden="true">✦</span><p><strong>Durable background review.</strong> Clicking generate queues this PR’s diff, checks, commits, and discussion for model review. You can leave this page—the result is saved to immutable history. Delta Code does not post comments or approve the pull request.</p><button className="button button-primary" type="button" disabled={isWorking || overviewLoading || overview?.configured === false} onClick={() => analyze(overviewStatus === "ready")}>{isWorking ? "Analyzing PR…" : overviewStatus === "ready" ? "Run another review" : "Generate AI overview"}</button></div>}
+              {selected && <section className="pr-review-history"><header><div><span className="section-kicker">Saved automatically</span><h3>Review history</h3></div><span>{overviewHistory.length} {overviewHistory.length === 1 ? "attempt" : "attempts"}</span></header>{overviewHistory.length ? <div>{overviewHistory.map((attempt) => <button type="button" key={attempt.attempt_id} disabled={isWorking} className={overview?.attempt_id === attempt.attempt_id ? "active" : ""} onClick={() => openOverviewAttempt(attempt.attempt_id)}><i className={`history-state state-${attempt.status}`} /><span><strong>{attempt.headline || (attempt.status === "ready" ? "Saved PR overview" : attempt.status === "failed" ? "Review failed" : "Review in progress")}</strong><small>{new Date(attempt.created_at).toLocaleString()} · {attempt.head_sha ? attempt.head_sha.slice(0, 7) : "reading head"}</small></span><b>{attempt.status === "ready" ? "Open →" : attempt.status}</b></button>)}</div> : <p>No previous reviews yet. The first generated overview will be stored here.</p>}</section>}
+              {overviewLoading ? <PullRequestOverviewLoading stage="restoring" /> : isWorking ? <PullRequestOverviewLoading stage={overviewStatus === "queued" ? "queued" : "running"} /> : overviewStatus === "failed" ? (
                 <div className="pr-overview-empty"><span>!</span><h3>The overview could not be generated</h3><p>Error code: <code>{overview?.error_code || "unknown"}</code>. The pull request was not changed.</p><button className="button button-quiet" type="button" onClick={() => analyze(true)}>Try again</button></div>
               ) : !result ? (
                 <div className="pr-overview-empty"><span>✦</span><h3>Choose when the AI reads this pull request</h3><p>The GitHub list is live. The model call only starts after you request an overview.</p></div>

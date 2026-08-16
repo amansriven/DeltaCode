@@ -2,7 +2,7 @@ from importlib import import_module
 from types import SimpleNamespace
 
 from app.openai_responses import OpenAIUsage
-from app.pull_request_intelligence import github, service
+from app.pull_request_intelligence import github, service, tasks
 from app.pull_request_intelligence.models import GeneratePullRequestOverviewRequest
 
 router = import_module("app.pull_request_intelligence.router")
@@ -111,6 +111,8 @@ def test_generate_pull_request_route_queues_durable_task(monkeypatch):
             "status": "queued",
             "repository_full_name": "acme/api",
             "pull_number": 42,
+            "attempt_id": "attempt-1",
+            "_enqueue_task": True,
         },
     )
     monkeypatch.setattr(
@@ -138,5 +140,123 @@ def test_generate_pull_request_route_queues_durable_task(monkeypatch):
             "workspace_id": "workspace-1",
             "repository_full_name": "acme/api",
             "pull_number": 42,
+            "attempt_id": "attempt-1",
         }
     ]
+
+
+def test_generate_route_does_not_duplicate_existing_background_job(monkeypatch):
+    queued = []
+    monkeypatch.setattr(router, "FRONTEND_URL", "https://delta.example")
+    monkeypatch.setattr(router, "_configured", lambda: True)
+    monkeypatch.setattr(
+        router,
+        "queue_overview",
+        lambda *_args, **_kwargs: {
+            "status": "running",
+            "repository_full_name": "acme/api",
+            "pull_number": 42,
+            "attempt_id": "attempt-1",
+            "_enqueue_task": False,
+        },
+    )
+    monkeypatch.setattr(
+        router.generate_pull_request_ai_overview,
+        "defer",
+        lambda **kwargs: queued.append(kwargs),
+    )
+
+    response = router.generate_overview(
+        "acme",
+        "api",
+        42,
+        GeneratePullRequestOverviewRequest(refresh=False),
+        SimpleNamespace(headers={"origin": "https://delta.example"}),
+        (
+            "workspace-1",
+            {"repositories": [{"full_name": "acme/api", "installation_id": 17}]},
+        ),
+    )
+
+    assert response["status"] == "running"
+    assert queued == []
+
+
+def test_pull_request_overview_history_is_scoped_to_authorized_repository(monkeypatch):
+    calls = []
+    monkeypatch.setattr(router, "_configured", lambda: True)
+    monkeypatch.setattr(
+        router,
+        "list_overview_attempts",
+        lambda *args: calls.append(args) or [{"attempt_id": "attempt-1", "status": "ready"}],
+    )
+
+    response = router.pull_request_overview_history(
+        "acme",
+        "api",
+        42,
+        (
+            "workspace-1",
+            {"repositories": [{"full_name": "acme/api", "installation_id": 17}]},
+        ),
+    )
+
+    assert response["items"][0]["attempt_id"] == "attempt-1"
+    assert response["configured"] is True
+    assert calls == [("workspace-1", "acme/api", 42)]
+
+
+def test_pull_request_overview_attempt_returns_saved_result(monkeypatch):
+    monkeypatch.setattr(router, "_configured", lambda: True)
+    monkeypatch.setattr(
+        router,
+        "get_overview_attempt",
+        lambda *_args: {
+            "attempt_id": "attempt-1",
+            "status": "ready",
+            "overview": {"headline": "Saved review"},
+        },
+    )
+
+    response = router.pull_request_overview_attempt(
+        "acme",
+        "api",
+        42,
+        "attempt-1",
+        (
+            "workspace-1",
+            {"repositories": [{"full_name": "acme/api", "installation_id": 17}]},
+        ),
+    )
+
+    assert response["overview"]["headline"] == "Saved review"
+    assert response["configured"] is True
+
+
+def test_pull_request_task_persists_attempt_identity(monkeypatch):
+    completed = []
+    snapshot = {
+        "repository_full_name": "acme/api",
+        "number": 42,
+        "head": {"sha": "a" * 40},
+        "updated_at": "2026-08-15T12:00:00Z",
+    }
+    overview = service.generate_pull_request_overview(snapshot, FakeOverviewClient())[0]
+    monkeypatch.setattr(tasks, "claim_overview", lambda *_args: ("attempt-1", 17))
+    monkeypatch.setattr(tasks, "fetch_pull_request_snapshot", lambda *_args: snapshot)
+    monkeypatch.setattr(
+        tasks,
+        "generate_pull_request_overview",
+        lambda _snapshot: (
+            overview,
+            "gpt-4o",
+            OpenAIUsage(input_tokens=10, output_tokens=5, cost_usd=0.001),
+        ),
+    )
+    monkeypatch.setattr(tasks, "complete_overview", lambda *args: completed.append(args))
+
+    tasks.generate_pull_request_ai_overview.func(
+        "workspace-1", "acme/api", 42, "attempt-1"
+    )
+
+    assert completed[0][-1] == "attempt-1"

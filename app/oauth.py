@@ -131,6 +131,7 @@ def _fetch_repository_access(user_token: str) -> list[dict]:
                     or f"https://github.com/{full_name}.git",
                     "default_branch": repo.get("default_branch") or "main",
                     "installation_id": installation["id"],
+                    "permissions": dict(installation.get("permissions") or {}),
                 }
             if len(batch) < 100:
                 break

@@ -52,6 +52,7 @@ export interface RepositoryAccess {
   full_name: string;
   private: boolean | null;
   visibility: "public" | "private" | "internal" | "unknown" | string;
+  permissions?: Record<string, string>;
 }
 
 export interface CurrentUser {

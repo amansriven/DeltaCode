@@ -162,7 +162,11 @@ def test_repository_access_preserves_visibility(monkeypatch):
         if url.endswith("/user/installations"):
             return {
                 "installations": [
-                    {"id": 7, "app_id": 42},
+                    {
+                        "id": 7,
+                        "app_id": 42,
+                        "permissions": {"contents": "read", "pull_requests": "read"},
+                    },
                     {"id": 8, "app_id": 999},
                 ]
             }
@@ -191,6 +195,7 @@ def test_repository_access_preserves_visibility(monkeypatch):
             "clone_url": "https://github.com/acme/private-api.git",
             "default_branch": "main",
             "installation_id": 7,
+            "permissions": {"contents": "read", "pull_requests": "read"},
         },
         {
             "full_name": "acme/public-api",
@@ -199,6 +204,7 @@ def test_repository_access_preserves_visibility(monkeypatch):
             "clone_url": "https://github.com/acme/public-api.git",
             "default_branch": "main",
             "installation_id": 7,
+            "permissions": {"contents": "read", "pull_requests": "read"},
         },
     ]
     assert not any("/8/repositories" in url for url, _page in calls)

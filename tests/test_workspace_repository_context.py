@@ -79,5 +79,18 @@ def test_repository_context_reports_missing_contents_permission(monkeypatch):
         "What is this?",
     )
 
-    assert context[0]["status"] == "unavailable"
+    assert context[0]["status"] == "metadata_only"
+    assert context[0]["reason_code"] == "contents_permission_missing"
+    assert "selected for metadata and pull requests" in context[0]["reason"]
     assert context[0]["files"] == []
+
+    report = repository_context.repository_access_report(context)
+    assert report == [
+        {
+            "repository_full_name": "acme/SweetPlus",
+            "status": "metadata_only",
+            "message": context[0]["reason"],
+            "files_inspected": 0,
+            "action_href": "/settings/integrations",
+        }
+    ]

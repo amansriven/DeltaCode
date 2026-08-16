@@ -35,7 +35,10 @@ def generate_dashboard_answer(
                 "the supplied repository and dashboard evidence cannot support an answer, set "
                 "insufficient_context instead of guessing. repository_sources must reference "
                 "only files supplied in repository_context and explain why each file supports the "
-                "answer. Dashboard citations must use supplied entities and internal paths only. "
+                "answer. Treat repository_context status as authoritative: metadata_only means "
+                "the repository is selected for metadata and pull requests but source contents "
+                "are not authorized; never describe that repository as entirely inaccessible. "
+                "Dashboard citations must use supplied entities and internal paths only. "
                 "Never claim code was executed, tested, or approved. State when the source sample "
                 "is incomplete. Keep answers concise to control token usage."
             ),

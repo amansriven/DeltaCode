@@ -13,6 +13,7 @@ MAX_FILES_PER_REPOSITORY = 10
 MAX_FILE_CHARS = 10_000
 MAX_TOTAL_CHARS = 56_000
 MAX_CANDIDATE_FILE_BYTES = 100_000
+SOURCE_ACCESS_ACTION = "/settings/integrations"
 
 _TEXT_EXTENSIONS = {
     ".c", ".cc", ".cpp", ".cs", ".css", ".go", ".graphql", ".html", ".java",
@@ -117,8 +118,13 @@ def _repository_context(repository: dict, question: str, budget: int) -> dict:
     if credentials.permissions.get("contents") not in {"read", "write"}:
         return {
             "repository_full_name": full_name,
-            "status": "unavailable",
-            "reason": "GitHub App contents permission is unavailable",
+            "status": "metadata_only",
+            "reason_code": "contents_permission_missing",
+            "reason": (
+                "This repository is selected for metadata and pull requests, but the "
+                "Delta Code GitHub App is missing Contents: Read permission."
+            ),
+            "action_href": SOURCE_ACCESS_ACTION,
             "files": [],
         }
     client = GitHubReadClient(credentials.token)
@@ -182,13 +188,49 @@ def build_repository_context(repositories: list[dict], question: str) -> list[di
             break
         try:
             result = _repository_context(repository, question, remaining)
-        except Exception as exc:
+        except Exception:
             result = {
                 "repository_full_name": repository.get("full_name", "unknown"),
                 "status": "unavailable",
-                "reason": str(exc),
+                "reason_code": "github_source_read_failed",
+                "reason": "GitHub could not provide repository source for this answer.",
+                "action_href": SOURCE_ACCESS_ACTION,
                 "files": [],
             }
         results.append(result)
         remaining -= sum(len(item["content"]) for item in result.get("files", []))
     return results
+
+
+def repository_access_report(repository_context: list[dict]) -> list[dict]:
+    """Return deterministic, browser-safe source access status for a chat response."""
+
+    report = []
+    for repository in repository_context:
+        files = repository.get("files", [])
+        status = repository.get("status")
+        if status == "ready":
+            report.append(
+                {
+                    "repository_full_name": repository["repository_full_name"],
+                    "status": "source_ready",
+                    "message": (
+                        f"GitHub source access verified; {len(files)} relevant "
+                        f"file{'s' if len(files) != 1 else ''} inspected."
+                    ),
+                    "files_inspected": len(files),
+                    "action_href": None,
+                }
+            )
+            continue
+        report.append(
+            {
+                "repository_full_name": repository.get("repository_full_name", "unknown"),
+                "status": "metadata_only" if status == "metadata_only" else "unavailable",
+                "message": repository.get("reason")
+                or "Repository source was unavailable for this answer.",
+                "files_inspected": 0,
+                "action_href": repository.get("action_href", SOURCE_ACCESS_ACTION),
+            }
+        )
+    return report

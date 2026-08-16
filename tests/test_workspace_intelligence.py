@@ -274,3 +274,61 @@ def test_task_persists_model_usage(monkeypatch):
 
     assert completed[0][0:2] == ("workspace-1", "b" * 64)
     assert completed[0][3] == "gpt-4o"
+
+
+def test_chat_task_persists_deterministic_repository_access(monkeypatch):
+    completed = []
+    context = [
+        {
+            "repository_full_name": "acme/SweetPlus",
+            "status": "metadata_only",
+            "reason_code": "contents_permission_missing",
+            "reason": (
+                "This repository is selected for metadata and pull requests, but the "
+                "Delta Code GitHub App is missing Contents: Read permission."
+            ),
+            "action_href": "/settings/integrations",
+            "files": [],
+        }
+    ]
+    answer = SimpleNamespace(
+        model_dump=lambda **_kwargs: {
+            "scope_status": "insufficient_context",
+            "answer": "Source is not authorized yet.",
+            "citations": [],
+            "repository_sources": [],
+            "follow_ups": [],
+        }
+    )
+    monkeypatch.setattr(
+        tasks,
+        "claim_message",
+        lambda *_args: {
+            "question": "Tell me about SweetPlus",
+            "repository_refs": [
+                {
+                    "full_name": "acme/SweetPlus",
+                    "default_branch": "main",
+                    "installation_id": 7,
+                }
+            ],
+        },
+    )
+    monkeypatch.setattr(tasks, "build_repository_context", lambda *_args: context)
+    monkeypatch.setattr(
+        tasks,
+        "generate_dashboard_answer",
+        lambda _payload: (
+            answer,
+            "gpt-4o",
+            OpenAIUsage(input_tokens=10, output_tokens=4, cost_usd=0.0001),
+        ),
+    )
+    monkeypatch.setattr(tasks, "complete_message", lambda *args: completed.append(args))
+
+    tasks.generate_dashboard_chat_answer.func("workspace-1", "message-1")
+
+    access = completed[0][2]["repository_access"]
+    assert access[0]["status"] == "metadata_only"
+    assert access[0]["action_href"] == "/settings/integrations"
+    assert "Contents: Read" in access[0]["message"]

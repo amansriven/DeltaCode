@@ -18,6 +18,13 @@ export interface DashboardChatMessage {
       path: string;
       reason: string;
     }>;
+    repository_access?: Array<{
+      repository_full_name: string;
+      status: "source_ready" | "metadata_only" | "unavailable";
+      message: string;
+      files_inspected: number;
+      action_href: string | null;
+    }>;
     follow_ups: string[];
   } | null;
   model?: string | null;

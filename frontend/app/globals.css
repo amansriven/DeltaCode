@@ -7513,6 +7513,16 @@ kbd {
   font-style: normal;
 }
 
+.permission-list .permission-missing { border-color: color-mix(in srgb, var(--warning) 35%, var(--border-soft)); background: color-mix(in srgb, var(--warning) 7%, var(--surface-raised)); }
+.permission-list .permission-missing i { color: var(--warning); background: color-mix(in srgb, var(--warning) 14%, transparent); }
+.permission-list .permission-unknown i { color: var(--text-muted); background: var(--surface); }
+.installation-summary > b.limited { color: var(--warning); background: color-mix(in srgb, var(--warning) 14%, transparent); }
+.integration-permission-alert { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; align-items: center; gap: 13px; margin: 18px 22px 0; padding: 14px; color: var(--text-soft); border: 1px solid color-mix(in srgb, var(--warning) 34%, var(--border-soft)); border-radius: 11px; background: color-mix(in srgb, var(--warning) 7%, var(--surface-raised)); }
+.integration-permission-alert > span { width: 30px; height: 30px; display: grid; place-items: center; color: var(--warning); border-radius: 9px; background: color-mix(in srgb, var(--warning) 14%, transparent); font-family: var(--font-mono); }
+.integration-permission-alert strong { font-size: 10px; }
+.integration-permission-alert p { margin: 4px 0 0; color: var(--text-muted); font-size: 9px; line-height: 1.5; }
+.integration-permission-alert a { color: var(--warning); font-size: 9px; white-space: nowrap; }
+
 .permission-list strong {
   font-size: 9px;
 }
@@ -9669,6 +9679,14 @@ html[data-theme="dark"] .flow-difference {
 .chat-source-evidence > span { display: grid; gap: 3px; padding: 9px 11px; border-radius: 8px; background: color-mix(in srgb, var(--panel-soft) 82%, transparent); }
 .chat-source-evidence code { color: var(--accent); overflow-wrap: anywhere; font-size: 8px; }
 .chat-source-evidence small { color: var(--text-muted); font-size: 8px; line-height: 1.45; }
+.chat-access-notices { display: grid; gap: 8px; margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--border); }
+.chat-access-notices > strong { color: var(--warning); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
+.chat-access-notices > span { display: grid; grid-template-columns: 24px minmax(0,1fr) auto; align-items: center; gap: 9px; padding: 10px; border: 1px solid color-mix(in srgb, var(--warning) 28%, var(--border-soft)); border-radius: 9px; background: color-mix(in srgb, var(--warning) 6%, var(--panel-soft)); }
+.chat-access-notices > span > i { width: 23px; height: 23px; display: grid; place-items: center; color: var(--warning); border-radius: 7px; background: color-mix(in srgb, var(--warning) 14%, transparent); font-style: normal; font-size: 9px; }
+.chat-access-notices > span > span { display: grid; gap: 3px; min-width: 0; }
+.chat-access-notices code { color: var(--text); overflow-wrap: anywhere; font-size: 8px; }
+.chat-access-notices small { color: var(--text-muted); font-size: 8px; line-height: 1.45; }
+.chat-access-notices a { color: var(--warning); font-size: 8px; white-space: nowrap; }
 .ask-delta-composer { margin: 0 18px 16px; padding: 11px 13px; border: 1px solid var(--border); border-radius: 13px; background: #090f18; }
 .ask-delta-composer:focus-within { border-color: rgba(98,205,224,.42); box-shadow: 0 0 0 3px rgba(98,205,224,.05); }
 .ask-delta-composer textarea { width: 100%; resize: none; color: var(--text); border: 0; outline: 0; background: transparent; font: inherit; font-size: 11px; line-height: 1.5; }

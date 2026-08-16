@@ -1319,6 +1319,19 @@ function IntegrationsPage() {
   const privateCount = repositories.filter((repository) => repository.private === true).length;
   const publicCount = repositories.filter((repository) => repository.private === false).length;
   const internalCount = repositories.filter((repository) => repository.visibility === "internal").length;
+  const permissionState = (permission: string, allowed: string[]): boolean | null => {
+    if (repositories.length === 0 || repositories.some((repository) => !repository.permissions)) {
+      return null;
+    }
+    return repositories.every((repository) => allowed.includes(repository.permissions?.[permission] ?? ""));
+  };
+  const permissionRows = [
+    { key: "contents", label: "Read repository contents", detail: "Inspect README, manifests, configuration, and code", state: permissionState("contents", ["read", "write"]) },
+    { key: "pull_requests", label: "Read pull requests", detail: "Analyze recent pull request metadata and changes", state: permissionState("pull_requests", ["read", "write"]) },
+    { key: "checks", label: "Write checks", detail: "Publish verification evidence to GitHub", state: permissionState("checks", ["write"]) },
+    { key: "metadata", label: "Read metadata", detail: "Display repository identity and visibility", state: permissionState("metadata", ["read"]) },
+  ];
+  const contentsState = permissionRows[0].state;
 
   return (
     <main className="dashboard-page">
@@ -1385,7 +1398,7 @@ function IntegrationsPage() {
                     <strong>Delta Code GitHub App</strong>
                     <small>{repositories.length} accessible repositories</small>
                   </span>
-                  <b>Active</b>
+                  <b className={contentsState === false ? "limited" : undefined}>{contentsState === false ? "Source limited" : "Active"}</b>
                 </div>
                 <div className="visibility-summary">
                   <span><strong>{privateCount}</strong><small>Private</small></span>
@@ -1394,16 +1407,26 @@ function IntegrationsPage() {
                 </div>
               </section>
             </div>
+            {contentsState === false && (
+              <aside className="integration-permission-alert" role="alert">
+                <span aria-hidden="true">!</span>
+                <div><strong>Repository listing works, but source analysis is blocked</strong><p>The GitHub App is installed for these repositories, but it is missing Contents: Read. Ask Delta can still use metadata and pull requests; it cannot inspect README files or code.</p></div>
+                <a href="https://github.com/settings/apps/deltacodeapp/permissions" target="_blank" rel="noreferrer">Update App permission ↗</a>
+              </aside>
+            )}
             <section className="permissions-panel">
               <div>
                 <span className="integration-section-label">Permissions</span>
                 <h3>Only what verification requires</h3>
               </div>
               <div className="permission-list">
-                <span><i>✓</i><strong>Read repository contents</strong><small>Fetch selected revisions for comparison</small></span>
-                <span><i>✓</i><strong>Read pull requests</strong><small>Respond to pull request updates</small></span>
-                <span><i>✓</i><strong>Write checks</strong><small>Publish verification evidence to GitHub</small></span>
-                <span><i>✓</i><strong>Read metadata</strong><small>Display repository identity and visibility</small></span>
+                {permissionRows.map((permission) => (
+                  <span className={permission.state === false ? "permission-missing" : permission.state === null ? "permission-unknown" : undefined} key={permission.key}>
+                    <i>{permission.state === true ? "✓" : permission.state === false ? "!" : "?"}</i>
+                    <strong>{permission.label}</strong>
+                    <small>{permission.state === null ? "Refresh repository access to verify" : permission.detail}</small>
+                  </span>
+                ))}
               </div>
             </section>
             <div className="integration-actions">

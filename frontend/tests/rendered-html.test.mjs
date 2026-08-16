@@ -127,25 +127,29 @@ test("server-renders the complete authenticated product routes", async () => {
     settingsResponse,
     intelligenceResponse,
     pullRequestsResponse,
+    historyResponse,
   ] = await Promise.all([
     render("/repositories"),
     render("/settings/integrations"),
     render("/settings/account"),
     render("/intelligence"),
     render("/pull-requests"),
+    render("/history"),
   ]);
   assert.equal(repositoriesResponse.status, 200);
   assert.equal(integrationsResponse.status, 200);
   assert.equal(settingsResponse.status, 200);
   assert.equal(intelligenceResponse.status, 200);
   assert.equal(pullRequestsResponse.status, 200);
+  assert.equal(historyResponse.status, 200);
 
-  const [repositories, integrations, settings, intelligence, pullRequests] = await Promise.all([
+  const [repositories, integrations, settings, intelligence, pullRequests, history] = await Promise.all([
     repositoriesResponse.text(),
     integrationsResponse.text(),
     settingsResponse.text(),
     intelligenceResponse.text(),
     pullRequestsResponse.text(),
+    historyResponse.text(),
   ]);
   assert.match(repositories, /Repository directory/);
   assert.match(repositories, /Loading repository access|Product preview|GitHub App access/);
@@ -159,6 +163,8 @@ test("server-renders the complete authenticated product routes", async () => {
   assert.match(intelligence, /Ask Delta/);
   assert.match(pullRequests, /Pull request radar/);
   assert.match(pullRequests, /Loading recent pull requests|No open pull requests found/);
+  assert.match(history, /Intelligence history/);
+  assert.match(history, /Loading intelligence history/);
 });
 
 test("server-renders the migration inbox and review workflow", async () => {

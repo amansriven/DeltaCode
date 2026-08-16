@@ -9,6 +9,7 @@ from app.db import init_schema
 from app.github_publishing import router as github_publishing_router
 from app.hardening.router import router as hardening_router
 from app.ingestion import router as ingestion_router
+from app.intelligence_history import router as intelligence_history_router
 from app.migration_generation import router as migration_generation_router
 from app.oauth import FRONTEND_URL
 from app.oauth import router as oauth_router
@@ -38,6 +39,7 @@ app.include_router(github_publishing_router)
 app.include_router(hardening_router)
 app.include_router(workspace_intelligence_router)
 app.include_router(pull_request_intelligence_router)
+app.include_router(intelligence_history_router)
 
 allowed_origins = {
     FRONTEND_URL,
@@ -71,5 +73,6 @@ def health() -> dict[str, str | list[str]]:
             "workspace_intelligence",
             "dashboard_chat",
             "pull_requests",
+            "intelligence_history",
         ],
     }

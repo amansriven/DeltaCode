@@ -1,6 +1,7 @@
 """Persistence and workspace authorization for PR intelligence."""
 
 import json
+import uuid
 from datetime import UTC, datetime
 
 from app.db import get_connection
@@ -139,12 +140,14 @@ def complete_overview(
     model: str,
     usage: OpenAIUsage,
 ) -> None:
+    generated_at = datetime.now(UTC)
+    history_id = str(uuid.uuid4())
     with get_connection() as conn:
         conn.execute(
             """UPDATE pull_request_ai_overviews SET status = 'ready', head_sha = %s,
                pull_updated_at = %s, input_snapshot = %s, data = %s, model = %s,
                input_tokens = %s, cached_input_tokens = %s, output_tokens = %s,
-               cost_usd = %s, error_code = NULL, updated_at = now()
+               cost_usd = %s, error_code = NULL, updated_at = %s
                WHERE workspace_id = %s AND repository_full_name = %s AND pull_number = %s
                  AND status = 'running'""",
             (
@@ -157,9 +160,33 @@ def complete_overview(
                 usage.cached_input_tokens,
                 usage.output_tokens,
                 usage.cost_usd,
+                generated_at,
                 workspace_id,
                 repository,
                 pull_number,
+            ),
+        )
+        conn.execute(
+            """INSERT INTO pull_request_ai_overview_history
+               (id, workspace_id, repository_full_name, pull_number, head_sha,
+                pull_updated_at, input_snapshot, data, model, input_tokens,
+                cached_input_tokens, output_tokens, cost_usd, generated_at)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            (
+                history_id,
+                workspace_id,
+                repository,
+                pull_number,
+                (snapshot.get("head") or {}).get("sha"),
+                snapshot.get("updated_at"),
+                json.dumps(snapshot),
+                json.dumps(overview),
+                model,
+                usage.input_tokens,
+                usage.cached_input_tokens,
+                usage.output_tokens,
+                usage.cost_usd,
+                generated_at,
             ),
         )
 

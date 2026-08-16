@@ -2,7 +2,7 @@ from importlib import import_module
 from types import SimpleNamespace
 
 from app.openai_responses import OpenAIUsage
-from app.pull_request_intelligence import github, service
+from app.pull_request_intelligence import github, service, store
 from app.pull_request_intelligence.models import GeneratePullRequestOverviewRequest
 
 router = import_module("app.pull_request_intelligence.router")
@@ -140,3 +140,39 @@ def test_generate_pull_request_route_queues_durable_task(monkeypatch):
             "pull_number": 42,
         }
     ]
+
+
+def test_completed_overview_appends_history_version(monkeypatch):
+    calls = []
+
+    class FakeConnection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def execute(self, query, parameters):
+            calls.append((query, parameters))
+
+    monkeypatch.setattr(store, "get_connection", FakeConnection)
+    snapshot = {
+        "head": {"sha": "a" * 40},
+        "updated_at": "2026-08-15T12:00:00Z",
+    }
+    usage = OpenAIUsage(input_tokens=20, output_tokens=8, cost_usd=0.00013)
+
+    store.complete_overview(
+        "workspace-1",
+        "acme/api",
+        42,
+        snapshot,
+        {"headline": "Review authentication"},
+        "gpt-4o",
+        usage,
+    )
+
+    assert len(calls) == 2
+    assert "UPDATE pull_request_ai_overviews" in calls[0][0]
+    assert "INSERT INTO pull_request_ai_overview_history" in calls[1][0]
+    assert calls[1][1][4] == "a" * 40

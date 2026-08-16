@@ -391,6 +391,43 @@ CREATE TABLE IF NOT EXISTS workspace_ai_chat_messages (
     PRIMARY KEY (workspace_id, id)
 );
 
+CREATE TABLE IF NOT EXISTS pull_request_ai_overview_history (
+    id TEXT NOT NULL,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    repository_full_name TEXT NOT NULL,
+    pull_number INTEGER NOT NULL CHECK (pull_number > 0),
+    head_sha TEXT,
+    pull_updated_at TIMESTAMPTZ,
+    input_snapshot JSONB,
+    data JSONB NOT NULL,
+    model TEXT NOT NULL,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    cached_input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    cost_usd NUMERIC(12, 6) NOT NULL DEFAULT 0,
+    generated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, id)
+);
+
+INSERT INTO pull_request_ai_overview_history
+    (id, workspace_id, repository_full_name, pull_number, head_sha, pull_updated_at,
+     input_snapshot, data, model, input_tokens, cached_input_tokens, output_tokens,
+     cost_usd, generated_at)
+SELECT md5(workspace_id || ':' || repository_full_name || ':' || pull_number::text || ':' ||
+           updated_at::text), workspace_id, repository_full_name, pull_number, head_sha,
+       pull_updated_at, input_snapshot, data, model, input_tokens, cached_input_tokens,
+       output_tokens, cost_usd, updated_at
+FROM pull_request_ai_overviews
+WHERE status = 'ready' AND data IS NOT NULL AND model IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM pull_request_ai_overview_history history
+      WHERE history.workspace_id = pull_request_ai_overviews.workspace_id
+        AND history.repository_full_name = pull_request_ai_overviews.repository_full_name
+        AND history.pull_number = pull_request_ai_overviews.pull_number
+        AND history.generated_at = pull_request_ai_overviews.updated_at
+  )
+ON CONFLICT (workspace_id, id) DO NOTHING;
+
 CREATE INDEX IF NOT EXISTS change_events_workspace_feed
 ON change_events (workspace_id, created_at DESC, id);
 CREATE INDEX IF NOT EXISTS provider_sources_workspace_feed
@@ -421,6 +458,9 @@ CREATE INDEX IF NOT EXISTS pull_request_ai_overviews_feed
 ON pull_request_ai_overviews (workspace_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS workspace_ai_chat_thread_feed
 ON workspace_ai_chat_messages (workspace_id, thread_id, created_at);
+CREATE INDEX IF NOT EXISTS pull_request_ai_overview_history_feed
+ON pull_request_ai_overview_history
+    (workspace_id, repository_full_name, pull_number, generated_at DESC);
 """
 
 

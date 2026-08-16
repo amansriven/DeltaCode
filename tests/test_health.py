@@ -14,7 +14,8 @@ def test_health_endpoint() -> None:
             "migrations",
             "providers",
             "workspace_intelligence",
-            "dashboard_chat",
-            "pull_requests",
-        ],
+                "dashboard_chat",
+                "pull_requests",
+                "intelligence_history",
+            ],
     }

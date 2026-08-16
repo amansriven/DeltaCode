@@ -274,6 +274,7 @@ function AppHeader({ active }: { active: DashboardSection }) {
   );
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandQuery, setCommandQuery] = useState("");
 
@@ -295,6 +296,15 @@ function AppHeader({ active }: { active: DashboardSection }) {
   }, []);
 
   useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const stored = window.localStorage.getItem("delta-code-sidebar-collapsed") === "true";
+      setSidebarCollapsed(stored);
+      document.documentElement.dataset.sidebar = stored ? "collapsed" : "expanded";
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
@@ -311,6 +321,12 @@ function AppHeader({ active }: { active: DashboardSection }) {
   }, []);
 
   const displayName = userDisplayName(user);
+  const toggleSidebar = () => {
+    const next = !sidebarCollapsed;
+    setSidebarCollapsed(next);
+    document.documentElement.dataset.sidebar = next ? "collapsed" : "expanded";
+    window.localStorage.setItem("delta-code-sidebar-collapsed", String(next));
+  };
   const visibleCommands = dashboardNavigation.filter((item) => {
     const normalized = commandQuery.trim().toLowerCase();
     return (
@@ -322,7 +338,21 @@ function AppHeader({ active }: { active: DashboardSection }) {
 
   return (
     <>
-      <aside className={`app-sidebar ${mobileOpen ? "mobile-open" : ""}`}>
+      <aside
+        id="workspace-sidebar"
+        className={`app-sidebar ${sidebarCollapsed ? "sidebar-collapsed" : ""} ${mobileOpen ? "mobile-open" : ""}`}
+      >
+        <button
+          type="button"
+          className="desktop-sidebar-toggle"
+          aria-label={sidebarCollapsed ? "Expand navigation sidebar" : "Collapse navigation sidebar"}
+          aria-controls="workspace-sidebar"
+          aria-expanded={!sidebarCollapsed}
+          title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          onClick={toggleSidebar}
+        >
+          <span aria-hidden="true">{sidebarCollapsed ? "›" : "‹"}</span>
+        </button>
         <div className="sidebar-brand">
           <Wordmark />
           <button
@@ -337,6 +367,7 @@ function AppHeader({ active }: { active: DashboardSection }) {
         <button
           type="button"
           className="command-trigger"
+          title={sidebarCollapsed ? "Search workspace" : undefined}
           onClick={() => setCommandOpen(true)}
         >
           <span aria-hidden="true">⌕</span>
@@ -350,6 +381,7 @@ function AppHeader({ active }: { active: DashboardSection }) {
               key={item.section}
               className={active === item.section ? "active" : ""}
               href={item.href}
+              title={sidebarCollapsed ? item.label : undefined}
               aria-current={active === item.section ? "page" : undefined}
             >
               <i aria-hidden="true">{item.icon}</i>
@@ -363,13 +395,13 @@ function AppHeader({ active }: { active: DashboardSection }) {
             title={apiStatus === "upgrade-required" ? "The API is online but missing required routes." : undefined}
           >
             <i />
-            {{
-              preview: "Preview workspace",
-              checking: "Checking API",
-              connected: "API connected",
-              "upgrade-required": "API update required",
-              unavailable: "API unavailable",
-            }[apiStatus]}
+            <span>{{
+                preview: "Preview workspace",
+                checking: "Checking API",
+                connected: "API connected",
+                "upgrade-required": "API update required",
+                unavailable: "API unavailable",
+              }[apiStatus]}</span>
           </span>
           <ThemeToggle />
           <div className="sidebar-account">

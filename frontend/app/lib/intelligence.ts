@@ -1,6 +1,7 @@
 import { apiBaseUrl, liveApiUrl } from "./data";
 
 export type BriefStatus = "not_generated" | "queued" | "running" | "ready" | "failed";
+export type BriefMode = "readiness" | "repository_health" | "migration_portfolio";
 
 export interface WorkspaceBrief {
   headline: string;
@@ -35,6 +36,8 @@ export interface WorkspaceBriefResponse {
   provider_count: number;
   source_count: number;
   change_count: number;
+  mode: BriefMode;
+  repository_full_names: string[];
   brief?: WorkspaceBrief | null;
   model?: string | null;
   usage?: {
@@ -56,9 +59,19 @@ async function parseResponse(response: Response): Promise<WorkspaceBriefResponse
   return response.json();
 }
 
-export async function fetchWorkspaceBrief(signal?: AbortSignal): Promise<WorkspaceBriefResponse> {
+function briefingUrl(repositories: string[], mode: BriefMode): string {
+  const parameters = new URLSearchParams({ mode });
+  repositories.forEach((repository) => parameters.append("repository", repository));
+  return `${apiBaseUrl}/intelligence/briefing?${parameters}`;
+}
+
+export async function fetchWorkspaceBrief(
+  repositories: string[],
+  mode: BriefMode,
+  signal?: AbortSignal,
+): Promise<WorkspaceBriefResponse> {
   if (!liveApiUrl) throw new Error("The live Delta Code API is not configured.");
-  const response = await fetch(`${apiBaseUrl}/intelligence/briefing`, {
+  const response = await fetch(briefingUrl(repositories, mode), {
     signal,
     credentials: "include",
     cache: "no-store",
@@ -66,12 +79,16 @@ export async function fetchWorkspaceBrief(signal?: AbortSignal): Promise<Workspa
   return parseResponse(response);
 }
 
-export async function generateWorkspaceBrief(refresh = false): Promise<WorkspaceBriefResponse> {
+export async function generateWorkspaceBrief(
+  repositories: string[],
+  mode: BriefMode,
+  refresh = false,
+): Promise<WorkspaceBriefResponse> {
   const response = await fetch(`${apiBaseUrl}/intelligence/briefing`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh }),
+    body: JSON.stringify({ refresh, mode, repository_full_names: repositories }),
   });
   return parseResponse(response);
 }

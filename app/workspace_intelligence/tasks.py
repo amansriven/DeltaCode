@@ -3,6 +3,8 @@
 from app.hardening.metrics import JobObservation
 from app.procrastinate_app import procrastinate_app
 
+from .chat_service import generate_dashboard_answer
+from .chat_store import claim_message, complete_message, fail_message
 from .service import generate_workspace_brief
 from .store import claim_brief, complete_brief, fail_brief
 
@@ -28,4 +30,22 @@ def generate_workspace_ai_brief(workspace_id: str, migration_digest: str) -> Non
         observation.finish("failed")
         error_code = getattr(exc, "code", None) or type(exc).__name__.lower()
         fail_brief(workspace_id, migration_digest, str(error_code))
+        raise
+
+
+@procrastinate_app.task(name="generate_dashboard_chat_answer")
+def generate_dashboard_chat_answer(workspace_id: str, message_id: str) -> None:
+    observation = JobObservation("workspace_chat")
+    try:
+        payload = claim_message(workspace_id, message_id)
+        if payload is None:
+            observation.finish("skipped")
+            return
+        answer, model, usage = generate_dashboard_answer(payload)
+        complete_message(workspace_id, message_id, answer.model_dump(mode="json"), model, usage)
+        observation.finish("completed")
+    except Exception as exc:
+        observation.finish("failed")
+        error_code = getattr(exc, "code", None) or type(exc).__name__.lower()
+        fail_message(workspace_id, message_id, str(error_code))
         raise

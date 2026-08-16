@@ -41,3 +41,5 @@ class WorkspaceBriefData(ContractModel):
 
 class GenerateWorkspaceBriefRequest(ContractModel):
     refresh: bool = False
+    mode: Literal["readiness", "repository_health", "migration_portfolio"] = "readiness"
+    repository_full_names: list[str] = Field(min_length=1, max_length=20)

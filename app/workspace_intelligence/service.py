@@ -38,6 +38,7 @@ def _compact_migration(item: dict) -> dict:
 
 def _compact_workspace(snapshot: dict) -> dict:
     return {
+        "scope": snapshot.get("scope", {}),
         "repositories": [
             {
                 "id": item.get("id"),
@@ -82,9 +83,7 @@ def _compact_workspace(snapshot: dict) -> dict:
             }
             for item in snapshot.get("changes", [])[:50]
         ],
-        "migrations": [
-            _compact_migration(item) for item in snapshot.get("migrations", [])[:50]
-        ],
+        "migrations": [_compact_migration(item) for item in snapshot.get("migrations", [])[:50]],
     }
 
 
@@ -96,12 +95,20 @@ def generate_workspace_brief(
     owns_client = client is None
     if not model_client.available:
         raise ValueError("OPENAI_API_KEY is required for workspace intelligence")
-    snapshot = {"repositories": [], "providers": [], "sources": [], "changes": [],
-                "migrations": workspace} if isinstance(workspace, list) else workspace
+    snapshot = (
+        {
+            "scope": {"mode": "migration_portfolio", "repository_full_names": []},
+            "repositories": [],
+            "providers": [],
+            "sources": [],
+            "changes": [],
+            "migrations": workspace,
+        }
+        if isinstance(workspace, list)
+        else workspace
+    )
     compact = _compact_workspace(snapshot)
-    known_ids = {
-        item["id"] for item in compact["migrations"] if isinstance(item.get("id"), str)
-    }
+    known_ids = {item["id"] for item in compact["migrations"] if isinstance(item.get("id"), str)}
     try:
         payload = model_client.generate_json(
             system_prompt=(
@@ -113,7 +120,10 @@ def generate_workspace_brief(
                 "repository, provider, source, and change inventory, explaining the concrete steps "
                 "needed to reach the first migration. Every claim must be grounded in supplied "
                 "fields. Set migration_id to null for readiness priorities and reference only "
-                "supplied migration ids otherwise. Do not imply that a scan, check, patch, or pull "
+                "supplied migration ids otherwise. Follow the requested scope.mode: readiness "
+                "explains setup gaps, repository_health focuses on the selected repositories, and "
+                "migration_portfolio prioritizes selected-repository migrations. Do not imply "
+                "that a scan, check, patch, or pull "
                 "request exists unless the data explicitly says so. Keep the result concise and "
                 "useful for a review board."
             ),

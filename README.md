@@ -66,13 +66,19 @@ uncertainty.
 ## What the AI review bot does
 
 GPT-4o is the migration intelligence layer. It receives bounded, repository-
-specific context and produces schema-validated output for two jobs:
+specific context and produces schema-validated output for core migration jobs:
 
 1. **Propose the migration.** Build a minimal plan, patch, test changes, and
    allowed verification commands from known provider evidence and call sites.
 2. **Review the result.** Inspect the proposed patch and completed sandbox
    evidence, identify grounded findings, and recommend approve, revise,
    snooze, or decline.
+
+The authenticated dashboard also exposes three explicit, user-controlled model
+workflows: repository-scoped readiness and portfolio briefings, Ask Delta chat
+over selected dashboard evidence, and per-pull-request overviews. Recent pull
+requests are read from GitHub without invoking a model; a bounded diff, checks,
+commits, and discussion are sent only after the developer clicks generate.
 
 AI is never the source of truth for whether a check passed. Delta Code keeps
 the authority boundary explicit:

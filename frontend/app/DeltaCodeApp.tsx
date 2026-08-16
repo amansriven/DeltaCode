@@ -20,12 +20,13 @@ import {
   MigrationDetailView,
   MigrationInbox,
   ProvidersOverview,
+  PullRequestIntelligence,
   WorkspaceIntelligence,
 } from "./MigrationWorkspace";
 
 const PRODUCT_NAME = "Delta Code";
 const GITHUB_INSTALL_URL = "https://github.com/apps/deltacodeapp/installations/new";
-type DashboardSection = "migrations" | "intelligence" | "providers" | "repositories" | "integrations" | "settings";
+type DashboardSection = "migrations" | "intelligence" | "pull-requests" | "providers" | "repositories" | "integrations" | "settings";
 type ThemePreference = "light" | "dark";
 
 const dashboardNavigation: Array<{
@@ -48,6 +49,13 @@ const dashboardNavigation: Array<{
     href: "/intelligence",
     icon: "✦",
     description: "OpenAI priorities and portfolio risk",
+  },
+  {
+    section: "pull-requests",
+    label: "PR intelligence",
+    href: "/pull-requests",
+    icon: "⑂",
+    description: "Recent GitHub PRs and on-demand AI review",
   },
   {
     section: "providers",
@@ -522,6 +530,15 @@ function IntelligencePage() {
     <main className="dashboard-page">
       <AppHeader active="intelligence" />
       <WorkspaceIntelligence />
+    </main>
+  );
+}
+
+function PullRequestsPage() {
+  return (
+    <main className="dashboard-page">
+      <AppHeader active="pull-requests" />
+      <PullRequestIntelligence />
     </main>
   );
 }
@@ -1647,6 +1664,7 @@ export default function DeltaCodeApp({ route }: { route: string[] }) {
   else if (path === "onboarding") page = <OnboardingPage />;
   else if (path === "migrations") page = <MigrationInboxPage />;
   else if (path === "intelligence") page = <IntelligencePage />;
+  else if (path === "pull-requests") page = <PullRequestsPage />;
   else if (path === "providers") page = <ProvidersPage />;
   else if (path === "repositories") page = <RepositoriesPage />;
   if (path.startsWith("migrations/")) {

@@ -9,6 +9,12 @@ def test_health_endpoint() -> None:
     assert response.status_code == 200
     assert response.json() == {
         "status": "ok",
-        "api_version": "2026-08-06",
-        "capabilities": ["migrations", "providers"],
+        "api_version": "2026-08-15",
+        "capabilities": [
+            "migrations",
+            "providers",
+            "workspace_intelligence",
+            "dashboard_chat",
+            "pull_requests",
+        ],
     }

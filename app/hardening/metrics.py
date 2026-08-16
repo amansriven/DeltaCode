@@ -5,7 +5,15 @@ from collections import defaultdict
 from time import monotonic
 
 JOB_KINDS = frozenset(
-    {"ingestion", "repository_analysis", "generation", "publication", "workspace_intelligence"}
+    {
+        "ingestion",
+        "repository_analysis",
+        "generation",
+        "publication",
+        "workspace_intelligence",
+        "workspace_chat",
+        "pull_request_intelligence",
+    }
 )
 JOB_STATUSES = frozenset({"completed", "failed", "skipped"})
 

@@ -2,12 +2,21 @@
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors keep route transitions explicit in the catch-all app shell. */
 import { useEffect, useMemo, useState } from "react";
-import { githubLoginUrlFor, liveApiUrl } from "./lib/data";
+import { fetchMe, githubLoginUrlFor, liveApiUrl } from "./lib/data";
 import {
+  BriefMode,
   fetchWorkspaceBrief,
   generateWorkspaceBrief,
   WorkspaceBriefResponse,
 } from "./lib/intelligence";
+import { askDelta, DashboardChatMessage, fetchDeltaThread } from "./lib/dashboardChat";
+import {
+  fetchPullRequestOverview,
+  fetchRecentPullRequests,
+  generatePullRequestOverview,
+  PullRequestOverviewResponse,
+  PullRequestSummary,
+} from "./lib/pullRequests";
 import {
   AttemptSummary,
   ChangeDetail,
@@ -152,9 +161,88 @@ function BriefLoading() {
   );
 }
 
+function AskDeltaChat({ repositories }: { repositories: string[] }) {
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<DashboardChatMessage[]>([]);
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const hasPending = messages.some((item) => item.status === "queued" || item.status === "running");
+  const scopeTooLarge = repositories.length > 10;
+
+  useEffect(() => {
+    if (!threadId || (!sending && !hasPending)) return;
+    const poll = () => fetchDeltaThread(threadId)
+      .then((response) => {
+        setMessages(response.messages);
+        if (!response.messages.some((item) => item.status === "queued" || item.status === "running")) {
+          setSending(false);
+        }
+      })
+      .catch((reason: Error) => {
+        setError(reason.message);
+        setSending(false);
+      });
+    void poll();
+    const timer = window.setInterval(poll, 2000);
+    return () => window.clearInterval(timer);
+  }, [hasPending, sending, threadId]);
+
+  async function sendMessage(value = message) {
+    const normalized = value.trim();
+    if (!normalized || repositories.length === 0 || scopeTooLarge || sending) return;
+    setSending(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await askDelta(normalized, repositories, threadId);
+      setThreadId(response.thread_id);
+      setMessages((current) => [...current, {
+        id: `optimistic-${Date.now()}`,
+        role: "user",
+        status: "ready",
+        content: normalized,
+        created_at: new Date().toISOString(),
+      }, {
+        id: response.message_id,
+        role: "assistant",
+        status: "queued",
+        content: null,
+        created_at: new Date().toISOString(),
+      }]);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Ask Delta could not send the question.");
+      setSending(false);
+    }
+  }
+
+  const suggestions = [
+    "What is missing before these repositories can produce migrations?",
+    "Summarize the highest-risk dashboard evidence in this scope.",
+    "Which selected repository should I review first, and why?",
+  ];
+
+  return (
+    <section className="ask-delta-panel">
+      <header><div><span className="ask-delta-mark" aria-hidden="true">✦</span><span><small>Repository-scoped assistant</small><h2>Ask Delta</h2></span></div><span className={`ask-delta-scope ${scopeTooLarge ? "scope-warning" : ""}`}><i />{scopeTooLarge ? "Choose 10 or fewer repositories" : `${repositories.length} ${repositories.length === 1 ? "repository" : "repositories"} in scope`}</span></header>
+      <div className="ask-delta-body">
+        {messages.length === 0 ? <div className="ask-delta-welcome"><span>Δ</span><h3>Ask about the workspace you selected</h3><p>I can explain connected repositories, migration readiness, providers, cached PR overviews, and next actions. Unrelated questions are declined to keep context and token usage bounded.</p><div>{suggestions.map((item) => <button type="button" key={item} disabled={repositories.length === 0 || scopeTooLarge} onClick={() => sendMessage(item)}>{item}<i>↗</i></button>)}</div></div>
+          : <div className="ask-delta-thread">{messages.map((item) => <article key={item.id} className={`chat-message chat-${item.role}`}><span>{item.role === "assistant" ? "Δ" : "You"}</span><div>{item.status === "queued" || item.status === "running" ? <p className="chat-thinking"><i />Reading dashboard evidence…</p> : item.status === "failed" ? <p>That answer failed safely. <code>{item.error_code || "unknown"}</code></p> : <><p>{item.answer?.answer || item.content}</p>{item.answer?.citations && item.answer.citations.length > 0 && <div className="chat-citations">{item.answer.citations.map((citation) => <a href={citation.href} key={`${citation.href}-${citation.label}`}>{citation.label}<i>→</i></a>)}</div>}{item.answer?.follow_ups && item.answer.follow_ups.length > 0 && <div className="chat-followups">{item.answer.follow_ups.map((followUp) => <button type="button" key={followUp} onClick={() => sendMessage(followUp)}>{followUp}</button>)}</div>}</>}</div></article>)}</div>}
+      </div>
+      {error && <p className="ask-delta-error" role="alert">{error}</p>}
+      <form className="ask-delta-composer" onSubmit={(event) => { event.preventDefault(); void sendMessage(); }}><textarea value={message} maxLength={1200} rows={2} disabled={repositories.length === 0 || scopeTooLarge || sending} placeholder={scopeTooLarge ? "Reduce the selection to 10 repositories for chat" : repositories.length ? "Ask about the selected repositories or dashboard evidence…" : "Select at least one repository above"} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} /><div><span><kbd>↵</kbd> send · <kbd>⇧↵</kbd> new line</span><small>{message.length}/1200</small><button type="submit" disabled={!message.trim() || repositories.length === 0 || scopeTooLarge || sending} aria-label="Send question">↑</button></div></form>
+      <footer><span>Bounded to dashboard data</span><span>No GitHub writes</span><span>10-repository scope · 1,200-token response cap</span></footer>
+    </section>
+  );
+}
+
 export function WorkspaceIntelligence() {
   const [response, setResponse] = useState<WorkspaceBriefResponse | null>(null);
-  const [loading, setLoading] = useState(Boolean(liveApiUrl));
+  const [repositories, setRepositories] = useState<string[]>([]);
+  const [selectedRepositories, setSelectedRepositories] = useState<string[]>([]);
+  const [mode, setMode] = useState<BriefMode>("readiness");
+  const [loading, setLoading] = useState(false);
+  const [repositoriesLoading, setRepositoriesLoading] = useState(Boolean(liveApiUrl));
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const responseStatus = response?.status;
@@ -162,19 +250,37 @@ export function WorkspaceIntelligence() {
   useEffect(() => {
     if (!liveApiUrl) return;
     const controller = new AbortController();
-    fetchWorkspaceBrief(controller.signal)
+    fetchMe(controller.signal)
+      .then((user) => {
+        const available = user?.accessible_repos || [];
+        setRepositories(available);
+        setSelectedRepositories(available.slice(0, 1));
+      })
+      .catch((reason: Error) => {
+        if (reason.name !== "AbortError") setError(reason.message);
+      })
+      .finally(() => setRepositoriesLoading(false));
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!liveApiUrl || selectedRepositories.length === 0) {
+      return;
+    }
+    const controller = new AbortController();
+    fetchWorkspaceBrief(selectedRepositories, mode, controller.signal)
       .then(setResponse)
       .catch((reason: Error) => {
         if (reason.name !== "AbortError") setError(reason.message);
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, []);
+  }, [mode, selectedRepositories]);
 
   useEffect(() => {
     if (!liveApiUrl || !responseStatus || !["queued", "running"].includes(responseStatus)) return;
     const timer = window.setInterval(() => {
-      fetchWorkspaceBrief()
+      fetchWorkspaceBrief(selectedRepositories, mode)
         .then((next) => {
           setResponse(next);
           if (!["queued", "running"].includes(next.status)) setGenerating(false);
@@ -185,13 +291,13 @@ export function WorkspaceIntelligence() {
         });
     }, 2200);
     return () => window.clearInterval(timer);
-  }, [responseStatus]);
+  }, [mode, responseStatus, selectedRepositories]);
 
   async function generate(refresh: boolean) {
     setError("");
     setGenerating(true);
     try {
-      setResponse(await generateWorkspaceBrief(refresh));
+      setResponse(await generateWorkspaceBrief(selectedRepositories, mode, refresh));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "AI briefing could not be generated.");
       setGenerating(false);
@@ -206,6 +312,18 @@ export function WorkspaceIntelligence() {
     + (response?.source_count || 0)
     + (response?.change_count || 0);
   const isWorking = generating || responseStatus === "queued" || responseStatus === "running";
+  const modeLabels: Record<BriefMode, { label: string; description: string; icon: string }> = {
+    readiness: { label: "Readiness plan", description: "Find setup gaps before the first migration.", icon: "◇" },
+    repository_health: { label: "Repository health", description: "Assess coverage and operational risk.", icon: "⌂" },
+    migration_portfolio: { label: "Migration portfolio", description: "Prioritize active migration work.", icon: "△" },
+  };
+
+  function toggleRepository(repository: string) {
+    setLoading(true);
+    setSelectedRepositories((current) => current.includes(repository)
+      ? current.filter((item) => item !== repository)
+      : current.length < 20 ? [...current, repository] : current);
+  }
   return (
     <div className="dashboard-content intelligence-content" id="main-content">
       <div className="intelligence-heading">
@@ -216,11 +334,23 @@ export function WorkspaceIntelligence() {
         </div>
         <div className="intelligence-heading-actions">
           <span className={`model-availability ${response?.configured ? "available" : "unavailable"}`}><i />{response?.configured ? "OpenAI configured" : !liveApiUrl ? "Backend required" : "API key required"}</span>
-          <button className="button button-primary" type="button" disabled={!liveApiUrl || isWorking || loading || response?.configured === false || workspaceSignals === 0} onClick={() => generate(response?.status === "ready")}>
+          <button className="button button-primary" type="button" disabled={!liveApiUrl || selectedRepositories.length === 0 || isWorking || loading || response?.configured === false || workspaceSignals === 0} onClick={() => generate(response?.status === "ready")}>
             {isWorking ? "Generating…" : response?.status === "ready" ? "Refresh briefing" : "Generate briefing"}
           </button>
         </div>
       </div>
+      <section className="ai-workbench-controls">
+        <div className="ai-mode-picker">
+          <div><span className="section-kicker">Choose the job</span><h2>What should Delta analyze?</h2></div>
+          <div className="ai-mode-grid">{(Object.entries(modeLabels) as Array<[BriefMode, { label: string; description: string; icon: string }]>).map(([value, item]) => <button type="button" key={value} className={mode === value ? "active" : ""} onClick={() => { setLoading(true); setMode(value); }}><i>{item.icon}</i><span><strong>{item.label}</strong><small>{item.description}</small></span><b aria-hidden="true">{mode === value ? "✓" : ""}</b></button>)}</div>
+        </div>
+        <div className="repository-scope-panel">
+          <div className="repository-scope-heading"><div><span className="section-kicker">Evidence scope</span><h2>Select repositories</h2><p>Only selected repository metadata and matching dashboard evidence enter this briefing.</p></div><span><strong>{selectedRepositories.length}</strong> selected</span></div>
+          {repositoriesLoading ? <div className="repository-scope-loading"><span className="loading-spinner" />Loading GitHub repositories…</div> : <div className="repository-scope-list">{repositories.map((repository) => <label key={repository} className={selectedRepositories.includes(repository) ? "selected" : ""}><input type="checkbox" checked={selectedRepositories.includes(repository)} onChange={() => toggleRepository(repository)} /><i>{repository.split("/")[1]?.slice(0, 2).toUpperCase()}</i><span>{repository}</span><b>{selectedRepositories.includes(repository) ? "✓" : "+"}</b></label>)}</div>}
+          <div className="repository-scope-actions"><button type="button" onClick={() => { setLoading(true); setSelectedRepositories(repositories.slice(0, 20)); }}>Select all</button><button type="button" onClick={() => setSelectedRepositories([])}>Clear selection</button><small>Up to 20 repositories per briefing</small></div>
+        </div>
+      </section>
+      <AskDeltaChat repositories={selectedRepositories} />
       {error && <div className="error-state intelligence-error" role="alert"><span>!</span><div><h2>AI briefing unavailable</h2><p>{error}</p>{error.includes("Sign in") && <a className="button button-primary" href={githubLoginUrlFor("/intelligence")}>Continue with GitHub</a>}</div></div>}
       {!liveApiUrl ? (
         <section className="intelligence-empty">
@@ -228,6 +358,8 @@ export function WorkspaceIntelligence() {
           <div><span className="section-kicker">Live data required</span><h2>Connect the Delta Code backend</h2><p>Set <code>NEXT_PUBLIC_DELTA_CODE_API_URL</code> to the Railway web-service URL. AI briefing never substitutes canned model output.</p></div>
           <a className="button button-quiet" href="/docs#ai">Open setup guide →</a>
         </section>
+      ) : selectedRepositories.length === 0 ? (
+        <section className="intelligence-empty"><span className="ai-empty-mark" aria-hidden="true">⌂</span><div><span className="section-kicker">Repository scope required</span><h2>Choose what the model should read</h2><p>Select one or more repositories above. Delta Code will never silently sweep every connected repository.</p></div></section>
       ) : loading ? <BriefLoading /> : response?.configured === false ? (
         <section className="intelligence-empty">
           <span className="ai-empty-mark" aria-hidden="true">✦</span>
@@ -237,7 +369,7 @@ export function WorkspaceIntelligence() {
       ) : isWorking ? <BriefLoading /> : !brief ? (
         <section className="intelligence-empty">
           <span className="ai-empty-mark" aria-hidden="true">✦</span>
-          <div><span className="section-kicker">{response?.migration_count ? "Migration portfolio" : "Workspace readiness"}</span><h2>{response?.migration_count ? "Your evidence is ready to analyze" : response?.repository_count ? `${response.repository_count} repositories are ready for an AI readiness scan` : "Connect your first repository"}</h2><p>{response?.migration_count ? `${response.migration_count} migrations will be ranked by urgency, risk, and required action.` : response?.repository_count ? "Generate a real, evidence-grounded plan for connecting provider sources and producing the first migration." : "Install Delta Code on at least one repository to create a grounded workspace briefing."}</p></div>
+          <div><span className="section-kicker">{modeLabels[mode].label}</span><h2>{selectedRepositories.length} {selectedRepositories.length === 1 ? "repository is" : "repositories are"} ready for analysis</h2><p>{modeLabels[mode].description} The model will only receive the selected scope.</p></div>
           {workspaceSignals > 0 && <button className="button button-primary" type="button" onClick={() => generate(false)}>{response?.migration_count ? "Generate briefing" : "Generate readiness brief"}</button>}
         </section>
       ) : (
@@ -718,6 +850,186 @@ export function ChangeDetailView({ changeId }: { changeId: string }) {
       <header className="change-detail-header"><span className="provider-monogram large">{change.provider.name.slice(0, 2).toUpperCase()}</span><div><span className="section-kicker">Normalized provider change</span><h1>{change.summary}</h1><p>{change.provider.name}{change.provider.product ? ` · ${change.provider.product}` : ""}</p></div></header>
       <div className="change-facts"><span><small>Severity</small><RiskPill risk={change.severity} /></span><span><small>Breaking</small><strong>{change.breaking === null ? "Unknown" : change.breaking ? "Yes" : "No"}</strong></span><span><small>Effective</small><strong>{formatDate(change.effective_at)}</strong></span><span><small>Confidence</small><strong>{percentage(change.confidence.score)}</strong></span></div>
       <div className="migration-detail-grid"><div className="migration-main-column"><section className="detail-card"><span className="section-kicker">Normalized semantics</span><h2>Before and after</h2><div className="semantic-comparison"><article><span>Before</span><pre>{JSON.stringify(change.before, null, 2)}</pre></article><article><span>After</span><pre>{JSON.stringify(change.after, null, 2)}</pre></article></div></section><section className="detail-card"><span className="section-kicker">Provider claims</span><h2>Evidence provenance</h2>{change.claims?.map((claim) => <article className="change-claim" key={claim.id}><i aria-hidden="true">✓</i><div><strong>{claim.summary}</strong><small>{claim.provenance.replaceAll("_", " ")} · {claim.locator}</small></div></article>)}</section></div><aside className="migration-side-column"><section className="detail-card source-card"><span className="section-kicker">Captured sources</span><h2>Official material</h2>{change.source_artifacts?.map((source) => <a key={source.id} href={source.canonical_url} target="_blank" rel="noreferrer"><span>{source.source_type.replaceAll("_", " ")}</span><b>Open source ↗</b></a>)}</section><section className="detail-card"><span className="section-kicker">Repository fanout</span><h2>{related.length || "—"} affected in preview</h2>{related.map((migration) => <a className="related-migration" href={`/migrations/${migration.id}`} key={migration.id}><code>{migration.repository_full_name}</code><StatusPill status={migration.status} /></a>)}</section></aside></div>
+    </div>
+  );
+}
+
+function PullRequestOverviewLoading() {
+  return (
+    <div className="pr-overview-loading" role="status">
+      <span className="ai-orbit" aria-hidden="true"><i /><i /><i /></span>
+      <div><strong>Reading the pull request</strong><small>Reviewing the diff, checks, commits, and discussion…</small></div>
+    </div>
+  );
+}
+
+export function PullRequestIntelligence() {
+  const [pullRequests, setPullRequests] = useState<PullRequestSummary[]>([]);
+  const [selectedKey, setSelectedKey] = useState("");
+  const [overview, setOverview] = useState<PullRequestOverviewResponse | null>(null);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(Boolean(liveApiUrl));
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!liveApiUrl) return;
+    const controller = new AbortController();
+    fetchRecentPullRequests(controller.signal)
+      .then((response) => {
+        setPullRequests(response.items);
+        if (response.items[0]) {
+          setSelectedKey(`${response.items[0].repository_full_name}#${response.items[0].number}`);
+        }
+      })
+      .catch((reason: Error) => {
+        if (reason.name !== "AbortError") setError(reason.message);
+      })
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, []);
+
+  const selected = useMemo(
+    () => pullRequests.find((item) => `${item.repository_full_name}#${item.number}` === selectedKey) || null,
+    [pullRequests, selectedKey],
+  );
+
+  useEffect(() => {
+    if (!selected) {
+      return;
+    }
+    const controller = new AbortController();
+    fetchPullRequestOverview(selected.repository_full_name, selected.number, controller.signal)
+      .then(setOverview)
+      .catch((reason: Error) => {
+        if (reason.name !== "AbortError") setError(reason.message);
+      })
+      .finally(() => setOverviewLoading(false));
+    return () => controller.abort();
+  }, [selected]);
+
+  const overviewStatus = overview?.status;
+  useEffect(() => {
+    if (!selected || !overviewStatus || !["queued", "running"].includes(overviewStatus)) return;
+    const timer = window.setInterval(() => {
+      fetchPullRequestOverview(selected.repository_full_name, selected.number)
+        .then((next) => {
+          setOverview(next);
+          if (!["queued", "running"].includes(next.status)) setGenerating(false);
+        })
+        .catch((reason: Error) => {
+          setError(reason.message);
+          setGenerating(false);
+        });
+    }, 2200);
+    return () => window.clearInterval(timer);
+  }, [selected, overviewStatus]);
+
+  async function analyze(refresh: boolean) {
+    if (!selected) return;
+    setError("");
+    setGenerating(true);
+    try {
+      setOverview(await generatePullRequestOverview(
+        selected.repository_full_name,
+        selected.number,
+        refresh,
+      ));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "The PR overview could not be generated.");
+      setGenerating(false);
+    }
+  }
+
+  async function refreshPullRequests() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetchRecentPullRequests();
+      setPullRequests(response.items);
+      if (!response.items.some((item) => `${item.repository_full_name}#${item.number}` === selectedKey)) {
+        const first = response.items[0];
+        setSelectedKey(first ? `${first.repository_full_name}#${first.number}` : "");
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Pull requests could not be refreshed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function selectPullRequest(key: string) {
+    setOverview(null);
+    setOverviewLoading(true);
+    setError("");
+    setSelectedKey(key);
+  }
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const visiblePullRequests = pullRequests.filter((item) => !normalizedQuery
+    || item.title.toLowerCase().includes(normalizedQuery)
+    || item.repository_full_name.toLowerCase().includes(normalizedQuery)
+    || item.author.login.toLowerCase().includes(normalizedQuery));
+  const reviewedCount = pullRequests.filter((item) => item.ai_overview.status === "ready").length;
+  const draftCount = pullRequests.filter((item) => item.draft).length;
+  const activeCount = pullRequests.length - draftCount;
+  const isWorking = generating || overviewStatus === "queued" || overviewStatus === "running";
+  const result = overview?.overview;
+
+  return (
+    <div className="dashboard-content pr-intelligence-content" id="main-content">
+      <div className="pr-intelligence-heading">
+        <div><span className="section-kicker">GitHub review intelligence</span><h1>Pull request radar</h1><p>Scan recent work across connected repositories, then request an evidence-grounded AI overview.</p></div>
+        <button className="button button-quiet" type="button" disabled={loading} onClick={refreshPullRequests}>{loading ? "Refreshing…" : "Refresh from GitHub"}</button>
+      </div>
+      <section className="pr-radar-metrics" aria-label="Pull request summary">
+        <article><span>Open pull requests</span><strong>{pullRequests.length}</strong><small>Across connected repositories</small></article>
+        <article><span>Ready for review</span><strong>{activeCount}</strong><small>Non-draft changes</small></article>
+        <article><span>Drafts</span><strong>{draftCount}</strong><small>Still in progress</small></article>
+        <article className="metric-ai"><span>AI overviews</span><strong>{reviewedCount}</strong><small>Generated on explicit request</small></article>
+      </section>
+      {error && <div className="error-state intelligence-error" role="alert"><span>!</span><div><h2>Pull request intelligence unavailable</h2><p>{error}</p>{error.includes("Sign in") && <a className="button button-primary" href={githubLoginUrlFor("/pull-requests")}>Continue with GitHub</a>}</div></div>}
+      {!liveApiUrl ? (
+        <section className="intelligence-empty"><span className="ai-empty-mark" aria-hidden="true">⑂</span><div><span className="section-kicker">Live data required</span><h2>Connect the Delta Code backend</h2><p>Pull request intelligence never substitutes preview repositories or fabricated reviews.</p></div></section>
+      ) : loading ? <div className="loading-state" role="status"><span className="loading-spinner" aria-hidden="true" />Loading recent pull requests…</div>
+        : !pullRequests.length ? (
+          <section className="intelligence-empty"><span className="ai-empty-mark" aria-hidden="true">⑂</span><div><span className="section-kicker">GitHub is connected</span><h2>No open pull requests found</h2><p>Open a pull request in one of the repositories selected for the Delta Code GitHub App, then refresh this page.</p></div><a className="button button-quiet" href="/settings/integrations">Review repository access →</a></section>
+        ) : (
+          <div className="pr-intelligence-layout">
+            <aside className="pr-radar-list">
+              <label className="pr-radar-search"><span aria-hidden="true">⌕</span><input type="search" value={query} placeholder="Search PRs, repositories, authors" onChange={(event) => setQuery(event.target.value)} /></label>
+              <div className="pr-radar-list-heading"><span>Recently updated</span><small>{visiblePullRequests.length} shown</small></div>
+              <div className="pr-radar-scroll">
+                {visiblePullRequests.map((item) => {
+                  const key = `${item.repository_full_name}#${item.number}`;
+                  return <button type="button" key={key} className={`pr-radar-item ${selectedKey === key ? "active" : ""}`} onClick={() => selectPullRequest(key)}><span className="pr-radar-repo">{item.repository_full_name}<b>#{item.number}</b></span><strong>{item.title}</strong><small><i className={item.draft ? "draft" : "open"} />{item.draft ? "Draft" : "Open"} · @{item.author.login} · {formatRelative(item.updated_at)}</small><span className={`pr-ai-state state-${item.ai_overview.status}`}>{item.ai_overview.status === "ready" ? "✦ Reviewed" : item.ai_overview.status === "running" || item.ai_overview.status === "queued" ? "✦ Analyzing" : "AI available"}</span></button>;
+                })}
+              </div>
+            </aside>
+            <section className="pr-overview-panel">
+              {selected && <header className="pr-selected-header"><div><span className="pr-selected-repo">{selected.repository_full_name} <i>#{selected.number}</i></span><h2>{selected.title}</h2><p><span className={selected.draft ? "draft" : "open"}>{selected.draft ? "Draft" : "Open"}</span> opened by @{selected.author.login} · {selected.head.ref} → {selected.base.ref}</p></div><a href={selected.html_url} target="_blank" rel="noreferrer" className="button button-quiet">Open on GitHub ↗</a></header>}
+              {selected && <div className="pr-ai-consent"><span aria-hidden="true">✦</span><p><strong>User-triggered model review.</strong> Clicking generate sends this PR’s bounded diff, checks, commits, and discussion to OpenAI. Delta Code does not post comments or approve the pull request.</p><button className="button button-primary" type="button" disabled={isWorking || overviewLoading || overview?.configured === false} onClick={() => analyze(overviewStatus === "ready")}>{isWorking ? "Analyzing PR…" : overviewStatus === "ready" ? "Refresh overview" : "Generate AI overview"}</button></div>}
+              {overviewLoading ? <PullRequestOverviewLoading /> : isWorking ? <PullRequestOverviewLoading /> : overviewStatus === "failed" ? (
+                <div className="pr-overview-empty"><span>!</span><h3>The overview could not be generated</h3><p>Error code: <code>{overview?.error_code || "unknown"}</code>. The pull request was not changed.</p><button className="button button-quiet" type="button" onClick={() => analyze(true)}>Try again</button></div>
+              ) : !result ? (
+                <div className="pr-overview-empty"><span>✦</span><h3>Choose when the AI reads this pull request</h3><p>The GitHub list is live. The model call only starts after you request an overview.</p></div>
+              ) : (
+                <div className="pr-overview-result">
+                  <section className="pr-overview-hero"><div><span className={`pr-verdict verdict-${result.verdict}`}>{result.verdict.replaceAll("_", " ")}</span><h2>{result.headline}</h2><p>{result.executive_summary}</p></div><dl><div><dt>Model</dt><dd>{overview.model || "gpt-4o"}</dd></div><div><dt>Confidence</dt><dd>{Math.round(result.confidence.score * 100)}%</dd></div><div><dt>Tokens</dt><dd>{((overview.usage?.input_tokens || 0) + (overview.usage?.output_tokens || 0)).toLocaleString()}</dd></div><div><dt>Est. cost</dt><dd>${(overview.usage?.estimated_cost_usd || 0).toFixed(4)}</dd></div></dl></section>
+                  <div className="pr-overview-grid">
+                    <section className="pr-overview-card"><div className="pr-card-heading"><span>01</span><div><small>What changed</small><h3>Change map</h3></div></div><ul className="pr-change-list">{result.change_summary.map((item) => <li key={item}><i>→</i><span>{item}</span></li>)}</ul></section>
+                    <section className="pr-overview-card"><div className="pr-card-heading"><span>02</span><div><small>Risk model</small><h3>Signals to investigate</h3></div></div><div className="pr-risk-list">{result.risk_signals.length ? result.risk_signals.map((risk) => <article key={risk.title} className={`risk-${risk.severity}`}><span>{risk.severity}</span><strong>{risk.title}</strong><p>{risk.detail}</p><ul>{risk.evidence.map((item) => <li key={item}>{item}</li>)}</ul></article>) : <p className="pr-no-signals">No grounded risk signal was identified in the supplied context.</p>}</div></section>
+                    <section className="pr-overview-card pr-focus-card"><div className="pr-card-heading"><span>03</span><div><small>Reviewer lens</small><h3>Where to focus</h3></div></div><div className="pr-focus-list">{result.review_focus.map((focus, index) => <article key={`${focus.path || focus.title}-${index}`}><i>{String(index + 1).padStart(2, "0")}</i><div>{focus.path && <code>{focus.path}</code>}<strong>{focus.title}</strong><p>{focus.detail}</p><blockquote>{focus.reviewer_question}</blockquote></div></article>)}</div></section>
+                    <section className="pr-overview-card"><div className="pr-card-heading"><span>04</span><div><small>Verification</small><h3>Test posture</h3></div></div><span className={`test-posture posture-${result.test_assessment.status}`}>{result.test_assessment.status}</span><p className="test-posture-summary">{result.test_assessment.summary}</p>{result.test_assessment.missing_coverage.length > 0 && <ul className="missing-coverage-list">{result.test_assessment.missing_coverage.map((item) => <li key={item}>{item}</li>)}</ul>}</section>
+                  </div>
+                  <section className="pr-next-actions"><div><span className="section-kicker">Before merge</span><h3>Recommended review sequence</h3><p>{result.confidence.basis}</p></div><ol>{result.recommended_actions.map((item, index) => <li key={item}><i>{index + 1}</i><span>{item}</span></li>)}</ol></section>
+                  <footer className="brief-footnote"><span>✦</span><p><strong>Advisory, not approval.</strong> This overview highlights review work from bounded GitHub evidence. It does not execute code, replace checks, post comments, or approve the pull request.</p></footer>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
     </div>
   );
 }

@@ -13,5 +13,8 @@ procrastinate_app = App(connector=PsycopgConnector(conninfo=DATABASE_URL))
 from app.github_publishing import tasks as github_publishing_tasks  # noqa: E402,F401
 from app.ingestion import tasks as ingestion_tasks  # noqa: E402,F401
 from app.migration_generation import tasks as migration_generation_tasks  # noqa: E402,F401
+from app.pull_request_intelligence import (  # noqa: E402
+    tasks as pull_request_intelligence_tasks,  # noqa: F401
+)
 from app.repository_intelligence import tasks as repository_intelligence_tasks  # noqa: E402,F401
 from app.workspace_intelligence import tasks as workspace_intelligence_tasks  # noqa: E402,F401

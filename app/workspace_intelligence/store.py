@@ -8,7 +8,46 @@ from app.db import get_connection
 from app.openai_responses import OpenAIUsage
 
 
-def workspace_snapshot(workspace_id: str) -> tuple[str, dict]:
+def _stable_repository(data: dict) -> dict:
+    return {
+        "id": data.get("id"),
+        "full_name": data.get("full_name"),
+        "default_branch": data.get("default_branch"),
+        "visibility": data.get("visibility"),
+        "enabled": data.get("enabled", True),
+        "languages": data.get("languages", []),
+        "providers": data.get("providers", []),
+    }
+
+
+def _stable_provider(data: dict) -> dict:
+    return {
+        "id": data.get("id"),
+        "name": data.get("name"),
+        "product": data.get("product"),
+        "status": data.get("status"),
+        "source_count": data.get("source_count", 0),
+        "last_synced_at": data.get("last_synced_at"),
+    }
+
+
+def _stable_source(data: dict) -> dict:
+    return {
+        "id": data.get("id"),
+        "provider_id": data.get("provider_id"),
+        "source_type": data.get("source_type"),
+        "status": data.get("status"),
+        "enabled": data.get("enabled", True),
+        "last_success_at": data.get("last_success_at"),
+        "last_error_code": data.get("last_error_code"),
+    }
+
+
+def workspace_snapshot(
+    workspace_id: str,
+    repository_full_names: list[str],
+    mode: str,
+) -> tuple[str, dict]:
     with get_connection() as conn:
         migration_rows = conn.execute(
             """SELECT m.data, a.data
@@ -44,10 +83,16 @@ def workspace_snapshot(workspace_id: str) -> tuple[str, dict]:
         migration = dict(migration_data)
         migration["attempts"] = [attempt_data] if attempt_data else []
         migrations.append(migration)
+    selected = set(repository_full_names)
+    repositories = [
+        _stable_repository(row[0]) for row in repository_rows if row[0].get("full_name") in selected
+    ]
+    migrations = [item for item in migrations if item.get("repository_full_name") in selected]
     snapshot = {
-        "repositories": [row[0] for row in repository_rows],
-        "providers": [row[0] for row in provider_rows],
-        "sources": [row[0] for row in source_rows],
+        "scope": {"mode": mode, "repository_full_names": sorted(selected)},
+        "repositories": repositories,
+        "providers": [_stable_provider(row[0]) for row in provider_rows],
+        "sources": [_stable_source(row[0]) for row in source_rows],
         "changes": [row[0] for row in change_rows],
         "migrations": migrations,
     }
@@ -67,8 +112,12 @@ def _snapshot_counts(snapshot: dict) -> dict:
     }
 
 
-def get_brief(workspace_id: str) -> dict:
-    digest, snapshot = workspace_snapshot(workspace_id)
+def get_brief(
+    workspace_id: str,
+    repository_full_names: list[str],
+    mode: str,
+) -> dict:
+    digest, snapshot = workspace_snapshot(workspace_id, repository_full_names, mode)
     counts = _snapshot_counts(snapshot)
     with get_connection() as conn:
         row = conn.execute(
@@ -83,12 +132,14 @@ def get_brief(workspace_id: str) -> dict:
             "status": "not_generated",
             "migration_digest": digest,
             **counts,
+            **snapshot["scope"],
         }
     status, data, model, input_tokens, cached_tokens, output_tokens, cost, error, updated_at = row
     return {
         "status": status,
         "migration_digest": digest,
         **counts,
+        **snapshot["scope"],
         "brief": data,
         "model": model,
         "usage": {
@@ -96,17 +147,30 @@ def get_brief(workspace_id: str) -> dict:
             "cached_input_tokens": cached_tokens,
             "output_tokens": output_tokens,
             "estimated_cost_usd": float(cost or 0),
-        } if model else None,
+        }
+        if model
+        else None,
         "error_code": error,
         "updated_at": updated_at.isoformat() if updated_at else None,
     }
 
 
-def queue_brief(workspace_id: str, *, refresh: bool) -> dict:
-    digest, snapshot = workspace_snapshot(workspace_id)
+def queue_brief(
+    workspace_id: str,
+    repository_full_names: list[str],
+    mode: str,
+    *,
+    refresh: bool,
+) -> dict:
+    digest, snapshot = workspace_snapshot(workspace_id, repository_full_names, mode)
     counts = _snapshot_counts(snapshot)
     if not any(counts.values()):
-        return {"status": "not_generated", "migration_digest": digest, **counts}
+        return {
+            "status": "not_generated",
+            "migration_digest": digest,
+            **counts,
+            **snapshot["scope"],
+        }
     now = datetime.now(UTC)
     with get_connection() as conn:
         existing = conn.execute(
@@ -115,7 +179,7 @@ def queue_brief(workspace_id: str, *, refresh: bool) -> dict:
             (workspace_id, digest),
         ).fetchone()
         if existing and not refresh:
-            return get_brief(workspace_id)
+            return get_brief(workspace_id, repository_full_names, mode)
         conn.execute(
             """INSERT INTO workspace_ai_briefs
                (workspace_id, migration_digest, status, input_migrations, created_at, updated_at)
@@ -127,7 +191,7 @@ def queue_brief(workspace_id: str, *, refresh: bool) -> dict:
                  updated_at = EXCLUDED.updated_at""",
             (workspace_id, digest, json.dumps(snapshot), now, now),
         )
-    return {"status": "queued", "migration_digest": digest, **counts}
+    return {"status": "queued", "migration_digest": digest, **counts, **snapshot["scope"]}
 
 
 def claim_brief(workspace_id: str, digest: str) -> dict | None:
@@ -161,8 +225,16 @@ def complete_brief(
                input_tokens = %s, cached_input_tokens = %s, output_tokens = %s,
                cost_usd = %s, error_code = NULL, updated_at = now()
                WHERE workspace_id = %s AND migration_digest = %s AND status = 'running'""",
-            (json.dumps(data), model, usage.input_tokens, usage.cached_input_tokens,
-             usage.output_tokens, usage.cost_usd, workspace_id, digest),
+            (
+                json.dumps(data),
+                model,
+                usage.input_tokens,
+                usage.cached_input_tokens,
+                usage.output_tokens,
+                usage.cost_usd,
+                workspace_id,
+                digest,
+            ),
         )
 
 

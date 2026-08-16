@@ -13,6 +13,7 @@ from app.migration_generation import router as migration_generation_router
 from app.oauth import FRONTEND_URL
 from app.oauth import router as oauth_router
 from app.procrastinate_app import procrastinate_app
+from app.pull_request_intelligence import router as pull_request_intelligence_router
 from app.repository_intelligence import router as repository_intelligence_router
 from app.workspace_intelligence import router as workspace_intelligence_router
 
@@ -36,6 +37,7 @@ app.include_router(migration_generation_router)
 app.include_router(github_publishing_router)
 app.include_router(hardening_router)
 app.include_router(workspace_intelligence_router)
+app.include_router(pull_request_intelligence_router)
 
 allowed_origins = {
     FRONTEND_URL,
@@ -62,6 +64,12 @@ def health() -> dict[str, str | list[str]]:
     """Return liveness and the capabilities required by the current frontend."""
     return {
         "status": "ok",
-        "api_version": "2026-08-06",
-        "capabilities": ["migrations", "providers"],
+        "api_version": "2026-08-15",
+        "capabilities": [
+            "migrations",
+            "providers",
+            "workspace_intelligence",
+            "dashboard_chat",
+            "pull_requests",
+        ],
     }

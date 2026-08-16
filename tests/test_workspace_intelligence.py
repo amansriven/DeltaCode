@@ -4,7 +4,8 @@ from types import SimpleNamespace
 import pytest
 
 from app.openai_responses import OpenAIUsage
-from app.workspace_intelligence import service, tasks
+from app.workspace_intelligence import service, store, tasks
+from app.workspace_intelligence.chat_service import generate_dashboard_answer
 from app.workspace_intelligence.models import GenerateWorkspaceBriefRequest
 
 router = import_module("app.workspace_intelligence.router")
@@ -144,11 +145,78 @@ def test_generate_route_queues_durable_task(monkeypatch):
     request = SimpleNamespace(headers={"origin": "https://delta.example"})
 
     response = router.generate_brief(
-        GenerateWorkspaceBriefRequest(refresh=True), request, "workspace-1"
+        GenerateWorkspaceBriefRequest(
+            refresh=True,
+            mode="repository_health",
+            repository_full_names=["acme/checkout"],
+        ),
+        request,
+        ("workspace-1", {"accessible_repos": ["acme/checkout"]}),
     )
 
     assert response["status"] == "queued"
     assert queued == [{"workspace_id": "workspace-1", "migration_digest": "a" * 64}]
+
+
+def test_repository_digest_ignores_volatile_sync_timestamp():
+    first = store._stable_repository(
+        {"id": "repo-1", "full_name": "acme/api", "updated_at": "2026-08-15T10:00:00Z"}
+    )
+    second = store._stable_repository(
+        {"id": "repo-1", "full_name": "acme/api", "updated_at": "2026-08-15T10:01:00Z"}
+    )
+
+    assert first == second
+
+
+def test_dashboard_chat_rejects_unrelated_question_with_structured_answer():
+    class ChatClient(FakeClient):
+        def generate_json(self, **kwargs):
+            assert kwargs["schema_name"] == "delta_code_dashboard_chat_answer"
+            assert kwargs["max_output_tokens"] == 1200
+            return {
+                "scope_status": "out_of_scope",
+                "answer": "I can only answer questions about this Delta Code workspace.",
+                "citations": [
+                    {
+                        "kind": "dashboard",
+                        "label": "AI briefing",
+                        "href": "/intelligence",
+                    }
+                ],
+                "follow_ups": ["Which repository should I review first?"],
+            }
+
+    answer, model, usage = generate_dashboard_answer(
+        {"history": [{"role": "user", "content": "Write a poem"}], "dashboard": {}},
+        ChatClient(),
+    )
+
+    assert answer.scope_status == "out_of_scope"
+    assert answer.citations[0].href == "/intelligence"
+    assert model == "gpt-4o"
+    assert usage.output_tokens == 45
+
+
+def test_dashboard_chat_drops_untrusted_internal_citation():
+    class ChatClient(FakeClient):
+        def generate_json(self, **_kwargs):
+            return {
+                "scope_status": "answered",
+                "answer": "Review the selected repository.",
+                "citations": [
+                    {
+                        "kind": "dashboard",
+                        "label": "Unsafe route",
+                        "href": "/admin/secrets",
+                    }
+                ],
+                "follow_ups": [],
+            }
+
+    answer, _model, _usage = generate_dashboard_answer({"dashboard": {}}, ChatClient())
+
+    assert answer.citations == []
 
 
 def test_task_persists_model_usage(monkeypatch):

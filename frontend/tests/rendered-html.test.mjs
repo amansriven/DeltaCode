@@ -126,22 +126,26 @@ test("server-renders the complete authenticated product routes", async () => {
     integrationsResponse,
     settingsResponse,
     intelligenceResponse,
+    pullRequestsResponse,
   ] = await Promise.all([
     render("/repositories"),
     render("/settings/integrations"),
     render("/settings/account"),
     render("/intelligence"),
+    render("/pull-requests"),
   ]);
   assert.equal(repositoriesResponse.status, 200);
   assert.equal(integrationsResponse.status, 200);
   assert.equal(settingsResponse.status, 200);
   assert.equal(intelligenceResponse.status, 200);
+  assert.equal(pullRequestsResponse.status, 200);
 
-  const [repositories, integrations, settings, intelligence] = await Promise.all([
+  const [repositories, integrations, settings, intelligence, pullRequests] = await Promise.all([
     repositoriesResponse.text(),
     integrationsResponse.text(),
     settingsResponse.text(),
     intelligenceResponse.text(),
+    pullRequestsResponse.text(),
   ]);
   assert.match(repositories, /Repository directory/);
   assert.match(repositories, /Loading repository access|Product preview|GitHub App access/);
@@ -151,7 +155,10 @@ test("server-renders the complete authenticated product routes", async () => {
   assert.match(settings, /Account/);
   assert.match(settings, /Loading settings|Sign in required/);
   assert.match(intelligence, /AI briefing/);
-  assert.match(intelligence, /Analyzing migration evidence|Evidence-grounded briefing/);
+  assert.match(intelligence, /Select repositories/);
+  assert.match(intelligence, /Ask Delta/);
+  assert.match(pullRequests, /Pull request radar/);
+  assert.match(pullRequests, /Loading recent pull requests|No open pull requests found/);
 });
 
 test("server-renders the migration inbox and review workflow", async () => {

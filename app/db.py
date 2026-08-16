@@ -350,6 +350,47 @@ CREATE TABLE IF NOT EXISTS workspace_ai_briefs (
     PRIMARY KEY (workspace_id, migration_digest)
 );
 
+CREATE TABLE IF NOT EXISTS pull_request_ai_overviews (
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    repository_full_name TEXT NOT NULL,
+    pull_number INTEGER NOT NULL CHECK (pull_number > 0),
+    installation_id BIGINT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('queued', 'running', 'ready', 'failed')),
+    head_sha TEXT,
+    pull_updated_at TIMESTAMPTZ,
+    input_snapshot JSONB,
+    data JSONB,
+    model TEXT,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    cached_input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    cost_usd NUMERIC(12, 6) NOT NULL DEFAULT 0,
+    error_code TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, repository_full_name, pull_number)
+);
+
+CREATE TABLE IF NOT EXISTS workspace_ai_chat_messages (
+    id TEXT NOT NULL,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    thread_id TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+    status TEXT NOT NULL CHECK (status IN ('ready', 'queued', 'running', 'failed')),
+    content TEXT,
+    scope JSONB NOT NULL DEFAULT '{}',
+    data JSONB,
+    model TEXT,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    cached_input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    cost_usd NUMERIC(12, 6) NOT NULL DEFAULT 0,
+    error_code TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (workspace_id, id)
+);
+
 CREATE INDEX IF NOT EXISTS change_events_workspace_feed
 ON change_events (workspace_id, created_at DESC, id);
 CREATE INDEX IF NOT EXISTS provider_sources_workspace_feed
@@ -376,6 +417,10 @@ CREATE INDEX IF NOT EXISTS audit_events_workspace_feed
 ON audit_events (workspace_id, created_at DESC, id);
 CREATE INDEX IF NOT EXISTS workspace_ai_briefs_feed
 ON workspace_ai_briefs (workspace_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS pull_request_ai_overviews_feed
+ON pull_request_ai_overviews (workspace_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS workspace_ai_chat_thread_feed
+ON workspace_ai_chat_messages (workspace_id, thread_id, created_at);
 """
 
 

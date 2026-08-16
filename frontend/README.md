@@ -63,7 +63,7 @@ The OpenAI key belongs only on the backend worker and must never use a
 | `/security` | Repository, sandbox, model, and evidence boundaries |
 | `/migrations` | Migration review inbox |
 | `/migrations/{id}` | Impact, plan, patch, checks, attempts, and decisions |
-| `/intelligence` | Repository-scoped briefings, usage, and Ask Delta chat |
+| `/intelligence` | Repository-scoped briefings and source-aware Ask Delta chat |
 | `/pull-requests` | Recent GitHub pull requests and user-triggered AI overviews |
 | `/changes/{id}` | Normalized provider change and provenance |
 | `/providers` | Official source health and synchronization |

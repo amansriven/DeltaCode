@@ -13,6 +13,11 @@ export interface DashboardChatMessage {
       label: string;
       href: string;
     }>;
+    repository_sources?: Array<{
+      repository_full_name: string;
+      path: string;
+      reason: string;
+    }>;
     follow_ups: string[];
   } | null;
   model?: string | null;

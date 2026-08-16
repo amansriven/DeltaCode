@@ -5,6 +5,7 @@ from app.procrastinate_app import procrastinate_app
 
 from .chat_service import generate_dashboard_answer
 from .chat_store import claim_message, complete_message, fail_message
+from .repository_context import build_repository_context
 from .service import generate_workspace_brief
 from .store import claim_brief, complete_brief, fail_brief
 
@@ -41,6 +42,10 @@ def generate_dashboard_chat_answer(workspace_id: str, message_id: str) -> None:
         if payload is None:
             observation.finish("skipped")
             return
+        repository_refs = payload.pop("repository_refs", [])
+        payload["repository_context"] = build_repository_context(
+            repository_refs, payload.get("question", "")
+        )
         answer, model, usage = generate_dashboard_answer(payload)
         complete_message(workspace_id, message_id, answer.model_dump(mode="json"), model, usage)
         observation.finish("completed")

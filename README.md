@@ -76,7 +76,8 @@ specific context and produces schema-validated output for core migration jobs:
 
 The authenticated dashboard also exposes three explicit, user-controlled model
 workflows: repository-scoped readiness and portfolio briefings, Ask Delta chat
-over selected dashboard evidence, and per-pull-request overviews. Recent pull
+over bounded selected-repository source plus workspace evidence, and
+per-pull-request overviews. Recent pull
 requests are read from GitHub without invoking a model; a bounded diff, checks,
 commits, and discussion are sent only after the developer clicks generate.
 

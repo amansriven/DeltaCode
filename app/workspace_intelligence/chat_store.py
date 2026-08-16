@@ -102,6 +102,12 @@ def claim_message(workspace_id: str, message_id: str) -> dict | None:
                ORDER BY updated_at DESC LIMIT 10""",
             (workspace_id, row[1].get("repository_full_names", [])),
         ).fetchall()
+        repository_rows = conn.execute(
+            """SELECT full_name, default_branch, installation_id
+               FROM repositories WHERE workspace_id = %s AND enabled = TRUE
+                 AND full_name = ANY(%s)""",
+            (workspace_id, row[1].get("repository_full_names", [])),
+        ).fetchall()
     repositories = row[1].get("repository_full_names", [])
     _digest, snapshot = workspace_snapshot(workspace_id, repositories, "repository_health")
     snapshot["pull_request_overviews"] = [
@@ -117,7 +123,26 @@ def claim_message(workspace_id: str, message_id: str) -> dict | None:
     for role, content, data in reversed(history_rows):
         answer = data.get("answer") if isinstance(data, dict) else None
         history.append({"role": role, "content": content or answer or ""})
-    return {"thread_id": row[0], "scope": row[1], "history": history, "dashboard": snapshot}
+    question = next(
+        (item["content"] for item in reversed(history) if item["role"] == "user"),
+        "",
+    )
+    return {
+        "thread_id": row[0],
+        "scope": row[1],
+        "history": history,
+        "question": question,
+        "repository_refs": [
+            {
+                "full_name": item[0],
+                "default_branch": item[1],
+                "installation_id": item[2],
+            }
+            for item in repository_rows
+            if item[2] is not None
+        ],
+        "dashboard": snapshot,
+    }
 
 
 def complete_message(

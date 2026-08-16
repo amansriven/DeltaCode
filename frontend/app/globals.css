@@ -9664,6 +9664,11 @@ html[data-theme="dark"] .flow-difference {
 .chat-followups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .chat-citations a { padding: 5px 7px; color: var(--accent); border: 1px solid rgba(98,205,224,.2); border-radius: 6px; font-size: 8px; }
 .chat-citations i { margin-left: 5px; }
+.chat-source-evidence { display: grid; gap: 8px; margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--border); }
+.chat-source-evidence > strong { color: var(--text-muted); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
+.chat-source-evidence > span { display: grid; gap: 3px; padding: 9px 11px; border-radius: 8px; background: color-mix(in srgb, var(--panel-soft) 82%, transparent); }
+.chat-source-evidence code { color: var(--accent); overflow-wrap: anywhere; font-size: 8px; }
+.chat-source-evidence small { color: var(--text-muted); font-size: 8px; line-height: 1.45; }
 .ask-delta-composer { margin: 0 18px 16px; padding: 11px 13px; border: 1px solid var(--border); border-radius: 13px; background: #090f18; }
 .ask-delta-composer:focus-within { border-color: rgba(98,205,224,.42); box-shadow: 0 0 0 3px rgba(98,205,224,.05); }
 .ask-delta-composer textarea { width: 100%; resize: none; color: var(--text); border: 0; outline: 0; background: transparent; font: inherit; font-size: 11px; line-height: 1.5; }

@@ -168,7 +168,7 @@ function AskDeltaChat({ repositories }: { repositories: string[] }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const hasPending = messages.some((item) => item.status === "queued" || item.status === "running");
-  const scopeTooLarge = repositories.length > 10;
+  const scopeTooLarge = repositories.length > 3;
 
   useEffect(() => {
     if (!threadId || (!sending && !hasPending)) return;
@@ -224,14 +224,14 @@ function AskDeltaChat({ repositories }: { repositories: string[] }) {
 
   return (
     <section className="ask-delta-panel">
-      <header><div><span className="ask-delta-mark" aria-hidden="true">✦</span><span><small>Repository-scoped assistant</small><h2>Ask Delta</h2></span></div><span className={`ask-delta-scope ${scopeTooLarge ? "scope-warning" : ""}`}><i />{scopeTooLarge ? "Choose 10 or fewer repositories" : `${repositories.length} ${repositories.length === 1 ? "repository" : "repositories"} in scope`}</span></header>
+      <header><div><span className="ask-delta-mark" aria-hidden="true">✦</span><span><small>Source-aware repository assistant</small><h2>Ask Delta</h2></span></div><span className={`ask-delta-scope ${scopeTooLarge ? "scope-warning" : ""}`}><i />{scopeTooLarge ? "Choose 3 or fewer repositories" : `${repositories.length} ${repositories.length === 1 ? "repository" : "repositories"} in scope`}</span></header>
       <div className="ask-delta-body">
-        {messages.length === 0 ? <div className="ask-delta-welcome"><span>Δ</span><h3>Ask about the workspace you selected</h3><p>I can explain connected repositories, migration readiness, providers, cached PR overviews, and next actions. Unrelated questions are declined to keep context and token usage bounded.</p><div>{suggestions.map((item) => <button type="button" key={item} disabled={repositories.length === 0 || scopeTooLarge} onClick={() => sendMessage(item)}>{item}<i>↗</i></button>)}</div></div>
-          : <div className="ask-delta-thread">{messages.map((item) => <article key={item.id} className={`chat-message chat-${item.role}`}><span>{item.role === "assistant" ? "Δ" : "You"}</span><div>{item.status === "queued" || item.status === "running" ? <p className="chat-thinking"><i />Reading dashboard evidence…</p> : item.status === "failed" ? <p>That answer failed safely. <code>{item.error_code || "unknown"}</code></p> : <><p>{item.answer?.answer || item.content}</p>{item.answer?.citations && item.answer.citations.length > 0 && <div className="chat-citations">{item.answer.citations.map((citation) => <a href={citation.href} key={`${citation.href}-${citation.label}`}>{citation.label}<i>→</i></a>)}</div>}{item.answer?.follow_ups && item.answer.follow_ups.length > 0 && <div className="chat-followups">{item.answer.follow_ups.map((followUp) => <button type="button" key={followUp} onClick={() => sendMessage(followUp)}>{followUp}</button>)}</div>}</>}</div></article>)}</div>}
+        {messages.length === 0 ? <div className="ask-delta-welcome"><span>Δ</span><h3>Ask about the repositories you selected</h3><p>I can inspect bounded source context—READMEs, manifests, configuration, architecture, and question-relevant files—alongside migrations, providers, and cached PR overviews. Repository code is read, never executed.</p><div>{suggestions.map((item) => <button type="button" key={item} disabled={repositories.length === 0 || scopeTooLarge} onClick={() => sendMessage(item)}>{item}<i>↗</i></button>)}</div></div>
+          : <div className="ask-delta-thread">{messages.map((item) => <article key={item.id} className={`chat-message chat-${item.role}`}><span>{item.role === "assistant" ? "Δ" : "You"}</span><div>{item.status === "queued" || item.status === "running" ? <p className="chat-thinking"><i />Reading repository source and dashboard evidence…</p> : item.status === "failed" ? <p>That answer failed safely. <code>{item.error_code || "unknown"}</code></p> : <><p>{item.answer?.answer || item.content}</p>{item.answer?.repository_sources && item.answer.repository_sources.length > 0 && <div className="chat-source-evidence"><strong>Source evidence inspected</strong>{item.answer.repository_sources.map((source) => <span key={`${source.repository_full_name}:${source.path}`}><code>{source.repository_full_name}/{source.path}</code><small>{source.reason}</small></span>)}</div>}{item.answer?.citations && item.answer.citations.length > 0 && <div className="chat-citations">{item.answer.citations.map((citation) => <a href={citation.href} key={`${citation.href}-${citation.label}`}>{citation.label}<i>→</i></a>)}</div>}{item.answer?.follow_ups && item.answer.follow_ups.length > 0 && <div className="chat-followups">{item.answer.follow_ups.map((followUp) => <button type="button" key={followUp} onClick={() => sendMessage(followUp)}>{followUp}</button>)}</div>}</>}</div></article>)}</div>}
       </div>
       {error && <p className="ask-delta-error" role="alert">{error}</p>}
-      <form className="ask-delta-composer" onSubmit={(event) => { event.preventDefault(); void sendMessage(); }}><textarea value={message} maxLength={1200} rows={2} disabled={repositories.length === 0 || scopeTooLarge || sending} placeholder={scopeTooLarge ? "Reduce the selection to 10 repositories for chat" : repositories.length ? "Ask about the selected repositories or dashboard evidence…" : "Select at least one repository above"} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} /><div><span><kbd>↵</kbd> send · <kbd>⇧↵</kbd> new line</span><small>{message.length}/1200</small><button type="submit" disabled={!message.trim() || repositories.length === 0 || scopeTooLarge || sending} aria-label="Send question">↑</button></div></form>
-      <footer><span>Bounded to dashboard data</span><span>No GitHub writes</span><span>10-repository scope · 1,200-token response cap</span></footer>
+      <form className="ask-delta-composer" onSubmit={(event) => { event.preventDefault(); void sendMessage(); }}><textarea value={message} maxLength={1200} rows={2} disabled={repositories.length === 0 || scopeTooLarge || sending} placeholder={scopeTooLarge ? "Reduce the selection to 3 repositories for source-aware chat" : repositories.length ? "Ask about purpose, architecture, code, dependencies, PRs, or migrations…" : "Select at least one repository above"} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} /><div><span><kbd>↵</kbd> send · <kbd>⇧↵</kbd> new line</span><small>{message.length}/1200</small><button type="submit" disabled={!message.trim() || repositories.length === 0 || scopeTooLarge || sending} aria-label="Send question">↑</button></div></form>
+      <footer><span>Selected repository source + workspace evidence</span><span>Read-only · no code execution</span><span>3-repository scope · 1,200-token response cap</span></footer>
     </section>
   );
 }
@@ -350,7 +350,10 @@ export function WorkspaceIntelligence() {
           <div className="repository-scope-actions"><button type="button" onClick={() => { setLoading(true); setSelectedRepositories(repositories.slice(0, 20)); }}>Select all</button><button type="button" onClick={() => setSelectedRepositories([])}>Clear selection</button><small>Up to 20 repositories per briefing</small></div>
         </div>
       </section>
-      <AskDeltaChat repositories={selectedRepositories} />
+      <AskDeltaChat
+        key={selectedRepositories.join("|")}
+        repositories={selectedRepositories}
+      />
       {error && <div className="error-state intelligence-error" role="alert"><span>!</span><div><h2>AI briefing unavailable</h2><p>{error}</p>{error.includes("Sign in") && <a className="button button-primary" href={githubLoginUrlFor("/intelligence")}>Continue with GitHub</a>}</div></div>}
       {!liveApiUrl ? (
         <section className="intelligence-empty">

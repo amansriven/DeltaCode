@@ -184,6 +184,7 @@ def test_dashboard_chat_rejects_unrelated_question_with_structured_answer():
                         "href": "/intelligence",
                     }
                 ],
+                "repository_sources": [],
                 "follow_ups": ["Which repository should I review first?"],
             }
 
@@ -211,12 +212,48 @@ def test_dashboard_chat_drops_untrusted_internal_citation():
                         "href": "/admin/secrets",
                     }
                 ],
+                "repository_sources": [],
                 "follow_ups": [],
             }
 
     answer, _model, _usage = generate_dashboard_answer({"dashboard": {}}, ChatClient())
 
     assert answer.citations == []
+
+
+def test_dashboard_chat_only_keeps_supplied_repository_sources():
+    class ChatClient(FakeClient):
+        def generate_json(self, **_kwargs):
+            return {
+                "scope_status": "answered",
+                "answer": "SweetPlus is a task application.",
+                "citations": [],
+                "repository_sources": [
+                    {
+                        "repository_full_name": "acme/SweetPlus",
+                        "path": "README.md",
+                        "reason": "Describes the product.",
+                    },
+                    {
+                        "repository_full_name": "acme/SweetPlus",
+                        "path": ".env",
+                        "reason": "Was not supplied.",
+                    },
+                ],
+                "follow_ups": [],
+            }
+
+    payload = {
+        "repository_context": [
+            {
+                "repository_full_name": "acme/SweetPlus",
+                "files": [{"path": "README.md", "content": "A task application."}],
+            }
+        ]
+    }
+    answer, _model, _usage = generate_dashboard_answer(payload, ChatClient())
+
+    assert [source.path for source in answer.repository_sources] == ["README.md"]
 
 
 def test_task_persists_model_usage(monkeypatch):

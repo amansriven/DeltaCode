@@ -1,5 +1,6 @@
 """Provider-neutral plan, patch, sandbox, and review orchestration."""
 
+import difflib
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -9,22 +10,34 @@ from app.control_plane.models import (
     ConfidenceBasis,
     EvidenceRepository,
     MigrationEvidence,
+    PatchEvidence,
     Recommendation,
     VerificationCheck,
 )
 from app.hardening.limits import GenerationLimits
 from app.ingestion.storage import ArtifactStore
 
+from .context import _redact
 from .intelligence import MigrationIntelligence
-from .models import PlanningContext, SandboxExecutionResult
+from .models import (
+    ContextFile,
+    GenerationProposal,
+    PatchProposal,
+    PlanningContext,
+    SandboxExecutionResult,
+)
 from .policy import (
     PatchPolicyError,
+    ReplacementError,
     build_sandbox_request,
     contains_secret,
     normalize_repository_path,
     validate_patch,
 )
+from .verification import add_python_checks, regression_report
 
+MAX_REPAIRS = 1
+MAX_REPAIR_FEEDBACK_CHARS = 5_000
 # Kinds that exercise the migrated code. Formatting and lint say nothing about behavior.
 VERIFYING_CHECK_KINDS = {
     "build",
@@ -40,6 +53,7 @@ NON_VERIFYING_ARGUMENTS = {"--version", "-V", "--help", "-h"}
 class GenerationResult:
     evidence: MigrationEvidence
     patch_object_ref: str
+    attempts: int = 1
 
 
 def _validate_plan(context: PlanningContext, plan) -> None:
@@ -132,6 +146,41 @@ def _guard_recommendation(
     )
 
 
+def _with_repair_feedback(context: PlanningContext, feedback: str) -> PlanningContext:
+    """Failure text comes from the repository's code, so it arrives as data like everything else."""
+    instructions = (context.developer_instructions or "") + (
+        "\n\nA previous attempt at this patch failed. Return every replacement again, applied to "
+        "the original files, and fix the cause:\n"
+        + _redact(feedback)[0][:MAX_REPAIR_FEEDBACK_CHARS]
+    )
+    return context.model_copy(update={"developer_instructions": instructions})
+
+
+def _review_context(context: PlanningContext, patch: PatchProposal) -> PlanningContext:
+    """The reviewer needs what changed. Resending untouched files would only double the cost."""
+    supplied = {item.path: item for item in context.files}
+    files = []
+    for edit in patch.edits:
+        source = supplied.get(edit.path)
+        before = source.restore_omitted(source.content) if source else ""
+        diff = difflib.unified_diff(
+            before.splitlines(keepends=True),
+            edit.content.splitlines(keepends=True),
+            fromfile=edit.path,
+            tofile=edit.path,
+        )
+        files.append(
+            ContextFile(
+                path=edit.path,
+                sha256=edit.expected_sha256 or "0" * 64,
+                content="".join(diff),
+                start_line=1,
+                end_line=1,
+            )
+        )
+    return context.model_copy(update={"files": files})
+
+
 class MigrationGenerationService:
     def __init__(
         self,
@@ -151,25 +200,32 @@ class MigrationGenerationService:
         root: Path,
         *,
         started_at: datetime | None = None,
+        baseline_tests: set[str] | None = None,
     ) -> GenerationResult:
         created_at = started_at or datetime.now(UTC)
         self.limits.validate_context(context)
-        proposal = self.intelligence.propose(context)
-        self.limits.validate_proposal(proposal)
-        _validate_plan(context, proposal.plan)
-        patch_bytes, patch = validate_patch(root, proposal.plan, proposal.patch)
+        attempts = 0
+        prompt = context
+        while True:
+            attempts += 1
+            can_repair = attempts <= MAX_REPAIRS
+            try:
+                proposal = self.intelligence.propose(prompt)
+            except ReplacementError as exc:
+                if not can_repair:
+                    raise
+                prompt = _with_repair_feedback(context, str(exc))
+                continue
+            patch_bytes, patch, execution = self._verify(
+                context, root, proposal, baseline_tests
+            )
+            report = regression_report(execution)
+            if report is None or not can_repair:
+                break
+            prompt = _with_repair_feedback(context, report)
         patch_object_ref = self.artifact_store.put(patch_bytes, patch.sha256)
-        request = build_sandbox_request(
-            root,
-            context.attempt_id,
-            context.snapshot.content_digest,
-            patch,
-            proposal.patch,
-        )
-        execution = self.executor.execute(request)
-        self.limits.validate_execution(execution)
         review, recommendation = self.intelligence.review(
-            context, proposal.plan, patch, execution
+            _review_context(context, proposal.patch), proposal.plan, patch, execution
         )
         review_payload = json.dumps(
             {
@@ -218,4 +274,29 @@ class MigrationGenerationService:
             created_at=created_at,
             completed_at=completed_at,
         )
-        return GenerationResult(evidence=evidence, patch_object_ref=patch_object_ref)
+        return GenerationResult(
+            evidence=evidence, patch_object_ref=patch_object_ref, attempts=attempts
+        )
+
+    def _verify(
+        self,
+        context: PlanningContext,
+        root: Path,
+        proposal: GenerationProposal,
+        baseline_tests: set[str] | None,
+    ) -> tuple[bytes, PatchEvidence, SandboxExecutionResult]:
+        self.limits.validate_proposal(proposal)
+        _validate_plan(context, proposal.plan)
+        patch_bytes, patch = validate_patch(root, proposal.plan, proposal.patch)
+        request = build_sandbox_request(
+            root,
+            context.attempt_id,
+            context.snapshot.content_digest,
+            patch,
+            proposal.patch,
+        )
+        execution = self.executor.execute(
+            add_python_checks(request, proposal.patch, baseline_tests)
+        )
+        self.limits.validate_execution(execution)
+        return patch_bytes, patch, execution

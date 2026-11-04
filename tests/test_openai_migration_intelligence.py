@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 from app.control_plane.models import MigrationPlan, PatchEvidence
 from app.migration_generation.intelligence import OpenAIMigrationIntelligence
-from app.migration_generation.models import SandboxExecutionResult
+from app.migration_generation.models import ContextFile, SandboxExecutionResult
 from app.openai_responses import OpenAIUsage
 
 
@@ -37,8 +37,13 @@ class FakeResponsesClient:
                     "edits": [
                         {
                             "path": "app.py",
-                            "expected_sha256": "a" * 64,
-                            "content": "replacement()\n",
+                            "replacements": [
+                                {
+                                    "old_text": "removed()",
+                                    "new_text": "replacement()",
+                                    "replace_all": False,
+                                }
+                            ],
                             "plan_step_ids": ["step-1"],
                         }
                     ],
@@ -47,7 +52,6 @@ class FakeResponsesClient:
                         {"id": "unit", "kind": "unit_test", "argv": ["pytest", "-q"]}
                     ],
                     "unresolved": [],
-                    "generator": {"id": "untrusted", "version": "untrusted"},
                 },
             }
         return {
@@ -69,7 +73,15 @@ class FakeResponsesClient:
 def test_openai_migration_intelligence_uses_structured_proposal_and_review():
     client = FakeResponsesClient()
     intelligence = OpenAIMigrationIntelligence(client)
-    context = SimpleNamespace(model_dump=lambda **_kwargs: {"untrusted_content_notice": "data"})
+    context = SimpleNamespace(
+        model_dump=lambda **_kwargs: {"untrusted_content_notice": "data"},
+        files=[
+            ContextFile(
+                path="app.py", sha256="a" * 64, content="removed()\nkeep()\n",
+                start_line=1, end_line=2,
+            )
+        ],
+    )
 
     proposal = intelligence.propose(context)
     execution = SandboxExecutionResult(
@@ -116,5 +128,7 @@ def test_openai_migration_intelligence_uses_structured_proposal_and_review():
     assert client.calls[0]["max_output_tokens"] == 6_000
     assert client.calls[1]["max_output_tokens"] == 3_000
     assert proposal.patch.generator.id == "gpt-4o"
+    assert proposal.patch.edits[0].content == "replacement()\nkeep()\n"
+    assert proposal.patch.edits[0].expected_sha256 == "a" * 64
     assert review.model.id == "gpt-4o"
     assert recommendation.action == "approve"

@@ -53,12 +53,10 @@ from app.migration_generation.executor import (
     LocalDockerSandboxExecutor,
 )
 from app.migration_generation.intelligence import MigrationIntelligence, OpenAIMigrationIntelligence
-from app.migration_generation.models import GenerationProposal
+from app.migration_generation.models import GenerationProposal, ModelGenerationProposal
 from app.migration_generation.policy import (
-    MAX_BUNDLE_BYTES,
-    MAX_BUNDLE_FILES,
     PatchPolicyError,
-    contains_secret,
+    collect_sandbox_files,
     normalize_repository_path,
 )
 from app.openai_responses import (
@@ -86,11 +84,12 @@ EXPECTED_REVIEW_OUTPUT_TOKENS = 800
 PROMPT_OVERHEAD_CHARS = 1_000
 TEST_TIMEOUT_SECONDS = 240
 PER_TEST_TIMEOUT_SECONDS = 30
-# Edits carry whole files, so anything above this is truncated after the model has been paid.
-OUTPUT_CHARS_PER_TOKEN = 3.3
+# Output tracks the call sites to rewrite, not file size. Past the cap, the answer is truncated
+# after the model has been paid.
+OUTPUT_TOKENS_PER_CALL_SITE = 80
 OUTPUT_OVERHEAD_TOKENS = 700
-# Room the review needs beyond the context, within the client's 120 KB input limit.
-MAX_CONTEXT_BYTES_FOR_REVIEW = 85_000
+# A failed check costs one more proposal. This is a guess until a run measures it.
+EXPECTED_REPAIR_RATE = 0.3
 MAX_CONSECUTIVE_PAID_FAILURES = 3
 PAID_FAILURE_STAGES = {"generation_failed", "patch_rejected"}
 # Told to the model because nothing else in its context says how verification runs.
@@ -111,11 +110,15 @@ GUIDES = {
         "replacement": r"\.(?:chat\.completions|completions|embeddings)\.create\s*\(",
         "guidance": (
             "openai-python 1.0 removed module-level resources. Create a client with "
-            "client = OpenAI() or AsyncOpenAI(). ChatCompletion.create becomes "
+            "client = OpenAI() or AsyncOpenAI(), inside the function that uses it or behind a "
+            "lazy helper, because constructing one at import time raises when no key is set. "
+            "Client settings are keyword-only: api_key=, and api_base becomes base_url=. "
+            "ChatCompletion.create becomes "
             "client.chat.completions.create, Completion.create becomes client.completions.create, "
             "and Embedding.create becomes client.embeddings.create; acreate becomes an awaited "
-            "create on AsyncOpenAI. Responses are typed objects, so response['choices'][0] becomes "
-            "response.choices[0]. Update the openai requirement to >=1."
+            "create on AsyncOpenAI. Responses are typed objects at every level, so "
+            "response['choices'][0]['message']['content'] becomes "
+            "response.choices[0].message.content. Update the openai requirement to >=1."
         ),
     },
     "selenium-4-locators": {
@@ -148,7 +151,9 @@ GUIDES = {
             "Pydantic 2 deprecated @validator and @root_validator. Use @field_validator with "
             "@classmethod, and @model_validator(mode='before'|'after'). pre=True becomes "
             "mode='before'; always=True is replaced by Field(validate_default=True); the values "
-            "argument becomes info: ValidationInfo with info.data. An after model validator is an "
+            "argument becomes info: ValidationInfo with info.data. field_validator accepts only "
+            "field names, mode, and check_fields. A before model validator is a classmethod that "
+            "receives the raw input data, not a ValidationInfo. An after model validator is an "
             "instance method returning self. Update the pydantic requirement to >=2."
         ),
     },
@@ -159,7 +164,8 @@ GUIDES = {
         "guidance": (
             "React 18 replaced ReactDOM.render(element, container) with "
             "createRoot(container).render(element), and ReactDOM.hydrate(element, container) with "
-            "hydrateRoot(container, element). Import them from react-dom/client. Update react and "
+            "hydrateRoot(container, element). Import them from react-dom/client. To unmount, keep "
+            "the root and call root.unmount() rather than creating another root. Update react and "
             "react-dom to ^18 if the manifest pins an older version."
         ),
     },
@@ -200,6 +206,7 @@ class EvalResult:
     recommendation: str | None = None
     model_check_status: str | None = None
     model_checks: list[dict] = field(default_factory=list)
+    attempts: int = 0
     baseline_passed: int | None = None
     baseline_exit: int | None = None
     after_passed: int | None = None
@@ -219,31 +226,6 @@ def _usage_lines(root: Path, pattern: re.Pattern[str], extensions: list[str]) ->
             if pattern.search(line) and not line.lstrip().startswith(COMMENT_PREFIXES):
                 count += 1
     return count
-
-
-def _tree_files(root: Path) -> dict[str, bytes]:
-    """The same files the sandbox request bundles, so tests see what verification saw."""
-    files: dict[str, bytes] = {}
-    for relative, entry_type, value in _walk_entries(root):
-        if entry_type != "file":
-            continue
-        try:
-            path = normalize_repository_path(relative)
-        except PatchPolicyError:
-            continue
-        content = value.read_bytes()
-        try:
-            if contains_secret(content.decode()):
-                continue
-        except UnicodeDecodeError:
-            pass
-        files[path] = content
-    return files
-
-
-def _fits_sandbox_bundle(files: dict[str, bytes]) -> bool:
-    size = sum(len(content) for content in files.values())
-    return len(files) <= MAX_BUNDLE_FILES and size <= MAX_BUNDLE_BYTES
 
 
 def _with_upgrade(requirements: list[str], upgrade: str | None) -> list[str]:
@@ -443,14 +425,17 @@ def _analyze_tree(root: Path, repository: str, sha: str, change: NormalizedChang
     return reference, snapshot, impact
 
 
-def _estimate(context_json: str, context_file_chars: int) -> tuple[float, float]:
-    schema_chars = len(json.dumps(GenerationProposal.model_json_schema()))
+def _estimate(context_json: str, context_file_chars: int, call_sites: int) -> tuple[float, float]:
+    schema_chars = len(json.dumps(ModelGenerationProposal.model_json_schema()))
     propose_input = (len(context_json) + schema_chars + PROMPT_OVERHEAD_CHARS) / CHARS_PER_TOKEN
-    # Edits carry whole files, so output tracks the size of what was supplied, up to the cap.
     expected_propose_output = min(
-        context_file_chars / CHARS_PER_TOKEN + 500, PROPOSE_MAX_OUTPUT_TOKENS
+        call_sites * OUTPUT_TOKENS_PER_CALL_SITE + OUTPUT_OVERHEAD_TOKENS,
+        PROPOSE_MAX_OUTPUT_TOKENS,
     )
-    review_input = (len(context_json) + PROMPT_OVERHEAD_CHARS + 6_000) / CHARS_PER_TOKEN
+    # The review gets diffs instead of whole files.
+    review_input = (
+        len(context_json) - context_file_chars + PROMPT_OVERHEAD_CHARS + 16_000
+    ) / CHARS_PER_TOKEN
 
     def price(input_tokens: float, output_tokens: float) -> float:
         return (
@@ -458,11 +443,13 @@ def _estimate(context_json: str, context_file_chars: int) -> tuple[float, float]
             + output_tokens * GPT_4O_OUTPUT_USD_PER_MILLION
         ) / 1_000_000
 
+    proposals = 1 + EXPECTED_REPAIR_RATE
     expected = price(
-        propose_input + review_input, expected_propose_output + EXPECTED_REVIEW_OUTPUT_TOKENS
+        propose_input * proposals + review_input,
+        expected_propose_output * proposals + EXPECTED_REVIEW_OUTPUT_TOKENS,
     )
     worst = price(
-        propose_input + review_input, PROPOSE_MAX_OUTPUT_TOKENS + REVIEW_MAX_OUTPUT_TOKENS
+        propose_input * 2 + review_input, PROPOSE_MAX_OUTPUT_TOKENS * 2 + REVIEW_MAX_OUTPUT_TOKENS
     )
     return round(expected, 5), round(worst, 5)
 
@@ -510,16 +497,11 @@ def _score_patch(
 def _run_tests_after(
     result: EvalResult,
     root: Path,
-    migration: dict,
+    image: str,
     baseline: set[str],
     baseline_failed: set[str],
 ) -> None:
-    upgrade = GUIDES[migration["id"]]["after_requirement"]
-    image, _complete = prepare_image(_with_upgrade(python_requirements(root), upgrade))
-    try:
-        exit_code, passed, failed = run_tests(image, _tree_files(root))
-    finally:
-        remove_image(image)
+    exit_code, passed, failed = run_tests(image, collect_sandbox_files(root))
     result.after_passed = len(passed)
     result.regressions = sorted(baseline - passed)[:50]
     result.new_failures = sorted(failed - baseline_failed)[:50]
@@ -540,7 +522,7 @@ def _run_human_control(
         root = _download(client, case["repository"], case["migration_sha"], Path(directory))
         image, _complete = prepare_image(_with_upgrade(python_requirements(root), upgrade))
         try:
-            _exit, passed, _failed = run_tests(image, _tree_files(root))
+            _exit, passed, _failed = run_tests(image, collect_sandbox_files(root))
         finally:
             remove_image(image)
     result.human_passed = len(passed)
@@ -587,8 +569,10 @@ def evaluate_tree(
         result.stage = "context_too_large"
         result.detail = str(exc)
         return result
-    files = _tree_files(root)
-    if not _fits_sandbox_bundle(files):
+    try:
+        # The same files the sandbox request bundles, so tests see what verification saw.
+        files = collect_sandbox_files(root)
+    except PatchPolicyError:
         result.stage = "repository_too_large"
         return result
     context_json = json.dumps(context.model_dump(mode="json"), separators=(",", ":"))
@@ -597,20 +581,14 @@ def evaluate_tree(
     if any(item.redaction_count for item in context.files):
         result.stage = "contains_redacted_secret"
         return result
-    call_site_paths = {site.path for site in impact.call_sites}
-    rewrite_chars = sum(len(item.content) for item in context.files if item.path in call_site_paths)
-    if (
-        rewrite_chars / OUTPUT_CHARS_PER_TOKEN + OUTPUT_OVERHEAD_TOKENS
-        > PROPOSE_MAX_OUTPUT_TOKENS
-    ):
+    call_sites = len(impact.call_sites)
+    expected_output = call_sites * OUTPUT_TOKENS_PER_CALL_SITE + OUTPUT_OVERHEAD_TOKENS
+    if expected_output > PROPOSE_MAX_OUTPUT_TOKENS:
         result.stage = "output_too_large"
-        result.detail = f"{rewrite_chars} characters to rewrite"
-        return result
-    if result.context_bytes > MAX_CONTEXT_BYTES_FOR_REVIEW:
-        result.stage = "review_input_too_large"
+        result.detail = f"{call_sites} call sites to rewrite"
         return result
     result.expected_cost_usd, result.worst_case_cost_usd = _estimate(
-        context_json, sum(len(item.content) for item in context.files)
+        context_json, sum(len(item.content) for item in context.files), call_sites
     )
     if intelligence is None:
         result.stage = "estimated"
@@ -621,11 +599,17 @@ def evaluate_tree(
     image = NODE_IMAGE
     prepared = guide["language"] == "python"
     if prepared:
-        image, _complete = prepare_image(python_requirements(root))
-    try:
-        if prepared:
-            result.baseline_exit, baseline_passed, baseline_failed = run_tests(image, files)
+        before_image, _complete = prepare_image(python_requirements(root))
+        try:
+            result.baseline_exit, baseline_passed, baseline_failed = run_tests(before_image, files)
             result.baseline_passed = len(baseline_passed)
+        finally:
+            remove_image(before_image)
+        # Verification has to see the library the patch migrates to.
+        image, _complete = prepare_image(
+            _with_upgrade(python_requirements(root), guide["after_requirement"])
+        )
+    try:
         with tempfile.TemporaryDirectory(prefix="delta-code-eval-") as artifacts:
             store = FilesystemArtifactStore(Path(artifacts))
             service = MigrationGenerationService(
@@ -634,7 +618,7 @@ def evaluate_tree(
             started = time.monotonic()
             spent_before = usage().cost_usd if usage else 0.0
             try:
-                generated = service.run(context, root)
+                generated = service.run(context, root, baseline_tests=baseline_passed)
             except PatchPolicyError as exc:
                 result.stage = "patch_rejected"
                 result.detail = str(exc)[:300]
@@ -661,6 +645,7 @@ def evaluate_tree(
             name = hashlib.sha256(case["id"].encode()).hexdigest()[:16]
             (patches_dir / f"{name}.json").write_bytes(patch_bytes)
         evidence = generated.evidence
+        result.attempts = generated.attempts
         result.recommendation = evidence.recommendation.action
         statuses = {check.status for check in evidence.verification_checks}
         result.model_check_status = "passed" if statuses == {"passed"} else "not_passed"
@@ -679,7 +664,7 @@ def evaluate_tree(
         result.stage = "completed"
         if baseline_passed:
             try:
-                _run_tests_after(result, root, migration, baseline_passed, baseline_failed)
+                _run_tests_after(result, root, image, baseline_passed, baseline_failed)
                 if http is not None:
                     _run_human_control(http, result, case, migration, baseline_passed)
             except Exception as exc:

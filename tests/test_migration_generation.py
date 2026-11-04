@@ -1,4 +1,6 @@
+import base64
 import hashlib
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -7,6 +9,8 @@ import pytest
 
 from app.control_plane.models import (
     AttemptReview,
+    ComponentVersion,
+    DependencyMatch,
     ImpactEvidence,
     MigrationPlan,
     NormalizedChange,
@@ -27,17 +31,24 @@ from app.migration_generation.intelligence import (
 )
 from app.migration_generation.models import (
     GenerationProposal,
+    ModelGenerationProposal,
     PatchProposal,
     SandboxExecutionResult,
 )
 from app.migration_generation.policy import (
+    MAX_BUNDLE_BYTES,
+    MAX_BUNDLE_FILES,
     PatchPolicyError,
+    ReplacementError,
     build_sandbox_request,
+    collect_sandbox_files,
     contains_secret,
+    materialize_proposal,
     normalize_repository_path,
     validate_patch,
 )
 from app.migration_generation.service import MigrationGenerationService, _guard_recommendation
+from app.openai_responses import strict_json_schema
 from app.repository_intelligence.models import RepositoryRef, RepositorySnapshot
 
 
@@ -330,6 +341,467 @@ def test_prompts_send_unicode_text_rather_than_escapes(tmp_path: Path):
 
     assert "caf\u00e9 \u2014 \u2713" in client.user_input
     assert "\\u2014" not in client.user_input
+
+
+GENERATOR = ComponentVersion(id="fixture-model", version="1.0")
+
+
+def _model_proposal(*replacements: dict, path: str = "app.py") -> ModelGenerationProposal:
+    return ModelGenerationProposal(
+        plan=_plan(),
+        patch={
+            "summary": "Use Client.send_v2.",
+            "edits": [
+                {
+                    "path": path,
+                    "replacements": [
+                        {"replace_all": False, **replacement} for replacement in replacements
+                    ],
+                    "plan_step_ids": ["step-1"],
+                }
+            ],
+            "verification_commands": [
+                {"id": "unit", "kind": "unit_test", "argv": ["pytest", "-q"]}
+            ],
+        },
+    )
+
+
+def test_replacements_keep_every_unmatched_character(tmp_path: Path):
+    source = "# caf\u00e9 \u2713\nclient.send(1)\n\nkeep   =  'spacing'  \n"
+    (tmp_path / "app.py").write_text(source)
+    context = _context(tmp_path)
+
+    proposal = materialize_proposal(
+        context,
+        _model_proposal({"old_text": "client.send(1)", "new_text": "client.send_v2(1)"}),
+        GENERATOR,
+    )
+
+    edit = proposal.patch.edits[0]
+    assert edit.content == source.replace("client.send(1)", "client.send_v2(1)")
+    assert edit.expected_sha256 == context.files[0].sha256
+    assert proposal.patch.generator == GENERATOR
+    validate_patch(tmp_path, proposal.plan, proposal.patch)
+
+
+def test_a_large_file_needs_no_retyping(tmp_path: Path):
+    padding = "".join(f"value_{index} = {index}\n" for index in range(1500))
+    (tmp_path / "app.py").write_text(f"client.send(1)\n{padding}")
+
+    proposal = materialize_proposal(
+        _context(tmp_path),
+        _model_proposal({"old_text": "client.send(1)", "new_text": "client.send_v2(1)"}),
+        GENERATOR,
+    )
+
+    assert proposal.patch.edits[0].content == f"client.send_v2(1)\n{padding}"
+
+
+def test_replacement_matching_many_places_needs_replace_all(tmp_path: Path):
+    (tmp_path / "app.py").write_text("client.send(1)\nclient.send(1)\n")
+    context = _context(tmp_path)
+
+    with pytest.raises(PatchPolicyError, match="matches 2 places"):
+        materialize_proposal(
+            context, _model_proposal({"old_text": ".send(", "new_text": ".send_v2("}), GENERATOR
+        )
+
+    proposal = materialize_proposal(
+        context,
+        _model_proposal({"old_text": ".send(", "new_text": ".send_v2(", "replace_all": True}),
+        GENERATOR,
+    )
+    assert proposal.patch.edits[0].content == "client.send_v2(1)\nclient.send_v2(1)\n"
+
+
+def test_replacements_apply_in_order(tmp_path: Path):
+    (tmp_path / "app.py").write_text("client.send(1)\n")
+
+    proposal = materialize_proposal(
+        _context(tmp_path),
+        _model_proposal(
+            {"old_text": "send(1)", "new_text": "send_v2(1)"},
+            {"old_text": "send_v2(1)", "new_text": "send_v2(2)"},
+        ),
+        GENERATOR,
+    )
+
+    assert proposal.patch.edits[0].content == "client.send_v2(2)\n"
+
+
+def test_replacement_keeps_windows_line_endings(tmp_path: Path):
+    (tmp_path / "app.py").write_bytes(b"import a\r\nclient.send(1)\r\nend = 1\r\n")
+
+    proposal = materialize_proposal(
+        _context(tmp_path),
+        _model_proposal(
+            {"old_text": "import a\nclient.send(1)", "new_text": "import b\nclient.send_v2(1)"}
+        ),
+        GENERATOR,
+    )
+
+    assert proposal.patch.edits[0].content == "import b\r\nclient.send_v2(1)\r\nend = 1\r\n"
+
+
+@pytest.mark.parametrize(
+    ("replacement", "path", "message"),
+    [
+        ({"old_text": "absent()", "new_text": "x"}, "app.py", "was not found"),
+        ({"old_text": "", "new_text": "x"}, "app.py", "no text to match"),
+        ({"old_text": "client", "new_text": "x"}, "other.py", "was not supplied"),
+    ],
+)
+def test_replacement_that_cannot_apply_is_rejected(tmp_path: Path, replacement, path, message):
+    (tmp_path / "app.py").write_text("client.send(1)\n")
+
+    with pytest.raises(PatchPolicyError, match=message):
+        materialize_proposal(
+            _context(tmp_path), _model_proposal(replacement, path=path), GENERATOR
+        )
+
+
+def test_empty_old_text_adds_a_file_the_context_does_not_have(tmp_path: Path):
+    (tmp_path / "app.py").write_text("client.send(1)\n")
+
+    proposal = materialize_proposal(
+        _context(tmp_path),
+        _model_proposal({"old_text": "", "new_text": "new = 1\n"}, path="added.py"),
+        GENERATOR,
+    )
+
+    edit = proposal.patch.edits[0]
+    assert (edit.path, edit.content, edit.expected_sha256) == ("added.py", "new = 1\n", None)
+
+
+def test_redacted_text_cannot_be_written_back_through_a_replacement(tmp_path: Path):
+    (tmp_path / "app.py").write_text('password = "correcthorsebattery"\nclient.send(1)\n')
+
+    proposal = materialize_proposal(
+        _context(tmp_path),
+        _model_proposal({"old_text": "client.send(1)", "new_text": "client.send_v2(1)"}),
+        GENERATOR,
+    )
+
+    with pytest.raises(PatchPolicyError, match="redaction marker"):
+        validate_patch(tmp_path, proposal.plan, proposal.patch)
+
+
+def _impact_at(line: int, path: str = "app.py") -> ImpactEvidence:
+    impact = _impact()
+    site = impact.call_sites[0].model_copy(
+        update={"path": path, "start_line": line, "end_line": line}
+    )
+    return impact.model_copy(update={"call_sites": [site]})
+
+
+def _context_with(root: Path, impact: ImpactEvidence):
+    return assemble_planning_context(
+        migration_id="migration-1",
+        attempt_id="attempt-1",
+        repository=_repository(),
+        snapshot=_snapshot(),
+        change=_change(),
+        impact=impact,
+        root=root,
+    )
+
+
+def _large_source(call_line: int, total: int = 4000) -> str:
+    lines = [f"value_{index} = 'padding padding padding'\n" for index in range(total)]
+    lines[call_line - 1] = "client.send(1)\n"
+    return "".join(lines)
+
+
+def test_large_file_is_windowed_around_call_sites_and_restored_exactly(tmp_path: Path):
+    source = _large_source(2000)
+    (tmp_path / "app.py").write_text(source)
+
+    context = _context_with(tmp_path, _impact_at(2000))
+
+    supplied = context.files[0]
+    assert len(supplied.content) < 5000
+    assert "value_0 =" in supplied.content
+    assert "client.send(1)" in supplied.content
+    assert "value_1000 =" not in supplied.content
+    assert "omitted lines 31-1984" in supplied.content
+    assert "value_1000" not in str(context.model_dump(mode="json"))
+    assert supplied.sha256 == hashlib.sha256(source.encode()).hexdigest()
+
+    proposal = materialize_proposal(
+        context,
+        _model_proposal({"old_text": "client.send(1)", "new_text": "client.send_v2(1)"}),
+        GENERATOR,
+    )
+
+    assert proposal.patch.edits[0].content == source.replace("client.send(1)", "client.send_v2(1)")
+    validate_patch(tmp_path, proposal.plan, proposal.patch)
+
+
+def test_small_file_is_sent_whole(tmp_path: Path):
+    source = _large_source(50, total=100)
+    (tmp_path / "app.py").write_text(source)
+
+    assert _context_with(tmp_path, _impact_at(50)).files[0].content == source
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    [
+        {"old_text": "<<<delta-code omitted lines 31-1984>>>\n", "new_text": ""},
+        {"old_text": "client.send(1)", "new_text": "<<<delta-code omitted lines 31-1984>>>\n"},
+    ],
+)
+def test_replacement_cannot_delete_or_duplicate_omitted_lines(tmp_path: Path, replacement):
+    (tmp_path / "app.py").write_text(_large_source(2000))
+    context = _context_with(tmp_path, _impact_at(2000))
+
+    with pytest.raises(PatchPolicyError, match="crosses omitted lines"):
+        materialize_proposal(context, _model_proposal(replacement), GENERATOR)
+
+
+def test_manifests_nearest_the_root_fit_within_the_file_limit(tmp_path: Path):
+    (tmp_path / "app.py").write_text("client.send(1)\n")
+    impact = _impact_at(1)
+    match = DependencyMatch(
+        ecosystem="pypi", package="acme", detection_method="manifest", evidence="acme==1"
+    )
+    matches = []
+    for index in range(30):
+        directory = tmp_path / "packages" / f"p{index:02}"
+        directory.mkdir(parents=True)
+        (directory / "requirements.txt").write_text("acme==1\n")
+        matches.append(
+            match.model_copy(update={"source_path": f"packages/p{index:02}/requirements.txt"})
+        )
+    (tmp_path / "requirements.txt").write_text("acme==1\n")
+    matches.append(match.model_copy(update={"source_path": "requirements.txt"}))
+
+    context = _context_with(tmp_path, impact.model_copy(update={"dependency_matches": matches}))
+
+    paths = {item.path for item in context.files}
+    assert len(paths) == 20
+    assert {"app.py", "requirements.txt"} <= paths
+
+
+def test_sandbox_bundle_keeps_everything_when_the_repository_fits(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = 1\n")
+    (tmp_path / "logo.png").write_bytes(b"\x89PNG")
+
+    assert set(collect_sandbox_files(tmp_path)) == {"app.py", "logo.png"}
+
+
+def test_oversized_repository_drops_assets_and_very_large_files(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = 1\n")
+    (tmp_path / "video.mp4").write_bytes(b"0" * (MAX_BUNDLE_BYTES + 1))
+    (tmp_path / "generated.py").write_text("y = 1\n" * 50_000)
+
+    assert set(collect_sandbox_files(tmp_path)) == {"app.py"}
+
+
+def test_repository_still_too_large_after_trimming_is_refused(tmp_path: Path):
+    for index in range(MAX_BUNDLE_FILES + 1):
+        (tmp_path / f"module_{index}.py").write_text("x = 1\n")
+
+    with pytest.raises(PatchPolicyError, match="sandbox upload limits"):
+        collect_sandbox_files(tmp_path)
+
+
+def _execution(request, status="passed", exit_code=0, stdout="") -> SandboxExecutionResult:
+    return SandboxExecutionResult(
+        attempt_id=request.attempt_id,
+        status=status,
+        checks=[
+            {
+                "id": check.id,
+                "kind": check.kind,
+                "status": status,
+                "command": " ".join(check.argv),
+                "exit_code": exit_code,
+                "duration_ms": 1,
+                "stdout": stdout,
+            }
+            for check in request.checks
+        ],
+        executor={"id": "fake", "version": "1"},
+        duration_ms=1,
+        network_policy="deny_all",
+        destroyed=True,
+    )
+
+
+class RecordingModel:
+    """Answers each proposal from a script and keeps every prompt it was given."""
+
+    def __init__(self, tmp_path: Path, *answers) -> None:
+        self.answers = list(answers)
+        self.prompts = []
+        self.reviewed = None
+
+    def propose(self, context):
+        self.prompts.append(context)
+        answer = self.answers.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
+        return GenerationProposal(plan=_plan(), patch=_proposal(answer, context.files[0].sha256))
+
+    def review(self, context, plan, patch, execution):
+        self.reviewed = context
+        return (
+            AttemptReview(
+                summary="Reviewed.",
+                findings=[],
+                provenance="model_inferred",
+                model=ComponentVersion(id="fake", version="1"),
+            ),
+            Recommendation(
+                action="approve",
+                rationale="Checks passed.",
+                confidence={"score": 1, "basis": "inferred"},
+                unresolved=[],
+            ),
+        )
+
+
+class ScriptedExecutor:
+    def __init__(self, *results) -> None:
+        self.results = list(results)
+        self.requests = []
+
+    def execute(self, request):
+        self.requests.append(request)
+        return _execution(request, **self.results.pop(0))
+
+
+def _service(tmp_path: Path, model, executor) -> MigrationGenerationService:
+    return MigrationGenerationService(
+        model, executor, FilesystemArtifactStore(tmp_path / "artifacts")
+    )
+
+
+REGRESSION = {"status": "failed", "exit_code": 1, "stdout": "REGRESSION app.py no longer imports"}
+
+
+def test_python_patch_runs_delta_code_checks_instead_of_the_models(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "app.py").write_text("client.send(1)\n")
+    executor = ScriptedExecutor({})
+    model = RecordingModel(tmp_path, "client.send_v2(1)\n")
+
+    result = _service(tmp_path, model, executor).run(
+        _context(root), root, baseline_tests={"test_app.py::test_go"}
+    )
+
+    request = executor.requests[0]
+    assert [check.id for check in request.checks] == ["delta-code-imports", "delta-code-tests"]
+    bundled = {item.path: item for item in request.files}
+    assert {".delta-code/verify_python.py", ".delta-code/baseline-tests.json"} <= set(bundled)
+    originals = json.loads(
+        base64.b64decode(bundled[".delta-code/originals.json"].content_base64)
+    )
+    assert base64.b64decode(originals["app.py"]) == b"client.send(1)\n"
+    assert result.attempts == 1
+    assert result.evidence.recommendation.action == "approve"
+
+
+def test_no_baseline_means_no_test_check_and_no_approval(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "app.py").write_text("client.send(1)\n")
+    executor = ScriptedExecutor({})
+
+    result = _service(
+        tmp_path, RecordingModel(tmp_path, "client.send_v2(1)\n"), executor
+    ).run(_context(root), root)
+
+    assert [check.id for check in executor.requests[0].checks] == ["delta-code-imports"]
+    assert result.evidence.recommendation.action == "revise"
+
+
+def test_regression_earns_one_repair_with_the_failure_in_the_prompt(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "app.py").write_text("client.send(1)\n")
+    executor = ScriptedExecutor(REGRESSION, {})
+    model = RecordingModel(tmp_path, "broken()\n", "client.send_v2(1)\n")
+
+    result = _service(tmp_path, model, executor).run(_context(root), root)
+
+    assert result.attempts == 2
+    assert "no longer imports" in model.prompts[1].developer_instructions
+    assert "no longer imports" not in (model.prompts[0].developer_instructions or "")
+    assert result.evidence.verification_checks[0].status == "passed"
+
+
+def test_second_regression_stops_and_cannot_be_approved(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "app.py").write_text("client.send(1)\n")
+    executor = ScriptedExecutor(REGRESSION, REGRESSION)
+    model = RecordingModel(tmp_path, "broken()\n", "still_broken()\n")
+
+    result = _service(tmp_path, model, executor).run(_context(root), root)
+
+    assert result.attempts == 2
+    assert len(model.prompts) == 2
+    assert result.evidence.recommendation.action == "revise"
+
+
+def test_failure_without_a_verdict_does_not_spend_on_a_repair(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "app.py").write_text("client.send(1)\n")
+    executor = ScriptedExecutor({"status": "failed", "exit_code": 3})
+    model = RecordingModel(tmp_path, "client.send_v2(1)\n")
+
+    result = _service(tmp_path, model, executor).run(_context(root), root)
+
+    assert result.attempts == 1
+    assert result.evidence.recommendation.action == "revise"
+
+
+def test_text_that_does_not_line_up_earns_one_retry_and_then_fails(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "app.py").write_text("client.send(1)\n")
+    error = ReplacementError("replacement text was not found in app.py")
+
+    model = RecordingModel(tmp_path, error, "client.send_v2(1)\n")
+    result = _service(tmp_path, model, ScriptedExecutor({})).run(_context(root), root)
+    assert result.attempts == 2
+    assert "was not found in app.py" in model.prompts[1].developer_instructions
+
+    model = RecordingModel(tmp_path, error, error)
+    with pytest.raises(ReplacementError):
+        _service(tmp_path, model, ScriptedExecutor()).run(_context(root), root)
+
+
+def test_review_sees_a_diff_rather_than_the_whole_file(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    padding = "".join(f"value_{index} = {index}\n" for index in range(200))
+    (root / "app.py").write_text(f"client.send(1)\n{padding}")
+    model = RecordingModel(tmp_path, f"client.send_v2(1)\n{padding}")
+
+    _service(tmp_path, model, ScriptedExecutor({})).run(_context(root), root)
+
+    reviewed = model.reviewed.files[0].content
+    assert "-client.send(1)" in reviewed
+    assert "+client.send_v2(1)" in reviewed
+    assert "value_150" not in reviewed
+
+
+def test_model_schema_asks_for_replacements_and_is_valid_for_strict_output():
+    schema = strict_json_schema(ModelGenerationProposal.model_json_schema())
+
+    edit = schema["$defs"]["ModelEdit"]
+    assert set(edit["properties"]) == {"path", "replacements", "plan_step_ids"}
+    assert schema["$defs"]["TextReplacement"]["required"] == [
+        "old_text",
+        "new_text",
+        "replace_all",
+    ]
 
 
 def test_review_logs_are_bounded_and_keep_the_end_of_the_output():

@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, PrivateAttr, model_validator
 
 from app.control_plane.models import (
     ComponentVersion,
@@ -22,6 +22,15 @@ class ContextFile(ContractModel):
     start_line: int = Field(ge=1)
     end_line: int = Field(ge=1)
     redaction_count: int = Field(default=0, ge=0)
+    # Lines left out of a large file, by the marker standing in for them. Never sent to the model.
+    _omitted: dict[str, str] = PrivateAttr(default_factory=dict)
+
+    def restore_omitted(self, content: str) -> str:
+        for marker, lines in self._omitted.items():
+            if content.count(marker) != 1:
+                raise ValueError("omitted-lines marker was changed")
+            content = content.replace(marker, lines)
+        return content
 
 
 class PlanningContext(ContractModel):
@@ -91,6 +100,33 @@ class PatchProposal(ContractModel):
 class GenerationProposal(ContractModel):
     plan: MigrationPlan
     patch: PatchProposal
+
+
+class TextReplacement(ContractModel):
+    old_text: str
+    new_text: str
+    replace_all: bool = False
+
+
+class ModelEdit(ContractModel):
+    path: str = Field(min_length=1)
+    replacements: list[TextReplacement] = Field(min_length=1)
+    plan_step_ids: list[str] = Field(min_length=1)
+
+
+class ModelPatchProposal(ContractModel):
+    summary: str = Field(min_length=1, max_length=4000)
+    edits: list[ModelEdit] = Field(min_length=1, max_length=100)
+    tests: list[TestChange] = Field(default_factory=list)
+    verification_commands: list[VerificationCommand] = Field(min_length=1, max_length=10)
+    unresolved: list[str] = Field(default_factory=list)
+
+
+class ModelGenerationProposal(ContractModel):
+    """What the model returns: targeted replacements, so it never retypes a file."""
+
+    plan: MigrationPlan
+    patch: ModelPatchProposal
 
 
 class SandboxFile(ContractModel):

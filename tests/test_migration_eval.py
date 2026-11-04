@@ -156,15 +156,25 @@ def test_an_upgrade_replaces_the_old_pin_instead_of_conflicting_with_it():
     assert migration_eval._with_upgrade(["requests>=2"], None) == ["requests>=2"]
 
 
-def test_files_too_large_to_rewrite_stop_before_any_spend(monkeypatch, tmp_path):
+def test_too_many_call_sites_stop_before_any_spend(monkeypatch, tmp_path):
     monkeypatch.setitem(migration_eval.GUIDES, "fixture", GUIDE)
     root = _repository(tmp_path)
-    (root / "app.py").write_text(APP + "# padding line for size\n" * 900)
+    (root / "app.py").write_text(APP + "    Client().send(2)\n" * 80)
 
     result = evaluate_tree(root, CASE, MIGRATION, 1, ScriptedModel("unused"))
 
     assert result.stage == "output_too_large"
     assert result.cost_usd == 0
+
+
+def test_a_large_file_with_few_call_sites_is_not_skipped(monkeypatch, tmp_path):
+    monkeypatch.setitem(migration_eval.GUIDES, "fixture", GUIDE)
+    root = _repository(tmp_path)
+    (root / "app.py").write_text(APP + "# padding line for size\n" * 900)
+
+    result = evaluate_tree(root, CASE, MIGRATION, 1, None)
+
+    assert result.stage == "estimated"
 
 
 def test_a_file_with_a_real_secret_stops_before_any_spend(monkeypatch, tmp_path):
@@ -326,14 +336,15 @@ def test_good_patch_scores_clean_even_though_the_model_chose_a_trivial_check(mon
 
 
 @requires_docker
-def test_regression_is_caught_and_a_trivial_check_cannot_earn_approval(monkeypatch, tmp_path):
+def test_regression_gets_one_repair_and_cannot_earn_approval(monkeypatch, tmp_path):
     monkeypatch.setitem(migration_eval.GUIDES, "fixture", GUIDE)
     broken = APP.replace(".send(", ".removed_method(")
 
     result = evaluate_tree(_repository(tmp_path), CASE, MIGRATION, 1, ScriptedModel(broken))
 
     assert result.stage == "completed", result.detail
-    assert result.model_check_status == "passed"
+    assert result.attempts == 2
+    assert result.model_check_status == "not_passed"
     assert result.recommendation == "revise"
     assert result.usage_after == 0
     assert result.replacement_added == 0

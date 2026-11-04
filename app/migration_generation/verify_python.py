@@ -7,6 +7,7 @@ only ever differences from the original code, so failures a repository already h
 
 import ast
 import base64
+import builtins
 import importlib
 import importlib.util
 import inspect
@@ -28,6 +29,16 @@ PER_TEST_SECONDS = 30
 MAX_FAILURE_LOG_CHARS = 3000
 MAX_REPORTED_TESTS = 10
 NO_VERDICT = 3
+MODULE_ATTRIBUTES = {
+    "__annotations__",
+    "__builtins__",
+    "__cached__",
+    "__class__",
+    "__file__",
+    "__loader__",
+    "__path__",
+    "__spec__",
+}
 # 0 and 1 mean tests ran. 5 means none were collected, which is what losing them all looks like.
 PYTEST_RAN = {0, 1, 5}
 PASSED_TEST = re.compile(r"^PASSED (\S+)", re.MULTILINE)
@@ -120,12 +131,43 @@ def _signature_errors(source: str) -> list[str]:
     return sorted(errors)
 
 
+def _undefined_names(source: str) -> list[str]:
+    """Names nothing in the file defines. Python only notices when that line finally runs.
+
+    Scopes are ignored on purpose: a name bound anywhere counts as bound, so this only reports
+    names that can't resolve, and comparing with the original drops anything it already did.
+    """
+    tree = ast.parse(source)
+    bound = set(dir(builtins)) | MODULE_ATTRIBUTES
+    loaded = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and any(alias.name == "*" for alias in node.names):
+            return []
+        if isinstance(node, ast.Import | ast.ImportFrom):
+            bound.update((alias.asname or alias.name).split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            bound.add(node.name)
+        elif isinstance(node, ast.arg):
+            bound.add(node.arg)
+        elif isinstance(node, ast.ExceptHandler | ast.MatchAs | ast.MatchStar) and node.name:
+            bound.add(node.name)
+        elif isinstance(node, ast.MatchMapping) and node.rest:
+            bound.add(node.rest)
+        elif isinstance(node, ast.Global | ast.Nonlocal):
+            bound.update(node.names)
+        elif isinstance(node, ast.Name):
+            (loaded if isinstance(node.ctx, ast.Load) else bound).add(node.id)
+    return sorted(loaded - bound)
+
+
 def _probe(path: str) -> None:
     """Runs in its own process, because importing repository code can do anything."""
     sys.path[:0] = [os.getcwd(), f"{os.getcwd()}/src", str(Path(path).parent)]
-    outcome: dict = {"import": "ok", "signatures": []}
+    outcome: dict = {"import": "ok", "signatures": [], "undefined": []}
     try:
-        outcome["signatures"] = _signature_errors(Path(path).read_text(encoding="utf-8"))
+        source = Path(path).read_text(encoding="utf-8")
+        outcome["undefined"] = _undefined_names(source)
+        outcome["signatures"] = _signature_errors(source)
     except (SyntaxError, ValueError) as exc:
         outcome["import"] = f"does not parse: {exc}"
     module = path.removesuffix(".py").removesuffix("/__init__")
@@ -170,7 +212,7 @@ def _check_imports() -> int:
     # Half for each side: a verdict needs both, so finishing one alone would be wasted.
     halfway = time.monotonic() + IMPORT_CHECK_SECONDS / 2
     after = {path: _run_probe(path, halfway) for path in paths}
-    clean = {"import": "ok", "signatures": []}
+    clean = {"import": "ok", "signatures": [], "undefined": []}
     try:
         for path, encoded in originals.items():
             if encoded is None:
@@ -193,6 +235,8 @@ def _check_imports() -> int:
             regressions.append(f"{path} no longer imports: {new['import']}")
         for error in sorted(set(new["signatures"]) - set(old["signatures"])):
             regressions.append(f"{path} calls {error}")
+        for name in sorted(set(new["undefined"]) - set(old["undefined"])):
+            regressions.append(f"{path} uses {name}, which is never imported or defined")
     for regression in regressions:
         print(f"REGRESSION {regression}")
     compared = sum(1 for path in paths if after[path] is not None and before[path] is not None)

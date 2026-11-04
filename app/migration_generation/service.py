@@ -37,7 +37,10 @@ from .policy import (
 )
 from .verification import add_python_checks, regression_report
 
+# Separate budgets: text that didn't line up says nothing about whether the migration is right,
+# so using it up would leave a real regression with no chance of a fix.
 MAX_REPAIRS = 1
+MAX_TEXT_RETRIES = 1
 MAX_REPAIR_FEEDBACK_CHARS = 5_000
 # Kinds that exercise the migrated code. Formatting and lint say nothing about behavior.
 VERIFYING_CHECK_KINDS = {
@@ -206,17 +209,17 @@ class MigrationGenerationService:
     ) -> GenerationResult:
         created_at = started_at or datetime.now(UTC)
         self.limits.validate_context(context)
-        attempts = 0
+        attempts = text_retries = repairs = 0
         repair_reasons: list[str] = []
         prompt = context
         while True:
             attempts += 1
-            can_repair = attempts <= MAX_REPAIRS
             try:
                 proposal = self.intelligence.propose(prompt)
             except ReplacementError as exc:
-                if not can_repair:
+                if text_retries >= MAX_TEXT_RETRIES:
                     raise
+                text_retries += 1
                 repair_reasons.append(str(exc))
                 prompt = _with_repair_feedback(context, str(exc))
                 continue
@@ -224,8 +227,9 @@ class MigrationGenerationService:
                 context, root, proposal, baseline_tests
             )
             report = regression_report(execution)
-            if report is None or not can_repair:
+            if report is None or repairs >= MAX_REPAIRS:
                 break
+            repairs += 1
             repair_reasons.append(report)
             prompt = _with_repair_feedback(context, report)
         patch_object_ref = self.artifact_store.put(patch_bytes, patch.sha256)

@@ -1,0 +1,10 @@
+{
+  "description": "Grades from reading each patch as a diff against its parent commit. Nothing was executed against a live service. The first 8 repositories ran before the undefined-name check, separate retry budgets and import prompt were added.",
+  "cases": [
+    {"id": "openai-python-v1:techpizzeria/psionai-guinea-python#3", "stage": "first_8", "grade": "defective", "category": "wrong_api", "note": "Chat path is right, but embeddings.py uses os without importing it, so that path raises NameError."},
+    {"id": "openai-python-v1:silasluiz96-alt/solar-advisor-agent#6", "stage": "first_8", "grade": "correct", "category": null, "note": "Works. Has a redundant response = client = assignment and loosened openai>=1.30 to >=1.0 for no reason."},
+    {"id": "openai-python-v1:bani/bot#1", "stage": "first_8", "grade": "correct", "category": null, "note": "Client created at call time and the repository's own key variable kept."},
+    {"id": "selenium-4-locators:timkpaine/tdameritrade#164", "stage": "first_8", "grade": "defective", "category": "syntax", "note": "Locators are right, but the By import sits unindented inside a function, so the file does not parse. Its one retry had already gone on a text mismatch."},
+    {"id": "selenium-4-locators:ZeitOnline/zeit.nightwatch#8", "stage": "first_8", "grade": "defective", "category": "wrong_api", "note": "Library code is right, but tests/test_basics.py uses By without importing it."}
+  ]
+}

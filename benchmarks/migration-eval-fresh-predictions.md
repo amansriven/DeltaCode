@@ -42,3 +42,11 @@ Run the first 8 repositories (4 OpenAI, 4 Selenium) with a $0.60 limit, then rea
 - Cost is above $0.10 per repository.
 
 The full run is limited to $2.50, and it halts by itself after 3 paid failures in a row.
+
+## After the first 8 repositories
+
+Recorded before running the rest. It cost $0.14 for 5 patches, about half the estimate, and no stopping rule fired. Diff review graded 2 of the 5 correct: OpenAI 2 of 3 and Selenium 0 of 2. Automatic checks alone would have passed 4 of them, and that is below the Selenium prediction.
+
+All 3 defects were cheap to catch, so an undefined-name check, separate retry budgets and a prompt rule on imports were added. Replayed over all 53 saved patches, the name check flagged 2 of the 18 defective patches and none of the 35 correct ones.
+
+The 5 patches keep their grades and are not rerun. The remaining repositories are the clean test of these changes, and results will be reported for each group as well as combined.

@@ -103,6 +103,64 @@ def test_valid_and_unresolvable_calls_pass(tmp_path):
     assert result.returncode == 0, result.stdout
 
 
+def test_name_the_patch_never_imports_is_a_regression(tmp_path):
+    (tmp_path / "app.py").write_text(
+        "import openai\n\n\ndef go():\n    return openai.OpenAI(api_key=os.environ['KEY'])\n"
+    )
+
+    result = _run(
+        tmp_path, "imports", {"app.py": "import openai\n\n\ndef go():\n    return openai\n"}
+    )
+
+    assert result.returncode == 1
+    assert "app.py uses os, which is never imported or defined" in result.stdout
+
+
+def test_undefined_name_the_original_already_had_is_not_blamed_on_the_patch(tmp_path):
+    (tmp_path / "app.py").write_text("def go():\n    return (missing, 2)\n")
+
+    result = _run(tmp_path, "imports", {"app.py": "def go():\n    return (missing, 1)\n"})
+
+    assert result.returncode == 0
+
+
+def test_every_way_of_binding_a_name_counts(tmp_path):
+    (tmp_path / "app.py").write_text(
+        "import a.b as c, d.e\n"
+        "from f import g as h\n"
+        "class K:\n"
+        "    def m(self, x, *y, z=1, **w):\n"
+        "        global q\n"
+        "        q = [i for i in x]\n"
+        "        return K, self, y, z, w, c, d, h, __file__, __name__, print, q\n"
+        "try:\n"
+        "    pass\n"
+        "except ValueError as err:\n"
+        "    print(err)\n"
+        "if (n := 1):\n"
+        "    print(n, lambda p: p)\n"
+        "match 1:\n"
+        "    case [u, *v]:\n"
+        "        print(u, v)\n"
+        "    case {'a': 1, **r}:\n"
+        "        print(r)\n"
+        "    case s:\n"
+        "        print(s)\n"
+    )
+
+    result = _run(tmp_path, "imports", {"app.py": "value = 1\n"})
+
+    assert "never imported" not in result.stdout, result.stdout
+
+
+def test_star_import_means_names_cannot_be_judged(tmp_path):
+    (tmp_path / "app.py").write_text("from os.path import *\nprint(join)\nprint(other_name)\n")
+
+    result = _run(tmp_path, "imports", {"app.py": "value = 1\n"})
+
+    assert "never imported" not in result.stdout
+
+
 def test_syntax_error_is_a_regression(tmp_path):
     (tmp_path / "app.py").write_text("def broken(:\n")
 

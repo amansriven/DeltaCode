@@ -915,6 +915,21 @@ def test_text_that_does_not_line_up_earns_one_retry_and_then_fails(tmp_path: Pat
         _service(tmp_path, model, ScriptedExecutor()).run(_context(root), root)
 
 
+def test_text_retry_does_not_use_up_the_regression_repair(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "app.py").write_text("client.send(1)\n")
+    error = ReplacementError("replacement text matches 2 places in app.py")
+    executor = ScriptedExecutor(REGRESSION, {})
+    model = RecordingModel(tmp_path, error, "broken()\n", "client.send_v2(1)\n")
+
+    result = _service(tmp_path, model, executor).run(_context(root), root)
+
+    assert result.attempts == 3
+    assert len(executor.requests) == 2
+    assert result.evidence.verification_checks[0].status == "passed"
+
+
 def test_review_sees_a_diff_rather_than_the_whole_file(tmp_path: Path):
     root = tmp_path / "repo"
     root.mkdir()

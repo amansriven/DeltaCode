@@ -96,6 +96,7 @@ OUTPUT_CHARS_PER_CALL_SITE = 100
 OUTPUT_OVERHEAD_TOKENS = 700
 # A failed check costs one more proposal. This is a guess until a run measures it.
 EXPECTED_REPAIR_RATE = 0.3
+WORST_CASE_PROPOSALS = 3
 MAX_CONSECUTIVE_PAID_FAILURES = 3
 SIMULATED_BUDGET_USD = 2.50
 PAID_FAILURE_STAGES = {"generation_failed", "patch_rejected"}
@@ -472,7 +473,8 @@ def _estimate(
         expected_propose_output * proposals + EXPECTED_REVIEW_OUTPUT_TOKENS,
     )
     worst = price(
-        propose_input * 2 + review_input, PROPOSE_MAX_OUTPUT_TOKENS * 2 + REVIEW_MAX_OUTPUT_TOKENS
+        propose_input * WORST_CASE_PROPOSALS + review_input,
+        PROPOSE_MAX_OUTPUT_TOKENS * WORST_CASE_PROPOSALS + REVIEW_MAX_OUTPUT_TOKENS,
     )
     return round(expected, 5), round(worst, 5)
 

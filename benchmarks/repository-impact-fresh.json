@@ -1,0 +1,1750 @@
+{
+  "schema_version": "1.0",
+  "description": "Real merged migrations in public repositories, frozen before scoring. Ground truth is the set of lines developers removed that use the changed API.",
+  "selected_at": "2026-11-04T19:20:41+00:00",
+  "selection_rules": [
+    "Merged public pull requests, in GitHub search result order for the listed queries.",
+    "First 10 qualifying per migration, one per repository, at most 150 examined.",
+    "Must remove more non-comment lines using the changed API than it adds.",
+    "Excludes forks, the library's own organization, repositories over 200 MB, and paths the analyzer ignores by policy.",
+    "Excludes every tuning and holdout repository; selected before scoring any generation fix on it."
+  ],
+  "migrations": [
+    {
+      "id": "openai-python-v1",
+      "description": "openai-python 1.0 removed module-level resource classes.",
+      "extensions": [
+        ".py"
+      ],
+      "pattern": "\\b(?:ChatCompletion|Completion|Embedding)\\.a?create\\s*\\(",
+      "queries": [
+        "openai v1 migration",
+        "migrate openai 1.0",
+        "upgrade openai python 1.0",
+        "openai chat.completions.create migrate",
+        "update openai api v1"
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "ChatCompletion.create",
+          "package": "openai",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "ChatCompletion.acreate",
+          "package": "openai",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "Completion.create",
+          "package": "openai",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "Completion.acreate",
+          "package": "openai",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "Embedding.create",
+          "package": "openai",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "Embedding.acreate",
+          "package": "openai",
+          "ecosystem": "pypi"
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators",
+      "description": "Selenium 4 removed the find_element(s)_by_* driver methods.",
+      "extensions": [
+        ".py"
+      ],
+      "pattern": "\\.find_elements?_by_(?:id|name|xpath|css_selector|class_name|tag_name|link_text|partial_link_text)\\s*\\(",
+      "queries": [
+        "selenium 4 find_element",
+        "find_element_by deprecated",
+        "replace find_element_by",
+        "selenium 4 upgrade",
+        "update selenium locators"
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "find_element_by_id",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_xpath",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_css_selector",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_class_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_tag_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_link_text",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_partial_link_text",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_id",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_xpath",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_css_selector",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_class_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_tag_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_link_text",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_partial_link_text",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases",
+      "description": "NumPy 1.24 removed the np.float style builtin aliases.",
+      "extensions": [
+        ".py"
+      ],
+      "pattern": "\\b(?:np|numpy)\\.(?:float|int|bool|object|str|complex)\\b",
+      "queries": [
+        "np.float deprecated",
+        "numpy 1.24 np.int",
+        "replace np.float",
+        "np.bool numpy 1.24",
+        "fix numpy deprecated aliases"
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "numpy.float",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "numpy.int",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "numpy.bool",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "numpy.object",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "numpy.str",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "numpy.complex",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators",
+      "description": "Pydantic 2 deprecated @validator and @root_validator.",
+      "extensions": [
+        ".py"
+      ],
+      "pattern": "^\\s*@(?:pydantic\\.)?(?:validator|root_validator)\\s*\\(",
+      "queries": [
+        "pydantic v2 migration",
+        "migrate to pydantic v2",
+        "upgrade pydantic 2",
+        "pydantic field_validator migrate",
+        "pydantic v2 upgrade validators"
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "pydantic.validator",
+          "package": "pydantic",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "pydantic.root_validator",
+          "package": "pydantic",
+          "ecosystem": "pypi"
+        }
+      ]
+    },
+    {
+      "id": "react-18-root",
+      "description": "React 18 replaced ReactDOM.render and hydrate with the root API.",
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx"
+      ],
+      "pattern": "\\bReactDOM\\.(?:render|hydrate)\\s*\\(",
+      "queries": [
+        "react 18 createRoot",
+        "upgrade react 18",
+        "migrate createRoot",
+        "react 18 migration",
+        "update to react 18"
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "ReactDOM.render",
+          "package": "react-dom",
+          "ecosystem": "npm"
+        },
+        {
+          "kind": "symbol",
+          "name": "ReactDOM.hydrate",
+          "package": "react-dom",
+          "ecosystem": "npm"
+        }
+      ]
+    },
+    {
+      "id": "openai-node-v4",
+      "description": "openai-node v4 removed OpenAIApi and its create* methods.",
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".ts",
+        ".tsx"
+      ],
+      "pattern": "\\.create(?:ChatCompletion|Completion|Embedding)\\s*\\(",
+      "queries": [
+        "openai v4 node",
+        "openai sdk v4 upgrade",
+        "migrate openai node v4",
+        "upgrade openai v4",
+        "openai node library v4 migration"
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "OpenAIApi.createChatCompletion",
+          "package": "openai",
+          "ecosystem": "npm"
+        },
+        {
+          "kind": "symbol",
+          "name": "OpenAIApi.createCompletion",
+          "package": "openai",
+          "ecosystem": "npm"
+        },
+        {
+          "kind": "symbol",
+          "name": "OpenAIApi.createEmbedding",
+          "package": "openai",
+          "ecosystem": "npm"
+        }
+      ]
+    }
+  ],
+  "rejections": {
+    "openai-python-v1": {
+      "examined": 150,
+      "rejected": {
+        "no_removed_usage": 130,
+        "repository_already_selected": 22,
+        "usage_not_reduced": 14,
+        "repository_too_large": 1,
+        "fork": 1
+      }
+    },
+    "selenium-4-locators": {
+      "examined": 99,
+      "rejected": {
+        "no_removed_usage": 58,
+        "library_owner": 19,
+        "usage_not_reduced": 8,
+        "repository_already_selected": 21,
+        "repository_too_large": 1,
+        "fork": 2,
+        "commit_unavailable": 1
+      }
+    },
+    "numpy-1.24-aliases": {
+      "examined": 62,
+      "rejected": {
+        "repository_already_selected": 18,
+        "no_removed_usage": 39,
+        "fork": 10,
+        "usage_not_reduced": 2,
+        "repository_too_large": 1
+      }
+    },
+    "pydantic-v2-validators": {
+      "examined": 150,
+      "rejected": {
+        "repository_already_selected": 20,
+        "no_removed_usage": 144,
+        "library_owner": 1,
+        "fork": 1
+      }
+    },
+    "react-18-root": {
+      "examined": 150,
+      "rejected": {
+        "repository_already_selected": 17,
+        "usage_not_reduced": 2,
+        "no_removed_usage": 137,
+        "fork": 2,
+        "repository_too_large": 1
+      }
+    },
+    "openai-node-v4": {
+      "examined": 150,
+      "rejected": {
+        "no_removed_usage": 143,
+        "repository_already_selected": 4,
+        "usage_not_reduced": 5,
+        "repository_too_large": 1,
+        "fork": 1
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "openai-python-v1:techpizzeria/psionai-guinea-python#3",
+      "migration": "openai-python-v1",
+      "repository": "techpizzeria/psionai-guinea-python",
+      "pull_request": 3,
+      "parent_sha": "09083d0a61460b18b075d288817fffc7b7abde7b",
+      "migration_sha": "2f763c410426fd78d4332d510231c022342eb1df",
+      "ground_truth": [
+        {
+          "path": "summarizer/__main__.py",
+          "line": 21
+        },
+        {
+          "path": "summarizer/embeddings.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:silasluiz96-alt/solar-advisor-agent#6",
+      "migration": "openai-python-v1",
+      "repository": "silasluiz96-alt/solar-advisor-agent",
+      "pull_request": 6,
+      "parent_sha": "15788dfa3818ee33f77324ea19b5cc4ed72d77f9",
+      "migration_sha": "5bf89c52573d6658df14d02a284d227359143c1e",
+      "ground_truth": [
+        {
+          "path": "tools/language_service.py",
+          "line": 36
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:bani/bot#1",
+      "migration": "openai-python-v1",
+      "repository": "bani/bot",
+      "pull_request": 1,
+      "parent_sha": "72d31ae336fafac8cfefa06dce6f2ff23fe6d42a",
+      "migration_sha": "a91ace78a6bd8cd03185c2e3ae86adf29ba00a60",
+      "ground_truth": [
+        {
+          "path": "discord/chatgpt.py",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:Pewgun/bot_app#13",
+      "migration": "openai-python-v1",
+      "repository": "Pewgun/bot_app",
+      "pull_request": 13,
+      "parent_sha": "86ae0cb6a86d5c8d387a8d80934b536fe3bb107e",
+      "migration_sha": "88b7fea1e06a6a3fc1fdb9b657c69e1e8a899328",
+      "ground_truth": [
+        {
+          "path": "bot.py",
+          "line": 298
+        },
+        {
+          "path": "bot.py",
+          "line": 368
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:joeyism/linkedin_scraper#133",
+      "migration": "selenium-4-locators",
+      "repository": "joeyism/linkedin_scraper",
+      "pull_request": 133,
+      "parent_sha": "27728f0aa3c073f51977b7a6fe80651e3d309231",
+      "migration_sha": "d1a3ec6b23af8b98a0eb96095dff7fd91c67fa53",
+      "ground_truth": [
+        {
+          "path": "linkedin_scraper/actions.py",
+          "line": 26
+        },
+        {
+          "path": "linkedin_scraper/actions.py",
+          "line": 29
+        },
+        {
+          "path": "linkedin_scraper/actions.py",
+          "line": 35
+        },
+        {
+          "path": "linkedin_scraper/company.py",
+          "line": 123
+        },
+        {
+          "path": "linkedin_scraper/company.py",
+          "line": 159
+        },
+        {
+          "path": "linkedin_scraper/company.py",
+          "line": 188
+        },
+        {
+          "path": "linkedin_scraper/company.py",
+          "line": 245
+        },
+        {
+          "path": "linkedin_scraper/company.py",
+          "line": 297
+        },
+        {
+          "path": "linkedin_scraper/objects.py",
+          "line": 61
+        },
+        {
+          "path": "linkedin_scraper/objects.py",
+          "line": 77
+        },
+        {
+          "path": "linkedin_scraper/objects.py",
+          "line": 85
+        },
+        {
+          "path": "linkedin_scraper/person.py",
+          "line": 159
+        },
+        {
+          "path": "linkedin_scraper/person.py",
+          "line": 216
+        },
+        {
+          "path": "linkedin_scraper/person.py",
+          "line": 259
+        },
+        {
+          "path": "linkedin_scraper/person.py",
+          "line": 282
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:timkpaine/tdameritrade#164",
+      "migration": "selenium-4-locators",
+      "repository": "timkpaine/tdameritrade",
+      "pull_request": 164,
+      "parent_sha": "e32571b89ac041ca0b52b4e386e7c386b9ad5305",
+      "migration_sha": "363ff2521c862ad58a63a34643c1a349e18d35f5",
+      "ground_truth": [
+        {
+          "path": "tdameritrade/auth/__init__.py",
+          "line": 67
+        },
+        {
+          "path": "tdameritrade/auth/__init__.py",
+          "line": 68
+        },
+        {
+          "path": "tdameritrade/auth/__init__.py",
+          "line": 71
+        },
+        {
+          "path": "tdameritrade/auth/__init__.py",
+          "line": 73
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:ZeitOnline/zeit.nightwatch#8",
+      "migration": "selenium-4-locators",
+      "repository": "ZeitOnline/zeit.nightwatch",
+      "pull_request": 8,
+      "parent_sha": "dbae80861ecd579f2c824c4be8b0ee31d7cc10e2",
+      "migration_sha": "1486456064a137bde0b2dd6f077c7088eacdf575",
+      "ground_truth": [
+        {
+          "path": "src/zeit/nightwatch/selenium.py",
+          "line": 50
+        },
+        {
+          "path": "src/zeit/nightwatch/selenium.py",
+          "line": 51
+        },
+        {
+          "path": "src/zeit/nightwatch/selenium.py",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:charlesbel/Microsoft-Rewards-Farmer#82",
+      "migration": "selenium-4-locators",
+      "repository": "charlesbel/Microsoft-Rewards-Farmer",
+      "pull_request": 82,
+      "parent_sha": "02ec39fde8f5f47e5e79918bdb0de827ed98e64e",
+      "migration_sha": "30c26d30ef0730183fe8bbda6ba24c1371b05e33",
+      "ground_truth": [
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 46
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 48
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 58
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 64
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 68
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 78
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 96
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 102
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 105
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 109
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 114
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 119
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 124
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 139
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 142
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 145
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 149
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 153
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 155
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 170
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 190
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 291
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 298
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 301
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 306
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 310
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 319
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 332
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 343
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 347
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 356
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 363
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 372
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 375
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 383
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 384
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 398
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 403
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 407
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 412
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 429
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 430
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 432
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 441
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 448
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 454
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 458
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 478
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 540
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 545
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 575
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 585
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 592
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 601
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 604
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 612
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 613
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 626
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 630
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 635
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 644
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 651
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 657
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 661
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 781
+        },
+        {
+          "path": "ms_rewards_farmer.py",
+          "line": 783
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:jeeva2812/automated-net-access#1",
+      "migration": "selenium-4-locators",
+      "repository": "jeeva2812/automated-net-access",
+      "pull_request": 1,
+      "parent_sha": "bc6b5c02345bea543b46030f06f78c590aae4b34",
+      "migration_sha": "72f925639646c41ae444965b09eb1004d5f8c7f7",
+      "ground_truth": [
+        {
+          "path": "automation.py",
+          "line": 21
+        },
+        {
+          "path": "automation.py",
+          "line": 24
+        },
+        {
+          "path": "automation.py",
+          "line": 27
+        },
+        {
+          "path": "automation.py",
+          "line": 32
+        },
+        {
+          "path": "automation.py",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:Strip3s/PhoenixBot#72",
+      "migration": "selenium-4-locators",
+      "repository": "Strip3s/PhoenixBot",
+      "pull_request": 72,
+      "parent_sha": "2afffe8af4eccdeae8a358d1fe26fe1f810e9b0a",
+      "migration_sha": "1bb45dbeeb717586db7c517efafb60e0ebd8e673",
+      "ground_truth": [
+        {
+          "path": "sites/target.py",
+          "line": 174
+        },
+        {
+          "path": "sites/target.py",
+          "line": 175
+        },
+        {
+          "path": "sites/target.py",
+          "line": 176
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:D61-IA/stellar-gnosis#40",
+      "migration": "selenium-4-locators",
+      "repository": "D61-IA/stellar-gnosis",
+      "pull_request": 40,
+      "parent_sha": "415bbe9428a51abb7edf8f17199591e8728fccce",
+      "migration_sha": "643ecaace69e4e5ca2294218259b38812e89cc74",
+      "ground_truth": [
+        {
+          "path": "gnosis/catalog/tests/test_selenium_bookmark_endorsement.py",
+          "line": 51
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_bookmark_endorsement.py",
+          "line": 54
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_bookmark_endorsement.py",
+          "line": 57
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 50
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 53
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 56
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 81
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 82
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 88
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 119
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 123
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 173
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 174
+        },
+        {
+          "path": "gnosis/catalog/tests/test_selenium_moderation.py",
+          "line": 177
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:dropbox/merou#552",
+      "migration": "selenium-4-locators",
+      "repository": "dropbox/merou",
+      "pull_request": 552,
+      "parent_sha": "192bc3ea47f9c05f2127ac6a270a85871bd25d19",
+      "migration_sha": "59bc35c52ae217ef256a652121e6595a4a1aec63",
+      "ground_truth": [
+        {
+          "path": "itests/pages/base.py",
+          "line": 42
+        },
+        {
+          "path": "itests/pages/base.py",
+          "line": 63
+        },
+        {
+          "path": "itests/pages/base.py",
+          "line": 67
+        },
+        {
+          "path": "itests/pages/permissions.py",
+          "line": 13
+        },
+        {
+          "path": "itests/pages/permissions.py",
+          "line": 24
+        },
+        {
+          "path": "itests/pages/permissions.py",
+          "line": 28
+        },
+        {
+          "path": "itests/pages/permissions.py",
+          "line": 33
+        },
+        {
+          "path": "itests/pages/permissions.py",
+          "line": 38
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:appium/python-client#366",
+      "migration": "selenium-4-locators",
+      "repository": "appium/python-client",
+      "pull_request": 366,
+      "parent_sha": "807d42431096d388623afa5695f38dac939004d4",
+      "migration_sha": "6cc1e144289ef3ee1d3cbb96ccdc0e687d179cac",
+      "ground_truth": [
+        {
+          "path": "test/functional/android/appium_tests.py",
+          "line": 212
+        },
+        {
+          "path": "test/functional/android/appium_tests.py",
+          "line": 219
+        },
+        {
+          "path": "test/functional/android/appium_tests.py",
+          "line": 220
+        },
+        {
+          "path": "test/functional/android/appium_tests.py",
+          "line": 221
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:mmartinsie/lolScout#1",
+      "migration": "selenium-4-locators",
+      "repository": "mmartinsie/lolScout",
+      "pull_request": 1,
+      "parent_sha": "4aece5bf4b04680655a132778bd8124e77e472c1",
+      "migration_sha": "935ff1ddc4901aac9ff774c9b98f1e53dbc746ca",
+      "ground_truth": [
+        {
+          "path": "WebScraping/main.py",
+          "line": 24
+        },
+        {
+          "path": "WebScraping/main.py",
+          "line": 26
+        },
+        {
+          "path": "WebScraping/main.py",
+          "line": 39
+        },
+        {
+          "path": "WebScraping/main_graphics.py",
+          "line": 24
+        },
+        {
+          "path": "WebScraping/main_graphics.py",
+          "line": 26
+        },
+        {
+          "path": "WebScraping/main_graphics.py",
+          "line": 46
+        },
+        {
+          "path": "WebScraping/scrap_champ.py",
+          "line": 65
+        },
+        {
+          "path": "WebScraping/scrap_champ.py",
+          "line": 69
+        },
+        {
+          "path": "WebScraping/scrap_champ.py",
+          "line": 73
+        },
+        {
+          "path": "WebScraping/scrap_champ.py",
+          "line": 77
+        },
+        {
+          "path": "WebScraping/scrap_champ.py",
+          "line": 81
+        },
+        {
+          "path": "WebScraping/scrap_champ.py",
+          "line": 83
+        },
+        {
+          "path": "WebScraping/scrap_champ.py",
+          "line": 85
+        },
+        {
+          "path": "WebScraping/scrap_champ.py",
+          "line": 87
+        },
+        {
+          "path": "WebScraping/scrap_champ.py",
+          "line": 89
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:GuignardLab/LineageTree#132",
+      "migration": "numpy-1.24-aliases",
+      "repository": "GuignardLab/LineageTree",
+      "pull_request": 132,
+      "parent_sha": "dfeeb2feca2216f8c5d296f20bb8f31f04cb7b78",
+      "migration_sha": "a91693f8a1b1af3974a1fed65ec082b15186345f",
+      "ground_truth": [
+        {
+          "path": "src/lineagetree/_io/_loaders.py",
+          "line": 749
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:RoshFps/Object-Detection-in-Autonomous-Driving-System#1",
+      "migration": "numpy-1.24-aliases",
+      "repository": "RoshFps/Object-Detection-in-Autonomous-Driving-System",
+      "pull_request": 1,
+      "parent_sha": "a51940d8bfe0b0c5022ba0ef0db581a8cab26cac",
+      "migration_sha": "257535a3323136dae67033da48c09d23137ab7c9",
+      "ground_truth": [
+        {
+          "path": "utlis.py",
+          "line": 75
+        },
+        {
+          "path": "utlis.py",
+          "line": 155
+        },
+        {
+          "path": "utlis.py",
+          "line": 193
+        },
+        {
+          "path": "utlis.py",
+          "line": 195
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:hwang595/Cuttlefish#2",
+      "migration": "numpy-1.24-aliases",
+      "repository": "hwang595/Cuttlefish",
+      "pull_request": 2,
+      "parent_sha": "71637aa5f980b03ff6c084866813d5fca20111b5",
+      "migration_sha": "6d4a74d11b3a1aa883ffbdf948519a7d1c525ba4",
+      "ground_truth": [
+        {
+          "path": "baselines/fnl_cuttlefish_baseline/Transformer-PyTorch/fairseq/indexed_dataset.py",
+          "line": 32
+        },
+        {
+          "path": "baselines/fnl_cuttlefish_baseline/Transformer-PyTorch/fairseq/indexed_dataset.py",
+          "line": 154
+        },
+        {
+          "path": "transformers/examples/legacy/seq2seq/utils.py",
+          "line": 374
+        },
+        {
+          "path": "transformers/examples/pytorch/benchmarking/plot_csv_file.py",
+          "line": 135
+        },
+        {
+          "path": "transformers/examples/pytorch/benchmarking/plot_csv_file.py",
+          "line": 147
+        },
+        {
+          "path": "transformers/examples/research_projects/seq2seq-distillation/utils.py",
+          "line": 356
+        },
+        {
+          "path": "transformers/examples/tensorflow/benchmarking/plot_csv_file.py",
+          "line": 135
+        },
+        {
+          "path": "transformers/examples/tensorflow/benchmarking/plot_csv_file.py",
+          "line": 147
+        },
+        {
+          "path": "transformers/src/transformers/models/deberta_v2/modeling_deberta_v2.py",
+          "line": 537
+        },
+        {
+          "path": "transformers/src/transformers/models/sew_d/modeling_sew_d.py",
+          "line": 203
+        },
+        {
+          "path": "transformers/src/transformers/models/vit_mae/modeling_vit_mae.py",
+          "line": 193
+        },
+        {
+          "path": "transformers/tests/realm/test_modeling_realm.py",
+          "line": 394
+        },
+        {
+          "path": "transformers/tests/realm/test_retrieval_realm.py",
+          "line": 102
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:14harshaldhote/Yolo-Pytorch-Crop-Disease-DETECTION_model-on-raspberryPi4#2",
+      "migration": "numpy-1.24-aliases",
+      "repository": "14harshaldhote/Yolo-Pytorch-Crop-Disease-DETECTION_model-on-raspberryPi4",
+      "pull_request": 2,
+      "parent_sha": "7675970684cab8630a663d98ed582af0f62a878d",
+      "migration_sha": "5582343862673058aa39f5769619895095895b8e",
+      "ground_truth": [
+        {
+          "path": "models/common.py",
+          "line": 480
+        },
+        {
+          "path": "utils/dataloaders.py",
+          "line": 476
+        },
+        {
+          "path": "utils/dataloaders.py",
+          "line": 518
+        },
+        {
+          "path": "utils/dataloaders.py",
+          "line": 894
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:cxcsds/ciao-contrib#733",
+      "migration": "numpy-1.24-aliases",
+      "repository": "cxcsds/ciao-contrib",
+      "pull_request": 733,
+      "parent_sha": "b4fac8784fb945fd17a45bf965c1a9229eb28387",
+      "migration_sha": "1fca90751783a5397bc603e47e4962676600f09d",
+      "ground_truth": [
+        {
+          "path": "ciao_contrib/_tools/aspsol.py",
+          "line": 123
+        },
+        {
+          "path": "ciao_contrib/_tools/aspsol.py",
+          "line": 131
+        },
+        {
+          "path": "ciao_contrib/_tools/fluximage.py",
+          "line": 1191
+        },
+        {
+          "path": "ciao_contrib/_tools/merging.py",
+          "line": 1666
+        },
+        {
+          "path": "ciao_contrib/region/fov.py",
+          "line": 51
+        },
+        {
+          "path": "ciao_contrib/region/fov.py",
+          "line": 101
+        },
+        {
+          "path": "ciao_contrib/smooth.py",
+          "line": 64
+        },
+        {
+          "path": "ciao_contrib/smooth.py",
+          "line": 89
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:dtcenter/METcalcpy#489",
+      "migration": "numpy-1.24-aliases",
+      "repository": "dtcenter/METcalcpy",
+      "pull_request": 489,
+      "parent_sha": "6485ff9aeb3a09e1377a962cfc3bd40cf53703df",
+      "migration_sha": "0b9220092fde983d7365fe9da15db9ead936aafa",
+      "ground_truth": [
+        {
+          "path": "metcalcpy/util/eclv_statistics.py",
+          "line": 73
+        },
+        {
+          "path": "metcalcpy/util/eclv_statistics.py",
+          "line": 74
+        },
+        {
+          "path": "metcalcpy/util/eclv_statistics.py",
+          "line": 75
+        },
+        {
+          "path": "metcalcpy/util/eclv_statistics.py",
+          "line": 76
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:sorbotics/yolov9#3",
+      "migration": "numpy-1.24-aliases",
+      "repository": "sorbotics/yolov9",
+      "pull_request": 3,
+      "parent_sha": "e0a0ae6552bf8a07b555fd0588a768c4a0737bd5",
+      "migration_sha": "d9ad749029ad6d259e26d5500b4fbc4e153a886f",
+      "ground_truth": [
+        {
+          "path": "src/yolo9/models/common.py",
+          "line": 910
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:sakoho81/dmlib#2",
+      "migration": "numpy-1.24-aliases",
+      "repository": "sakoho81/dmlib",
+      "pull_request": 2,
+      "parent_sha": "c6c4e8a58c6d4a62487b12aadb29a98a9b71b183",
+      "migration_sha": "96bf9cd8c340a94aa6c648345005c3a7a34363e8",
+      "ground_truth": [
+        {
+          "path": "dmlib/control.py",
+          "line": 175
+        },
+        {
+          "path": "dmlib/dmplot.py",
+          "line": 100
+        },
+        {
+          "path": "dmlib/gui.py",
+          "line": 1430
+        },
+        {
+          "path": "dmlib/gui.py",
+          "line": 1431
+        },
+        {
+          "path": "dmlib/gui.py",
+          "line": 1432
+        },
+        {
+          "path": "dmlib/gui.py",
+          "line": 1433
+        },
+        {
+          "path": "dmlib/gui.py",
+          "line": 1437
+        },
+        {
+          "path": "dmlib/gui.py",
+          "line": 1442
+        },
+        {
+          "path": "dmlib/gui.py",
+          "line": 1445
+        },
+        {
+          "path": "dmlib/gui.py",
+          "line": 1447
+        },
+        {
+          "path": "dmlib/gui.py",
+          "line": 1449
+        },
+        {
+          "path": "dmlib/gui.py",
+          "line": 1455
+        },
+        {
+          "path": "dmlib/interf.py",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:Teoroo-CMC/PiNN#42",
+      "migration": "numpy-1.24-aliases",
+      "repository": "Teoroo-CMC/PiNN",
+      "pull_request": 42,
+      "parent_sha": "b592996c4ec2d19d6fe9ffedffb38c1ab998f77b",
+      "migration_sha": "398a151646dde322d22e7f7b46f923ee337e3b2c",
+      "ground_truth": [
+        {
+          "path": "pinn/cli.py",
+          "line": 180
+        },
+        {
+          "path": "pinn/io/cp2k.py",
+          "line": 35
+        },
+        {
+          "path": "pinn/io/cp2k.py",
+          "line": 71
+        },
+        {
+          "path": "pinn/io/cp2k.py",
+          "line": 100
+        },
+        {
+          "path": "pinn/io/cp2k.py",
+          "line": 101
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:antonypaulson/circle_detection#1",
+      "migration": "numpy-1.24-aliases",
+      "repository": "antonypaulson/circle_detection",
+      "pull_request": 1,
+      "parent_sha": "4a514240276c337090f78ef857d239d2113545ac",
+      "migration_sha": "648baa74ba7b7e068fb7093247cb721205c2d912",
+      "ground_truth": [
+        {
+          "path": "shapes.py",
+          "line": 13
+        },
+        {
+          "path": "shapes.py",
+          "line": 37
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:NHSDigital/data-validation-engine#107",
+      "migration": "pydantic-v2-validators",
+      "repository": "NHSDigital/data-validation-engine",
+      "pull_request": 107,
+      "parent_sha": "8d4b3c49e2845c0b34aabe7576afba661ed37f74",
+      "migration_sha": "4b687dcfbef7a88e858be91913ab60158a180a44",
+      "ground_truth": [
+        {
+          "path": "src/dve/core_engine/backends/metadata/contract.py",
+          "line": 50
+        },
+        {
+          "path": "src/dve/core_engine/backends/metadata/reporting.py",
+          "line": 272
+        },
+        {
+          "path": "src/dve/core_engine/backends/metadata/reporting.py",
+          "line": 286
+        },
+        {
+          "path": "src/dve/core_engine/backends/metadata/rules.py",
+          "line": 152
+        },
+        {
+          "path": "src/dve/core_engine/backends/metadata/rules.py",
+          "line": 378
+        },
+        {
+          "path": "src/dve/core_engine/backends/metadata/rules.py",
+          "line": 390
+        },
+        {
+          "path": "src/dve/core_engine/backends/metadata/rules.py",
+          "line": 714
+        },
+        {
+          "path": "src/dve/core_engine/configuration/v1/steps.py",
+          "line": 110
+        },
+        {
+          "path": "src/dve/core_engine/engine.py",
+          "line": 62
+        },
+        {
+          "path": "src/dve/core_engine/engine.py",
+          "line": 74
+        },
+        {
+          "path": "src/dve/core_engine/message.py",
+          "line": 198
+        },
+        {
+          "path": "src/dve/core_engine/message.py",
+          "line": 213
+        },
+        {
+          "path": "src/dve/core_engine/models.py",
+          "line": 34
+        },
+        {
+          "path": "src/dve/core_engine/models.py",
+          "line": 67
+        },
+        {
+          "path": "src/dve/core_engine/models.py",
+          "line": 159
+        },
+        {
+          "path": "src/dve/core_engine/models.py",
+          "line": 184
+        },
+        {
+          "path": "src/dve/metadata_parser/models.py",
+          "line": 66
+        },
+        {
+          "path": "src/dve/metadata_parser/models.py",
+          "line": 73
+        },
+        {
+          "path": "src/dve/metadata_parser/models.py",
+          "line": 131
+        },
+        {
+          "path": "src/dve/metadata_parser/models.py",
+          "line": 167
+        },
+        {
+          "path": "src/dve/metadata_parser/models.py",
+          "line": 285
+        },
+        {
+          "path": "src/dve/metadata_parser/models.py",
+          "line": 297
+        },
+        {
+          "path": "src/dve/metadata_parser/models.py",
+          "line": 330
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:canonical/landscape-server-operator#102",
+      "migration": "pydantic-v2-validators",
+      "repository": "canonical/landscape-server-operator",
+      "pull_request": 102,
+      "parent_sha": "593bab89d5dcfed54bd69cd30e8049d75adc782f",
+      "migration_sha": "c28b375cb75dc5fbe2470dff2f94aca7e7234764",
+      "ground_truth": [
+        {
+          "path": "src/config.py",
+          "line": 79
+        },
+        {
+          "path": "src/config.py",
+          "line": 103
+        },
+        {
+          "path": "src/config.py",
+          "line": 118
+        },
+        {
+          "path": "src/config.py",
+          "line": 134
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:virtool/virtool#3549",
+      "migration": "pydantic-v2-validators",
+      "repository": "virtool/virtool",
+      "pull_request": 3549,
+      "parent_sha": "4c09a8d1070e3cbe72c14779955c5827e1b682ad",
+      "migration_sha": "77aa4740a0a2df0e23e86a2287102330e9a1aadc",
+      "ground_truth": [
+        {
+          "path": "virtool/references/oas.py",
+          "line": 147
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:NVIDIA-NeMo/Guardrails#967",
+      "migration": "pydantic-v2-validators",
+      "repository": "NVIDIA-NeMo/Guardrails",
+      "pull_request": 967,
+      "parent_sha": "321d7427cd494eb2e3701c80376080295db38ad4",
+      "migration_sha": "be1b32be42378b06124fbb4c3d1c30219bee1e34",
+      "ground_truth": [
+        {
+          "path": "nemoguardrails/eval/models.py",
+          "line": 99
+        },
+        {
+          "path": "nemoguardrails/eval/models.py",
+          "line": 135
+        },
+        {
+          "path": "nemoguardrails/integrations/langchain/providers/trtllm/llm.py",
+          "line": 65
+        },
+        {
+          "path": "nemoguardrails/library/trend_micro/actions.py",
+          "line": 56
+        },
+        {
+          "path": "nemoguardrails/rails/llm/config.py",
+          "line": 560
+        },
+        {
+          "path": "nemoguardrails/rails/llm/config.py",
+          "line": 1808
+        },
+        {
+          "path": "nemoguardrails/rails/llm/config.py",
+          "line": 1834
+        },
+        {
+          "path": "nemoguardrails/rails/llm/config.py",
+          "line": 1860
+        },
+        {
+          "path": "nemoguardrails/rails/llm/config.py",
+          "line": 1917
+        },
+        {
+          "path": "nemoguardrails/rails/llm/config.py",
+          "line": 1940
+        },
+        {
+          "path": "nemoguardrails/rails/llm/config.py",
+          "line": 1994
+        },
+        {
+          "path": "nemoguardrails/rails/llm/config.py",
+          "line": 2009
+        },
+        {
+          "path": "nemoguardrails/rails/llm/options.py",
+          "line": 199
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:kmmehedihassan/Jogaar#1",
+      "migration": "react-18-root",
+      "repository": "kmmehedihassan/Jogaar",
+      "pull_request": 1,
+      "parent_sha": "f8cf25c9edfc8076e2935942509e01d7e855c045",
+      "migration_sha": "8d0f5d9b4820b22f0124cc1cfb0b2fcfc0a32a43",
+      "ground_truth": [
+        {
+          "path": "src/index.js",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:SeleniumHQ/selenium-ide#2024",
+      "migration": "react-18-root",
+      "repository": "SeleniumHQ/selenium-ide",
+      "pull_request": 2024,
+      "parent_sha": "ac72a111e2defaf502c8b56ca179d2f020ced5e6",
+      "migration_sha": "b49806401c5cff434bd93be87aceaabf5486e61a",
+      "ground_truth": [
+        {
+          "path": "packages/selenium-ide/src/browser/windows/ProjectEditor/tabs/Project/Message.tsx",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:ayyappaswamyangadi/todo-list#1",
+      "migration": "react-18-root",
+      "repository": "ayyappaswamyangadi/todo-list",
+      "pull_request": 1,
+      "parent_sha": "bb1c050eb6e972950bc6329df27820b9205dc3d7",
+      "migration_sha": "6992c490d5e67d72fc62195953ccd95dd81da656",
+      "ground_truth": [
+        {
+          "path": "src/index.js",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:rsl50/Omnistack11#41",
+      "migration": "react-18-root",
+      "repository": "rsl50/Omnistack11",
+      "pull_request": 41,
+      "parent_sha": "dfac5d27020a34adf98c2f9b4aa65fbbe2d74d4b",
+      "migration_sha": "d5d571504d41ca5a4ee72d4804d69ea3266322d4",
+      "ground_truth": [
+        {
+          "path": "www/omni11/aulas/frontend/src/index.js",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:Ruberoni/drama-keeper#16",
+      "migration": "react-18-root",
+      "repository": "Ruberoni/drama-keeper",
+      "pull_request": 16,
+      "parent_sha": "ce77e604e2b5e35a94b19c37e4dc85e9b6527209",
+      "migration_sha": "3943bbf243c388dd53efbe3ad0a093948228d767",
+      "ground_truth": [
+        {
+          "path": "client/src/index.tsx",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:annajolly/pacman#13",
+      "migration": "react-18-root",
+      "repository": "annajolly/pacman",
+      "pull_request": 13,
+      "parent_sha": "71a1c81b60abb931a6889d10b90f39d3cdb8c3f6",
+      "migration_sha": "512e51dfa7aaa41e2b4a043c3c57080daf98102f",
+      "ground_truth": [
+        {
+          "path": "src/index.js",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:yyaanniivv/simon#36",
+      "migration": "react-18-root",
+      "repository": "yyaanniivv/simon",
+      "pull_request": 36,
+      "parent_sha": "21a39417ec14d387a1697128eae85b2501ceb827",
+      "migration_sha": "3982311034d06ed84a45418408a77964d18c9380",
+      "ground_truth": [
+        {
+          "path": "src/App.test.js",
+          "line": 7
+        },
+        {
+          "path": "src/index.js",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:madmaxlax/maxstruever-site#70",
+      "migration": "react-18-root",
+      "repository": "madmaxlax/maxstruever-site",
+      "pull_request": 70,
+      "parent_sha": "ae28b50446596d0386e952fe4d78a4273ba58071",
+      "migration_sha": "43e1ab048e2986a7d62ad025a2da6c4c39d49389",
+      "ground_truth": [
+        {
+          "path": "src/index.tsx",
+          "line": 16
+        }
+      ]
+    }
+  ]
+}

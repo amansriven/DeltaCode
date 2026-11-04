@@ -10,7 +10,11 @@ rules are unchanged, and it searches exact API names because broad phrases mostl
 --holdout selects a separate set under the same rules, excluding every tuning repository, so a
 number can be reported from cases no analyzer fix was ever made against. Score it once.
 
-Usage: GITHUB_TOKEN=$(gh auth token) python benchmarks/build_backtest.py [--extend | --holdout]
+--fresh selects a third set excluding the tuning and holdout repositories, because both were read
+while choosing generation fixes. --per-migration keeps a small set balanced across migrations.
+
+Usage: GITHUB_TOKEN=$(gh auth token) python benchmarks/build_backtest.py
+    [--extend | --holdout | --fresh [--per-migration N]]
 """
 
 import argparse
@@ -226,19 +230,32 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--extend", action="store_true", help="append round 2 to the frozen file")
     parser.add_argument("--holdout", action="store_true", help="select a separate untuned set")
+    parser.add_argument("--fresh", action="store_true", help="exclude tuning and holdout repos")
+    parser.add_argument("--per-migration", type=int, default=PER_MIGRATION)
     arguments = parser.parse_args()
+    per_migration = arguments.per_migration
     tuning_path = Path(__file__).with_name("repository-impact-backtest.json")
+    holdout_path = Path(__file__).with_name("repository-impact-backtest-holdout.json")
     output = (
-        Path(__file__).with_name("repository-impact-backtest-holdout.json")
+        holdout_path
         if arguments.holdout
+        else Path(__file__).with_name("repository-impact-fresh.json")
+        if arguments.fresh
         else tuning_path
     )
     frozen = json.loads(tuning_path.read_text(encoding="utf-8")) if arguments.extend else None
-    tuning_repositories = (
-        {case["repository"] for case in json.loads(tuning_path.read_text("utf-8"))["cases"]}
+    excluded_paths = (
+        [tuning_path, holdout_path]
+        if arguments.fresh
+        else [tuning_path]
         if arguments.holdout
-        else set()
+        else []
     )
+    tuning_repositories = {
+        case["repository"]
+        for path in excluded_paths
+        for case in json.loads(path.read_text("utf-8"))["cases"]
+    }
     github = GitHub(os.environ["GITHUB_TOKEN"])
     cases = list(frozen["cases"]) if frozen else []
     rejections = {}
@@ -250,7 +267,7 @@ def main() -> None:
         seen_pulls: set[str] = set()
         examined = 0
         queries = EXACT_API_QUERIES.get(migration["id"], []) if frozen else migration["queries"]
-        if arguments.holdout:
+        if arguments.holdout or arguments.fresh:
             queries = [
                 *EXACT_API_QUERIES.get(migration["id"], []),
                 *HOLDOUT_EXTRA_QUERIES.get(migration["id"], []),
@@ -258,7 +275,7 @@ def main() -> None:
             ]
         for query in queries:
             for item in github.search(query):
-                if len(selected) >= PER_MIGRATION or examined >= MAX_CANDIDATES:
+                if len(selected) >= per_migration or examined >= MAX_CANDIDATES:
                     break
                 repository = item["repository_url"].rsplit("/repos/", 1)[-1]
                 key = f"{repository}#{item['number']}"
@@ -285,7 +302,7 @@ def main() -> None:
         "selected_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "selection_rules": [
             "Merged public pull requests, in GitHub search result order for the listed queries.",
-            f"First {PER_MIGRATION} qualifying per migration, one per repository, "
+            f"First {per_migration} qualifying per migration, one per repository, "
             f"at most {MAX_CANDIDATES} examined.",
             "Must remove more non-comment lines using the changed API than it adds.",
             "Excludes forks, the library's own organization, repositories over 200 MB, "
@@ -302,6 +319,11 @@ def main() -> None:
     if arguments.holdout:
         document["selection_rules"].append(
             "Excludes every repository in the tuning set; selected before any fix was scored on it."
+        )
+    if arguments.fresh:
+        document["selection_rules"].append(
+            "Excludes every tuning and holdout repository; selected before scoring any generation "
+            "fix on it."
         )
     if frozen:
         document["selected_at"] = frozen["selected_at"]

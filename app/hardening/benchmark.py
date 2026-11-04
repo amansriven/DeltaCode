@@ -3,7 +3,7 @@
 import argparse
 import json
 import tempfile
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 
@@ -25,6 +25,10 @@ class BenchmarkScore:
     recall: float
     f1: float
     classifications: dict[str, str]
+    abstained: int = 0
+    by_category: dict[str, dict[str, int]] = field(default_factory=dict)
+    by_difficulty: dict[str, dict[str, int]] = field(default_factory=dict)
+    misclassified: list[str] = field(default_factory=list)
 
 
 def _safe_fixture_path(value: str) -> PurePosixPath:
@@ -78,6 +82,10 @@ def run_benchmark(path: Path) -> BenchmarkScore:
         raise ValueError("benchmark must contain a non-empty cases array")
     predictions: dict[str, str] = {}
     true_positives = false_positives = true_negatives = false_negatives = 0
+    abstained = 0
+    by_category: dict[str, dict[str, int]] = {}
+    by_difficulty: dict[str, dict[str, int]] = {}
+    misclassified: list[str] = []
     analyzer = MultiLanguageImpactAnalyzer()
     builder = RepositoryInventoryBuilder()
 
@@ -119,12 +127,27 @@ def run_benchmark(path: Path) -> BenchmarkScore:
         predicted = result.conclusion == "affected"
         if expected and predicted:
             true_positives += 1
+            outcome = "tp"
         elif expected:
             false_negatives += 1
+            outcome = "fn"
         elif predicted:
             false_positives += 1
+            outcome = "fp"
         else:
             true_negatives += 1
+            outcome = "tn"
+        if result.conclusion in {"uncertain", "unsupported"}:
+            abstained += 1
+        if outcome in {"fp", "fn"}:
+            misclassified.append(f"{identifier} [{outcome}: {result.conclusion}]")
+        for bucket, key in (
+            (by_category, case.get("category")),
+            (by_difficulty, case.get("difficulty")),
+        ):
+            if key:
+                counts = bucket.setdefault(key, {"tp": 0, "fp": 0, "tn": 0, "fn": 0})
+                counts[outcome] += 1
 
     precision = true_positives / (true_positives + false_positives or 1)
     recall = true_positives / (true_positives + false_negatives or 1)
@@ -139,6 +162,10 @@ def run_benchmark(path: Path) -> BenchmarkScore:
         recall=recall,
         f1=f1,
         classifications=predictions,
+        abstained=abstained,
+        by_category=dict(sorted(by_category.items())),
+        by_difficulty=dict(sorted(by_difficulty.items())),
+        misclassified=misclassified,
     )
 
 
@@ -147,9 +174,13 @@ def main() -> None:
     parser.add_argument("dataset", type=Path)
     parser.add_argument("--min-precision", type=float, default=0.9)
     parser.add_argument("--min-recall", type=float, default=0.9)
+    parser.add_argument("--summary", action="store_true", help="omit per-case classifications")
     arguments = parser.parse_args()
     score = run_benchmark(arguments.dataset)
-    print(json.dumps(asdict(score), indent=2, sort_keys=True))
+    report = asdict(score)
+    if arguments.summary:
+        del report["classifications"]
+    print(json.dumps(report, indent=2, sort_keys=True))
     if score.precision < arguments.min_precision or score.recall < arguments.min_recall:
         raise SystemExit(1)
 

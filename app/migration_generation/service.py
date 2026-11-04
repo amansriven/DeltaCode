@@ -25,6 +25,16 @@ from .policy import (
     validate_patch,
 )
 
+# Kinds that exercise the migrated code. Formatting and lint say nothing about behavior.
+VERIFYING_CHECK_KINDS = {
+    "build",
+    "type_check",
+    "unit_test",
+    "generated_test",
+    "behavioral_verification",
+}
+NON_VERIFYING_ARGUMENTS = {"--version", "-V", "--help", "-h"}
+
 
 @dataclass(frozen=True)
 class GenerationResult:
@@ -67,14 +77,42 @@ def _verification_checks(execution: SandboxExecutionResult) -> list[Verification
     ]
 
 
+def _exercises_the_code(execution: SandboxExecutionResult) -> bool:
+    """The model picks its own commands, so approval needs one that could have failed."""
+    return any(
+        check.status == "passed"
+        and check.kind in VERIFYING_CHECK_KINDS
+        and not NON_VERIFYING_ARGUMENTS.intersection(check.command.split())
+        for check in execution.checks
+    )
+
+
 def _guard_recommendation(
     recommendation: Recommendation,
     execution: SandboxExecutionResult,
 ) -> Recommendation:
-    if recommendation.action != "approve" or (
-        execution.status == "passed" and execution.destroyed
-    ):
+    if recommendation.action != "approve":
         return recommendation
+    if execution.status == "passed" and execution.destroyed:
+        if _exercises_the_code(execution):
+            return recommendation
+        return recommendation.model_copy(
+            update={
+                "action": "revise",
+                "rationale": (
+                    "Automatic approval is forbidden because no check exercised the migrated code."
+                ),
+                "confidence": recommendation.confidence.model_copy(
+                    update={
+                        "basis": ConfidenceBasis.mixed,
+                        "unresolved": [
+                            *recommendation.confidence.unresolved,
+                            "No build, type-check, or test command ran against the patch.",
+                        ],
+                    }
+                ),
+            }
+        )
     return recommendation.model_copy(
         update={
             "action": "revise" if execution.status == "failed" else "snooze",

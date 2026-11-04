@@ -1,0 +1,146 @@
+{
+  "description": "Grades from reading each patch as a diff against its parent commit, after the encoding and file-loss fixes. Nothing was executed against a live service.",
+  "counts": {
+    "correct": 14,
+    "defective": 4,
+    "no_patch": 1
+  },
+  "by_migration": {
+    "selenium-4-locators": {
+      "correct": 4,
+      "attempted": 4
+    },
+    "numpy-1.24-aliases": {
+      "correct": 1,
+      "attempted": 1
+    },
+    "react-18-root": {
+      "correct": 5,
+      "attempted": 6
+    },
+    "openai-python-v1": {
+      "correct": 2,
+      "attempted": 5
+    },
+    "pydantic-v2-validators": {
+      "correct": 2,
+      "attempted": 3
+    }
+  },
+  "cases": [
+    {
+      "id": "selenium-4-locators:gurbaaz27/linkedin-comments-scraper#4",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted and By imported in each file."
+    },
+    {
+      "id": "numpy-1.24-aliases:tianrluo/AutoDiffPulses#4",
+      "grade": "correct",
+      "category": null,
+      "note": "Aliases replaced with builtins."
+    },
+    {
+      "id": "react-18-root:ibznroglu/MyPortfolio#18",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:Vitorspk/docker-react#18",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct. The test no longer unmounts, a minor loss."
+    },
+    {
+      "id": "react-18-root:dqsmith/phaser-pixel-generator#18",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:deuex-solutions/react-tutorial#18",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "openai-python-v1:davletovb/hiyal#45",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Passes api_base to OpenAI(), which takes base_url; 2 tests regress."
+    },
+    {
+      "id": "openai-python-v1:NeonGeckoCom/neon-llm-chatgpt#28",
+      "grade": "correct",
+      "category": null,
+      "note": "Client, call, and response access all migrated."
+    },
+    {
+      "id": "openai-python-v1:lexmourao/cursor-memory-project#28",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Builds OpenAI() at import, which raises without a key; all 42 passing tests fail."
+    },
+    {
+      "id": "openai-python-v1:RainRat/gpt-virus-scanner#7",
+      "grade": "no_patch",
+      "category": "policy",
+      "note": "generated proposal contains credential-like material"
+    },
+    {
+      "id": "openai-python-v1:End2EndAI/travel-ai-translator#1",
+      "grade": "correct",
+      "category": null,
+      "note": "Client, call, and response access all migrated."
+    },
+    {
+      "id": "selenium-4-locators:SURFscz/SRAM-deploy#307",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted; By was already imported."
+    },
+    {
+      "id": "selenium-4-locators:dataXdevelopment/SEELE#26",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted and By imported."
+    },
+    {
+      "id": "selenium-4-locators:f-is-h/douban-to-imdb#21",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted; By was already imported; non-ASCII text intact."
+    },
+    {
+      "id": "pydantic-v2-validators:ugurtheiron/icebreaker-agent#2",
+      "grade": "correct",
+      "category": null,
+      "note": "Validator migrated; 10 of 10 tests still pass."
+    },
+    {
+      "id": "pydantic-v2-validators:taha-kms/CLASSMATE-RAG#60",
+      "grade": "correct",
+      "category": null,
+      "note": "Validators migrated and compatibility shim removed; 107 of 107 tests pass. Also deleted one comment."
+    },
+    {
+      "id": "pydantic-v2-validators:oslokommune/okdata-permission-api#204",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Treats the before-validator input as ValidationInfo and reads .data, which it does not have."
+    },
+    {
+      "id": "react-18-root:sirbrillig/gitnews-menubar#302",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:maangie/react_watch#48",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Creates a second root to unmount, and removed Japanese doc comments from a test."
+    }
+  ]
+}

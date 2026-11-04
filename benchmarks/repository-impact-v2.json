@@ -1,0 +1,6663 @@
+{
+ "schema_version": 2,
+ "description": "Provider-neutral repository impact cases labeled by ground truth, not by analyzer output. Includes hard positives (real breakage that static analysis can miss) and hard negatives (name collisions, comments, strings, vendored code).",
+ "families": 86,
+ "cases": [
+  {
+   "id": "dep-cross-ecosystem:acme_sdk",
+   "family": "dep-cross-ecosystem",
+   "category": "dependency",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "package.json": "{\"dependencies\": {\"acme-sdk\": \"^2.0.0\"}}",
+    "src/i.js": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-cross-ecosystem:mapkit",
+   "family": "dep-cross-ecosystem",
+   "category": "dependency",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "package.json": "{\"dependencies\": {\"mapkit-py\": \"^2.0.0\"}}",
+    "src/i.js": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-cross-ecosystem:payfast",
+   "family": "dep-cross-ecosystem",
+   "category": "dependency",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "package.json": "{\"dependencies\": {\"payfast\": \"^2.0.0\"}}",
+    "src/i.js": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-cross-ecosystem:storekit",
+   "family": "dep-cross-ecosystem",
+   "category": "dependency",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "package.json": "{\"dependencies\": {\"storekit\": \"^2.0.0\"}}",
+    "src/i.js": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-dependencies:acme_sdk",
+   "family": "dep-npm-dependencies",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package.json": "{\"dependencies\": {\"@acme/sdk\": \"^5.1.0\"}}",
+    "src/i.ts": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "@acme/sdk",
+     "package": "@acme/sdk",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-dependencies:mapkit",
+   "family": "dep-npm-dependencies",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package.json": "{\"dependencies\": {\"mapkit\": \"^5.1.0\"}}",
+    "src/i.ts": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit",
+     "package": "mapkit",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-dependencies:payfast",
+   "family": "dep-npm-dependencies",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package.json": "{\"dependencies\": {\"payfast-node\": \"^5.1.0\"}}",
+    "src/i.ts": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast-node",
+     "package": "payfast-node",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-dependencies:storekit",
+   "family": "dep-npm-dependencies",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package.json": "{\"dependencies\": {\"storekit-js\": \"^5.1.0\"}}",
+    "src/i.ts": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit-js",
+     "package": "storekit-js",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-dev-dependencies:acme_sdk",
+   "family": "dep-npm-dev-dependencies",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package.json": "{\"devDependencies\": {\"@acme/sdk\": \"^5.1.0\"}}"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "@acme/sdk",
+     "package": "@acme/sdk",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-dev-dependencies:mapkit",
+   "family": "dep-npm-dev-dependencies",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package.json": "{\"devDependencies\": {\"mapkit\": \"^5.1.0\"}}"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit",
+     "package": "mapkit",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-dev-dependencies:payfast",
+   "family": "dep-npm-dev-dependencies",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package.json": "{\"devDependencies\": {\"payfast-node\": \"^5.1.0\"}}"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast-node",
+     "package": "payfast-node",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-dev-dependencies:storekit",
+   "family": "dep-npm-dev-dependencies",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package.json": "{\"devDependencies\": {\"storekit-js\": \"^5.1.0\"}}"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit-js",
+     "package": "storekit-js",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-lockfile:acme_sdk",
+   "family": "dep-npm-lockfile",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package-lock.json": "{\"lockfileVersion\": 3, \"packages\": {\"\": {\"name\": \"x\"}, \"node_modules/@acme/sdk\": {\"version\": \"5.2.0\"}}}"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "@acme/sdk",
+     "package": "@acme/sdk",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-lockfile:mapkit",
+   "family": "dep-npm-lockfile",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package-lock.json": "{\"lockfileVersion\": 3, \"packages\": {\"\": {\"name\": \"x\"}, \"node_modules/mapkit\": {\"version\": \"5.2.0\"}}}"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit",
+     "package": "mapkit",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-lockfile:payfast",
+   "family": "dep-npm-lockfile",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package-lock.json": "{\"lockfileVersion\": 3, \"packages\": {\"\": {\"name\": \"x\"}, \"node_modules/payfast-node\": {\"version\": \"5.2.0\"}}}"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast-node",
+     "package": "payfast-node",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-lockfile:storekit",
+   "family": "dep-npm-lockfile",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "package-lock.json": "{\"lockfileVersion\": 3, \"packages\": {\"\": {\"name\": \"x\"}, \"node_modules/storekit-js\": {\"version\": \"5.2.0\"}}}"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit-js",
+     "package": "storekit-js",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-not-listed:acme_sdk",
+   "family": "dep-npm-not-listed",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "package.json": "{\"dependencies\": {\"left-pad\": \"^1.0.0\"}}",
+    "src/i.ts": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "@acme/sdk",
+     "package": "@acme/sdk",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-not-listed:mapkit",
+   "family": "dep-npm-not-listed",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "package.json": "{\"dependencies\": {\"left-pad\": \"^1.0.0\"}}",
+    "src/i.ts": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit",
+     "package": "mapkit",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-not-listed:payfast",
+   "family": "dep-npm-not-listed",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "package.json": "{\"dependencies\": {\"left-pad\": \"^1.0.0\"}}",
+    "src/i.ts": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast-node",
+     "package": "payfast-node",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-npm-not-listed:storekit",
+   "family": "dep-npm-not-listed",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "package.json": "{\"dependencies\": {\"left-pad\": \"^1.0.0\"}}",
+    "src/i.ts": "export const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit-js",
+     "package": "storekit-js",
+     "ecosystem": "npm",
+     "version_scope": {
+      "affected_range": ">=5.0.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-pyproject-range:acme_sdk",
+   "family": "dep-pyproject-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "pyproject.toml": "[project]\nname='x'\nversion='0.1'\ndependencies=['acme-sdk>=2,<3']\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-pyproject-range:mapkit",
+   "family": "dep-pyproject-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "pyproject.toml": "[project]\nname='x'\nversion='0.1'\ndependencies=['mapkit-py>=2,<3']\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-pyproject-range:payfast",
+   "family": "dep-pyproject-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "pyproject.toml": "[project]\nname='x'\nversion='0.1'\ndependencies=['payfast>=2,<3']\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-pyproject-range:storekit",
+   "family": "dep-pyproject-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "pyproject.toml": "[project]\nname='x'\nversion='0.1'\ndependencies=['storekit>=2,<3']\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-boundary-excluded:acme_sdk",
+   "family": "dep-requirements-boundary-excluded",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "acme-sdk==3.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-boundary-excluded:mapkit",
+   "family": "dep-requirements-boundary-excluded",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "mapkit-py==3.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-boundary-excluded:payfast",
+   "family": "dep-requirements-boundary-excluded",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "payfast==3.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-boundary-excluded:storekit",
+   "family": "dep-requirements-boundary-excluded",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "storekit==3.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-commented:acme_sdk",
+   "family": "dep-requirements-commented",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "# acme-sdk==2.5.0\nrequests\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-commented:mapkit",
+   "family": "dep-requirements-commented",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "# mapkit-py==2.5.0\nrequests\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-commented:payfast",
+   "family": "dep-requirements-commented",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "# payfast==2.5.0\nrequests\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-commented:storekit",
+   "family": "dep-requirements-commented",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "# storekit==2.5.0\nrequests\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-dev-file:acme_sdk",
+   "family": "dep-requirements-dev-file",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements-dev.txt": "acme-sdk==2.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-dev-file:mapkit",
+   "family": "dep-requirements-dev-file",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements-dev.txt": "mapkit-py==2.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-dev-file:payfast",
+   "family": "dep-requirements-dev-file",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements-dev.txt": "payfast==2.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-dev-file:storekit",
+   "family": "dep-requirements-dev-file",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements-dev.txt": "storekit==2.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-different-package:acme_sdk",
+   "family": "dep-requirements-different-package",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "acme-sdk-extras==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-different-package:mapkit",
+   "family": "dep-requirements-different-package",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "mapkit-py-extras==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-different-package:payfast",
+   "family": "dep-requirements-different-package",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "payfast-extras==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-different-package:storekit",
+   "family": "dep-requirements-different-package",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "storekit-extras==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-extras:acme_sdk",
+   "family": "dep-requirements-extras",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "acme-sdk[async]==2.1.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-extras:mapkit",
+   "family": "dep-requirements-extras",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "mapkit-py[async]==2.1.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-extras:payfast",
+   "family": "dep-requirements-extras",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "payfast[async]==2.1.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-extras:storekit",
+   "family": "dep-requirements-extras",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "storekit[async]==2.1.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-mixed-case:acme_sdk",
+   "family": "dep-requirements-mixed-case",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "ACME-SDK==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-mixed-case:mapkit",
+   "family": "dep-requirements-mixed-case",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "MAPKIT-PY==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-mixed-case:payfast",
+   "family": "dep-requirements-mixed-case",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "PAYFAST==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-mixed-case:storekit",
+   "family": "dep-requirements-mixed-case",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "STOREKIT==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-out-of-range:acme_sdk",
+   "family": "dep-requirements-out-of-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "acme-sdk==3.1.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-out-of-range:mapkit",
+   "family": "dep-requirements-out-of-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "mapkit-py==3.1.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-out-of-range:payfast",
+   "family": "dep-requirements-out-of-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "payfast==3.1.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-out-of-range:storekit",
+   "family": "dep-requirements-out-of-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "storekit==3.1.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-pinned-in-range:acme_sdk",
+   "family": "dep-requirements-pinned-in-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "acme-sdk==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-pinned-in-range:mapkit",
+   "family": "dep-requirements-pinned-in-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "mapkit-py==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-pinned-in-range:payfast",
+   "family": "dep-requirements-pinned-in-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "payfast==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-pinned-in-range:storekit",
+   "family": "dep-requirements-pinned-in-range",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "storekit==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-prefix-package:acme_sdk",
+   "family": "dep-requirements-prefix-package",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "xacme-sdk==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-prefix-package:mapkit",
+   "family": "dep-requirements-prefix-package",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "xmapkit-py==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-prefix-package:payfast",
+   "family": "dep-requirements-prefix-package",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "xpayfast==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-prefix-package:storekit",
+   "family": "dep-requirements-prefix-package",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "xstorekit==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-underscore-name:acme_sdk",
+   "family": "dep-requirements-underscore-name",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "acme_sdk==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-underscore-name:mapkit",
+   "family": "dep-requirements-underscore-name",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "mapkit_py==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-underscore-name:payfast",
+   "family": "dep-requirements-underscore-name",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "payfast==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-underscore-name:storekit",
+   "family": "dep-requirements-underscore-name",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "storekit==2.5.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-unpinned:acme_sdk",
+   "family": "dep-requirements-unpinned",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "acme-sdk\nrequests\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-unpinned:mapkit",
+   "family": "dep-requirements-unpinned",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "mapkit-py\nrequests\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-unpinned:payfast",
+   "family": "dep-requirements-unpinned",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "payfast\nrequests\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-unpinned:storekit",
+   "family": "dep-requirements-unpinned",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "storekit\nrequests\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-upper-boundary-inside:acme_sdk",
+   "family": "dep-requirements-upper-boundary-inside",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "acme-sdk==2.9.9\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-upper-boundary-inside:mapkit",
+   "family": "dep-requirements-upper-boundary-inside",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "mapkit-py==2.9.9\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "mapkit-py",
+     "package": "mapkit-py",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-upper-boundary-inside:payfast",
+   "family": "dep-requirements-upper-boundary-inside",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "payfast==2.9.9\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "dep-requirements-upper-boundary-inside:storekit",
+   "family": "dep-requirements-upper-boundary-inside",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "storekit==2.9.9\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "storekit",
+     "package": "storekit",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "empty-repo:acme_sdk",
+   "family": "empty-repo",
+   "category": "unsupported-language",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "README.md": "# hi\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send"
+    }
+   ]
+  },
+  {
+   "id": "empty-repo:mapkit",
+   "family": "empty-repo",
+   "category": "unsupported-language",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "README.md": "# hi\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route"
+    }
+   ]
+  },
+  {
+   "id": "empty-repo:payfast",
+   "family": "empty-repo",
+   "category": "unsupported-language",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "README.md": "# hi\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge"
+    }
+   ]
+  },
+  {
+   "id": "empty-repo:storekit",
+   "family": "empty-repo",
+   "category": "unsupported-language",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "README.md": "# hi\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload"
+    }
+   ]
+  },
+  {
+   "id": "ep-clean-python:acme_sdk",
+   "family": "ep-clean-python",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "print('nothing here')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-clean-python:mapkit",
+   "family": "ep-clean-python",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "print('nothing here')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-clean-python:payfast",
+   "family": "ep-clean-python",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "print('nothing here')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-clean-python:storekit",
+   "family": "ep-clean-python",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "print('nothing here')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-comment-quoted:acme_sdk",
+   "family": "ep-js-comment-quoted",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/c.js": "// old call used the '/v1/messages' endpoint before the rewrite\nexport const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-comment-quoted:mapkit",
+   "family": "ep-js-comment-quoted",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/c.js": "// old call used the '/directions/v1' endpoint before the rewrite\nexport const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-comment-quoted:payfast",
+   "family": "ep-js-comment-quoted",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/c.js": "// old call used the '/v2/charges/create' endpoint before the rewrite\nexport const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-comment-quoted:storekit",
+   "family": "ep-js-comment-quoted",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/c.js": "// old call used the '/objects/put' endpoint before the rewrite\nexport const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-fetch:acme_sdk",
+   "family": "ep-js-fetch",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.js": "fetch('/v1/messages', { method: 'POST' });\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-fetch:mapkit",
+   "family": "ep-js-fetch",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.js": "fetch('/directions/v1', { method: 'POST' });\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-fetch:payfast",
+   "family": "ep-js-fetch",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.js": "fetch('/v2/charges/create', { method: 'POST' });\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-fetch:storekit",
+   "family": "ep-js-fetch",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.js": "fetch('/objects/put', { method: 'POST' });\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-near-miss:acme_sdk",
+   "family": "ep-js-near-miss",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/c.js": "fetch('/v1/messages-new');\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-near-miss:mapkit",
+   "family": "ep-js-near-miss",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/c.js": "fetch('/directions/v1-new');\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-near-miss:payfast",
+   "family": "ep-js-near-miss",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/c.js": "fetch('/v2/charges/create-new');\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-near-miss:storekit",
+   "family": "ep-js-near-miss",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/c.js": "fetch('/objects/put-new');\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-template-literal:acme_sdk",
+   "family": "ep-js-template-literal",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/c.js": "fetch(`/v1/messages`, { method: 'POST' });\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-template-literal:mapkit",
+   "family": "ep-js-template-literal",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/c.js": "fetch(`/directions/v1`, { method: 'POST' });\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-template-literal:payfast",
+   "family": "ep-js-template-literal",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/c.js": "fetch(`/v2/charges/create`, { method: 'POST' });\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-js-template-literal:storekit",
+   "family": "ep-js-template-literal",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/c.js": "fetch(`/objects/put`, { method: 'POST' });\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-comment:acme_sdk",
+   "family": "ep-python-comment",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "# legacy path /v1/messages was removed\nx = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-comment:mapkit",
+   "family": "ep-python-comment",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "# legacy path /directions/v1 was removed\nx = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-comment:payfast",
+   "family": "ep-python-comment",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "# legacy path /v2/charges/create was removed\nx = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-comment:storekit",
+   "family": "ep-python-comment",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "# legacy path /objects/put was removed\nx = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-concat:acme_sdk",
+   "family": "ep-python-concat",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nBASE = 'https://api.example.com'\nrequests.post(BASE + '/v1/messages')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-concat:mapkit",
+   "family": "ep-python-concat",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nBASE = 'https://api.example.com'\nrequests.post(BASE + '/directions/v1')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-concat:payfast",
+   "family": "ep-python-concat",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nBASE = 'https://api.example.com'\nrequests.post(BASE + '/v2/charges/create')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-concat:storekit",
+   "family": "ep-python-concat",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nBASE = 'https://api.example.com'\nrequests.post(BASE + '/objects/put')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-constant:acme_sdk",
+   "family": "ep-python-constant",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nURL = '/v1/messages'\nrequests.post(URL)\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-constant:mapkit",
+   "family": "ep-python-constant",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nURL = '/directions/v1'\nrequests.post(URL)\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-constant:payfast",
+   "family": "ep-python-constant",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nURL = '/v2/charges/create'\nrequests.post(URL)\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-constant:storekit",
+   "family": "ep-python-constant",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nURL = '/objects/put'\nrequests.post(URL)\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-full-url:acme_sdk",
+   "family": "ep-python-full-url",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('https://api.example.com/v1/messages')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-full-url:mapkit",
+   "family": "ep-python-full-url",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('https://api.example.com/directions/v1')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-full-url:payfast",
+   "family": "ep-python-full-url",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('https://api.example.com/v2/charges/create')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-full-url:storekit",
+   "family": "ep-python-full-url",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('https://api.example.com/objects/put')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-httpx-client:acme_sdk",
+   "family": "ep-python-httpx-client",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "import httpx\n\nclient = httpx.Client()\nclient.post(\"/v1/messages\", json={})\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-httpx-client:mapkit",
+   "family": "ep-python-httpx-client",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "import httpx\n\nclient = httpx.Client()\nclient.post(\"/directions/v1\", json={})\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-httpx-client:payfast",
+   "family": "ep-python-httpx-client",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "import httpx\n\nclient = httpx.Client()\nclient.post(\"/v2/charges/create\", json={})\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-httpx-client:storekit",
+   "family": "ep-python-httpx-client",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "import httpx\n\nclient = httpx.Client()\nclient.post(\"/objects/put\", json={})\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-near-miss:acme_sdk",
+   "family": "ep-python-near-miss",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/v1/messages/refund-v2')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-near-miss:mapkit",
+   "family": "ep-python-near-miss",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/directions/v1/refund-v2')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-near-miss:payfast",
+   "family": "ep-python-near-miss",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/v2/charges/create/refund-v2')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-near-miss:storekit",
+   "family": "ep-python-near-miss",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/objects/put/refund-v2')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-other-version:acme_sdk",
+   "family": "ep-python-other-version",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/v9/v1/messages')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-other-version:mapkit",
+   "family": "ep-python-other-version",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/v9/directions/v1')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-other-version:payfast",
+   "family": "ep-python-other-version",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/v9/v2/charges/create')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-other-version:storekit",
+   "family": "ep-python-other-version",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/v9/objects/put')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-requests:acme_sdk",
+   "family": "ep-python-requests",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/v1/messages', json={})\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-requests:mapkit",
+   "family": "ep-python-requests",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/directions/v1', json={})\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-requests:payfast",
+   "family": "ep-python-requests",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/v2/charges/create', json={})\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-python-requests:storekit",
+   "family": "ep-python-requests",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "import requests\n\nrequests.post('/objects/put', json={})\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-ts-axios:acme_sdk",
+   "family": "ep-ts-axios",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.ts": "await axios.post(\"/v1/messages\", body);\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-ts-axios:mapkit",
+   "family": "ep-ts-axios",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.ts": "await axios.post(\"/directions/v1\", body);\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/directions/v1",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-ts-axios:payfast",
+   "family": "ep-ts-axios",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.ts": "await axios.post(\"/v2/charges/create\", body);\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "ep-ts-axios:storekit",
+   "family": "ep-ts-axios",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.ts": "await axios.post(\"/objects/put\", body);\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/objects/put",
+     "operation": "POST"
+    }
+   ]
+  },
+  {
+   "id": "fld-clean:acme_sdk",
+   "family": "fld-clean",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "print('ok')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-clean:mapkit",
+   "family": "fld-clean",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "print('ok')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-clean:payfast",
+   "family": "fld-clean",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "print('ok')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-clean:storekit",
+   "family": "fld-clean",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "print('ok')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-near-name:acme_sdk",
+   "family": "fld-js-near-name",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/c.js": "send({ legacy_token_v2: 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-near-name:mapkit",
+   "family": "fld-js-near-name",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/c.js": "send({ avoid_tolls_v2: 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-near-name:payfast",
+   "family": "fld-js-near-name",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/c.js": "send({ card_token_v2: 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-near-name:storekit",
+   "family": "fld-js-near-name",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/c.js": "send({ acl_mode_v2: 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-object-key:acme_sdk",
+   "family": "fld-js-object-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.js": "send({ legacy_token: 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-object-key:mapkit",
+   "family": "fld-js-object-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.js": "send({ avoid_tolls: 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-object-key:payfast",
+   "family": "fld-js-object-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.js": "send({ card_token: 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-object-key:storekit",
+   "family": "fld-js-object-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.js": "send({ acl_mode: 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-property-read:acme_sdk",
+   "family": "fld-js-property-read",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/c.js": "const v = response.legacy_token;\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-property-read:mapkit",
+   "family": "fld-js-property-read",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/c.js": "const v = response.avoid_tolls;\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-property-read:payfast",
+   "family": "fld-js-property-read",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/c.js": "const v = response.card_token;\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-property-read:storekit",
+   "family": "fld-js-property-read",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/c.js": "const v = response.acl_mode;\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-quoted-key:acme_sdk",
+   "family": "fld-js-quoted-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.ts": "send({ 'legacy_token': 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-quoted-key:mapkit",
+   "family": "fld-js-quoted-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.ts": "send({ 'avoid_tolls': 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-quoted-key:payfast",
+   "family": "fld-js-quoted-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.ts": "send({ 'card_token': 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-js-quoted-key:storekit",
+   "family": "fld-js-quoted-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/c.ts": "send({ 'acl_mode': 'v' });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-attribute-read:acme_sdk",
+   "family": "fld-python-attribute-read",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "value = response.legacy_token\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-attribute-read:mapkit",
+   "family": "fld-python-attribute-read",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "value = response.avoid_tolls\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-attribute-read:payfast",
+   "family": "fld-python-attribute-read",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "value = response.card_token\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-attribute-read:storekit",
+   "family": "fld-python-attribute-read",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "value = response.acl_mode\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-comment:acme_sdk",
+   "family": "fld-python-comment",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "# the legacy_token field is going away\nx = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-comment:mapkit",
+   "family": "fld-python-comment",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "# the avoid_tolls field is going away\nx = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-comment:payfast",
+   "family": "fld-python-comment",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "# the card_token field is going away\nx = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-comment:storekit",
+   "family": "fld-python-comment",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "# the acl_mode field is going away\nx = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-dict-key:acme_sdk",
+   "family": "fld-python-dict-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "payload = {'legacy_token': 'v'}\nsend(payload)\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-dict-key:mapkit",
+   "family": "fld-python-dict-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "payload = {'avoid_tolls': 'v'}\nsend(payload)\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-dict-key:payfast",
+   "family": "fld-python-dict-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "payload = {'card_token': 'v'}\nsend(payload)\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-dict-key:storekit",
+   "family": "fld-python-dict-key",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "payload = {'acl_mode': 'v'}\nsend(payload)\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-kwarg:acme_sdk",
+   "family": "fld-python-kwarg",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "create(legacy_token='v')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-kwarg:mapkit",
+   "family": "fld-python-kwarg",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "create(avoid_tolls='v')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-kwarg:payfast",
+   "family": "fld-python-kwarg",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "create(card_token='v')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-kwarg:storekit",
+   "family": "fld-python-kwarg",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "c.py": "create(acl_mode='v')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-near-name:acme_sdk",
+   "family": "fld-python-near-name",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "create(legacy_token_id='v')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-near-name:mapkit",
+   "family": "fld-python-near-name",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "create(avoid_tolls_id='v')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-near-name:payfast",
+   "family": "fld-python-near-name",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "create(card_token_id='v')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-near-name:storekit",
+   "family": "fld-python-near-name",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "c.py": "create(acl_mode_id='v')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-subscript:acme_sdk",
+   "family": "fld-python-subscript",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "value = data['legacy_token']\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-subscript:mapkit",
+   "family": "fld-python-subscript",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "value = data['avoid_tolls']\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "avoid_tolls"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-subscript:payfast",
+   "family": "fld-python-subscript",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "value = data['card_token']\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "fld-python-subscript:storekit",
+   "family": "fld-python-subscript",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "c.py": "value = data['acl_mode']\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "acl_mode"
+    }
+   ]
+  },
+  {
+   "id": "js-aliased-import:acme_sdk",
+   "family": "js-aliased-import",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "import { Client as Api } from '@acme/sdk';\nconst a = new Api();\na.send(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-aliased-import:mapkit",
+   "family": "js-aliased-import",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "import { Router as Api } from 'mapkit';\nconst a = new Api();\na.route(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-aliased-import:payfast",
+   "family": "js-aliased-import",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "import { Gateway as Api } from 'payfast-node';\nconst a = new Api();\na.charge(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-aliased-import:storekit",
+   "family": "js-aliased-import",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "import { Bucket as Api } from 'storekit-js';\nconst a = new Api();\na.upload(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit-js",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-chained-call:acme_sdk",
+   "family": "js-chained-call",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.js": "new Client().send(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-chained-call:mapkit",
+   "family": "js-chained-call",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.js": "new Router().route(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-chained-call:payfast",
+   "family": "js-chained-call",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.js": "new Gateway().charge(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-chained-call:storekit",
+   "family": "js-chained-call",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.js": "new Bucket().upload(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit-js",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-clean:acme_sdk",
+   "family": "js-clean",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/a.ts": "export const value = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-clean:mapkit",
+   "family": "js-clean",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/a.ts": "export const value = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-clean:payfast",
+   "family": "js-clean",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/a.ts": "export const value = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-clean:storekit",
+   "family": "js-clean",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/a.ts": "export const value = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit-js",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-comment-only:acme_sdk",
+   "family": "js-comment-only",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/a.ts": "// client.send( was removed upstream\nexport const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-comment-only:mapkit",
+   "family": "js-comment-only",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/a.ts": "// router.route( was removed upstream\nexport const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-comment-only:payfast",
+   "family": "js-comment-only",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/a.ts": "// gateway.charge( was removed upstream\nexport const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-comment-only:storekit",
+   "family": "js-comment-only",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/a.ts": "// bucket.upload( was removed upstream\nexport const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit-js",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-computed-property:acme_sdk",
+   "family": "js-computed-property",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const c = new Client();\nc['send'](1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-computed-property:mapkit",
+   "family": "js-computed-property",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const c = new Router();\nc['route'](1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-computed-property:payfast",
+   "family": "js-computed-property",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const c = new Gateway();\nc['charge'](1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-computed-property:storekit",
+   "family": "js-computed-property",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const c = new Bucket();\nc['upload'](1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit-js",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-destructured-method:acme_sdk",
+   "family": "js-destructured-method",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const { send } = new Client();\nsend(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-destructured-method:mapkit",
+   "family": "js-destructured-method",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const { route } = new Router();\nroute(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-destructured-method:payfast",
+   "family": "js-destructured-method",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const { charge } = new Gateway();\ncharge(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-destructured-method:storekit",
+   "family": "js-destructured-method",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const { upload } = new Bucket();\nupload(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit-js",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-direct-call:acme_sdk",
+   "family": "js-direct-call",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const client = new Client();\nawait client.send({});\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-direct-call:mapkit",
+   "family": "js-direct-call",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const router = new Router();\nawait router.route({});\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-direct-call:payfast",
+   "family": "js-direct-call",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const gateway = new Gateway();\nawait gateway.charge({});\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-direct-call:storekit",
+   "family": "js-direct-call",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.ts": "const bucket = new Bucket();\nawait bucket.upload({});\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit-js",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-jsx-handler:acme_sdk",
+   "family": "js-jsx-handler",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.tsx": "export function B() {\n  const onClick = () => client.send();\n  return null;\n}\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-jsx-handler:mapkit",
+   "family": "js-jsx-handler",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.tsx": "export function B() {\n  const onClick = () => router.route();\n  return null;\n}\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-jsx-handler:payfast",
+   "family": "js-jsx-handler",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.tsx": "export function B() {\n  const onClick = () => gateway.charge();\n  return null;\n}\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-jsx-handler:storekit",
+   "family": "js-jsx-handler",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "src/a.tsx": "export function B() {\n  const onClick = () => bucket.upload();\n  return null;\n}\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit-js",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-other-receiver:acme_sdk",
+   "family": "js-other-receiver",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/a.ts": "logger.send('x');\nqueue.send('y');\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-other-receiver:mapkit",
+   "family": "js-other-receiver",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/a.ts": "logger.route('x');\nqueue.route('y');\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-other-receiver:payfast",
+   "family": "js-other-receiver",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/a.ts": "logger.charge('x');\nqueue.charge('y');\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-other-receiver:storekit",
+   "family": "js-other-receiver",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "src/a.ts": "logger.upload('x');\nqueue.upload('y');\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit-js",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-string-only:acme_sdk",
+   "family": "js-string-only",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/a.ts": "export const doc = 'see client.send(x) docs';\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-string-only:mapkit",
+   "family": "js-string-only",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/a.ts": "export const doc = 'see router.route(x) docs';\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-string-only:payfast",
+   "family": "js-string-only",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/a.ts": "export const doc = 'see gateway.charge(x) docs';\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "js-string-only:storekit",
+   "family": "js-string-only",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "src/a.ts": "export const doc = 'see bucket.upload(x) docs';\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit-js",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "lang-go-affected:acme_sdk",
+   "family": "lang-go-affected",
+   "category": "unsupported-language",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "main.go": "package main\nfunc main() { c := acme_sdk.NewClient(); c.Send() }\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send"
+    }
+   ]
+  },
+  {
+   "id": "lang-go-affected:mapkit",
+   "family": "lang-go-affected",
+   "category": "unsupported-language",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "main.go": "package main\nfunc main() { c := mapkit.NewRouter(); c.Route() }\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route"
+    }
+   ]
+  },
+  {
+   "id": "lang-go-affected:payfast",
+   "family": "lang-go-affected",
+   "category": "unsupported-language",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "main.go": "package main\nfunc main() { c := payfast.NewGateway(); c.Charge() }\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge"
+    }
+   ]
+  },
+  {
+   "id": "lang-go-affected:storekit",
+   "family": "lang-go-affected",
+   "category": "unsupported-language",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "main.go": "package main\nfunc main() { c := storekit.NewBucket(); c.Upload() }\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload"
+    }
+   ]
+  },
+  {
+   "id": "lang-go-clean:acme_sdk",
+   "family": "lang-go-clean",
+   "category": "unsupported-language",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "main.go": "package main\nfunc main() {}\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send"
+    }
+   ]
+  },
+  {
+   "id": "lang-go-clean:mapkit",
+   "family": "lang-go-clean",
+   "category": "unsupported-language",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "main.go": "package main\nfunc main() {}\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route"
+    }
+   ]
+  },
+  {
+   "id": "lang-go-clean:payfast",
+   "family": "lang-go-clean",
+   "category": "unsupported-language",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "main.go": "package main\nfunc main() {}\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge"
+    }
+   ]
+  },
+  {
+   "id": "lang-go-clean:storekit",
+   "family": "lang-go-clean",
+   "category": "unsupported-language",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "main.go": "package main\nfunc main() {}\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload"
+    }
+   ]
+  },
+  {
+   "id": "lang-java-affected:acme_sdk",
+   "family": "lang-java-affected",
+   "category": "unsupported-language",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/Main.java": "class Main { void go() { new Client().send(); } }\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send"
+    }
+   ]
+  },
+  {
+   "id": "lang-java-affected:mapkit",
+   "family": "lang-java-affected",
+   "category": "unsupported-language",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/Main.java": "class Main { void go() { new Router().route(); } }\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route"
+    }
+   ]
+  },
+  {
+   "id": "lang-java-affected:payfast",
+   "family": "lang-java-affected",
+   "category": "unsupported-language",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/Main.java": "class Main { void go() { new Gateway().charge(); } }\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge"
+    }
+   ]
+  },
+  {
+   "id": "lang-java-affected:storekit",
+   "family": "lang-java-affected",
+   "category": "unsupported-language",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "src/Main.java": "class Main { void go() { new Bucket().upload(); } }\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload"
+    }
+   ]
+  },
+  {
+   "id": "py-assign-chain:acme_sdk",
+   "family": "py-assign-chain",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "import acme_sdk\n\nFactory = acme_sdk.Client\nobj = Factory()\nobj.send(3)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-assign-chain:mapkit",
+   "family": "py-assign-chain",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "import mapkit\n\nFactory = mapkit.Router\nobj = Factory()\nobj.route(3)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-assign-chain:payfast",
+   "family": "py-assign-chain",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "import payfast\n\nFactory = payfast.Gateway\nobj = Factory()\nobj.charge(3)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-assign-chain:storekit",
+   "family": "py-assign-chain",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "import storekit\n\nFactory = storekit.Bucket\nobj = Factory()\nobj.upload(3)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-attribute-reference:acme_sdk",
+   "family": "py-attribute-reference",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from acme_sdk import Client\n\nclient = Client()\nhandler = client.send\nhandler('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-attribute-reference:mapkit",
+   "family": "py-attribute-reference",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from mapkit import Router\n\nclient = Router()\nhandler = client.route\nhandler('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-attribute-reference:payfast",
+   "family": "py-attribute-reference",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from payfast import Gateway\n\nclient = Gateway()\nhandler = client.charge\nhandler('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-attribute-reference:storekit",
+   "family": "py-attribute-reference",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from storekit import Bucket\n\nclient = Bucket()\nhandler = client.upload\nhandler('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-clean:acme_sdk",
+   "family": "py-clean",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "print('safe')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-clean:mapkit",
+   "family": "py-clean",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "print('safe')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-clean:payfast",
+   "family": "py-clean",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "print('safe')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-clean:storekit",
+   "family": "py-clean",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "print('safe')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-comment-mention:acme_sdk",
+   "family": "py-comment-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "# TODO: migrate Client.send soon\nprint('ok')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-comment-mention:mapkit",
+   "family": "py-comment-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "# TODO: migrate Router.route soon\nprint('ok')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-comment-mention:payfast",
+   "family": "py-comment-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "# TODO: migrate Gateway.charge soon\nprint('ok')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-comment-mention:storekit",
+   "family": "py-comment-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "# TODO: migrate Bucket.upload soon\nprint('ok')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-conditional-import:acme_sdk",
+   "family": "py-conditional-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "try:\n    from acme_sdk import Client\nexcept ImportError:\n    Client = None\n\nClient().send(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-conditional-import:mapkit",
+   "family": "py-conditional-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "try:\n    from mapkit import Router\nexcept ImportError:\n    Router = None\n\nRouter().route(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-conditional-import:payfast",
+   "family": "py-conditional-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "try:\n    from payfast import Gateway\nexcept ImportError:\n    Gateway = None\n\nGateway().charge(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-conditional-import:storekit",
+   "family": "py-conditional-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "try:\n    from storekit import Bucket\nexcept ImportError:\n    Bucket = None\n\nBucket().upload(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-deep-package:acme_sdk",
+   "family": "py-deep-package",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "pkg/__init__.py": "",
+    "pkg/core/__init__.py": "",
+    "pkg/core/util.py": "def add(a, b):\n    return a + b\n",
+    "pkg/integrations/notify.py": "from acme_sdk import Client\n\n\ndef go():\n    return Client().send()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-deep-package:mapkit",
+   "family": "py-deep-package",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "pkg/__init__.py": "",
+    "pkg/core/__init__.py": "",
+    "pkg/core/util.py": "def add(a, b):\n    return a + b\n",
+    "pkg/integrations/notify.py": "from mapkit import Router\n\n\ndef go():\n    return Router().route()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-deep-package:payfast",
+   "family": "py-deep-package",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "pkg/__init__.py": "",
+    "pkg/core/__init__.py": "",
+    "pkg/core/util.py": "def add(a, b):\n    return a + b\n",
+    "pkg/integrations/notify.py": "from payfast import Gateway\n\n\ndef go():\n    return Gateway().charge()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-deep-package:storekit",
+   "family": "py-deep-package",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "pkg/__init__.py": "",
+    "pkg/core/__init__.py": "",
+    "pkg/core/util.py": "def add(a, b):\n    return a + b\n",
+    "pkg/integrations/notify.py": "from storekit import Bucket\n\n\ndef go():\n    return Bucket().upload()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-direct:acme_sdk",
+   "family": "py-direct",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from acme_sdk import Client\n\nclient = Client()\nclient.send('hello')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-direct:mapkit",
+   "family": "py-direct",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from mapkit import Router\n\nclient = Router()\nclient.route('hello')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-direct:payfast",
+   "family": "py-direct",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from payfast import Gateway\n\nclient = Gateway()\nclient.charge('hello')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-direct:storekit",
+   "family": "py-direct",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from storekit import Bucket\n\nclient = Bucket()\nclient.upload('hello')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-docstring-mention:acme_sdk",
+   "family": "py-docstring-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "\"\"\"Notes: Client.send is deprecated upstream.\"\"\"\n\n\ndef noop():\n    return 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-docstring-mention:mapkit",
+   "family": "py-docstring-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "\"\"\"Notes: Router.route is deprecated upstream.\"\"\"\n\n\ndef noop():\n    return 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-docstring-mention:payfast",
+   "family": "py-docstring-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "\"\"\"Notes: Gateway.charge is deprecated upstream.\"\"\"\n\n\ndef noop():\n    return 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-docstring-mention:storekit",
+   "family": "py-docstring-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "\"\"\"Notes: Bucket.upload is deprecated upstream.\"\"\"\n\n\ndef noop():\n    return 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-factory-wrapper:acme_sdk",
+   "family": "py-factory-wrapper",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from acme_sdk import Client\n\n\ndef make():\n    return Client()\n\n\nmake().send('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-factory-wrapper:mapkit",
+   "family": "py-factory-wrapper",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from mapkit import Router\n\n\ndef make():\n    return Router()\n\n\nmake().route('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-factory-wrapper:payfast",
+   "family": "py-factory-wrapper",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from payfast import Gateway\n\n\ndef make():\n    return Gateway()\n\n\nmake().charge('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-factory-wrapper:storekit",
+   "family": "py-factory-wrapper",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from storekit import Bucket\n\n\ndef make():\n    return Bucket()\n\n\nmake().upload('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-from-alias:acme_sdk",
+   "family": "py-from-alias",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from acme_sdk import Client as Api\n\napi = Api()\napi.send(2)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-from-alias:mapkit",
+   "family": "py-from-alias",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from mapkit import Router as Api\n\napi = Api()\napi.route(2)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-from-alias:payfast",
+   "family": "py-from-alias",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from payfast import Gateway as Api\n\napi = Api()\napi.charge(2)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-from-alias:storekit",
+   "family": "py-from-alias",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from storekit import Bucket as Api\n\napi = Api()\napi.upload(2)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-function-local-import:acme_sdk",
+   "family": "py-function-local-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "def go():\n    from acme_sdk import Client\n    return Client().send()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-function-local-import:mapkit",
+   "family": "py-function-local-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "def go():\n    from mapkit import Router\n    return Router().route()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-function-local-import:payfast",
+   "family": "py-function-local-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "def go():\n    from payfast import Gateway\n    return Gateway().charge()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-function-local-import:storekit",
+   "family": "py-function-local-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "def go():\n    from storekit import Bucket\n    return Bucket().upload()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-getattr-dynamic:acme_sdk",
+   "family": "py-getattr-dynamic",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from acme_sdk import Client\n\nclient = Client()\ngetattr(client, 'send')('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-getattr-dynamic:mapkit",
+   "family": "py-getattr-dynamic",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from mapkit import Router\n\nclient = Router()\ngetattr(client, 'route')('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-getattr-dynamic:payfast",
+   "family": "py-getattr-dynamic",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from payfast import Gateway\n\nclient = Gateway()\ngetattr(client, 'charge')('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-getattr-dynamic:storekit",
+   "family": "py-getattr-dynamic",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from storekit import Bucket\n\nclient = Bucket()\ngetattr(client, 'upload')('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-in-tests:acme_sdk",
+   "family": "py-in-tests",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "tests/test_flow.py": "from acme_sdk import Client\n\n\ndef test_it():\n    Client().send('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-in-tests:mapkit",
+   "family": "py-in-tests",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "tests/test_flow.py": "from mapkit import Router\n\n\ndef test_it():\n    Router().route('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-in-tests:payfast",
+   "family": "py-in-tests",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "tests/test_flow.py": "from payfast import Gateway\n\n\ndef test_it():\n    Gateway().charge('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-in-tests:storekit",
+   "family": "py-in-tests",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "tests/test_flow.py": "from storekit import Bucket\n\n\ndef test_it():\n    Bucket().upload('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-js-neighbor-clean:acme_sdk",
+   "family": "py-js-neighbor-clean",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "x = 1\n",
+    "web/index.js": "export const a = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-js-neighbor-clean:mapkit",
+   "family": "py-js-neighbor-clean",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "x = 1\n",
+    "web/index.js": "export const a = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-js-neighbor-clean:payfast",
+   "family": "py-js-neighbor-clean",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "x = 1\n",
+    "web/index.js": "export const a = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-js-neighbor-clean:storekit",
+   "family": "py-js-neighbor-clean",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "x = 1\n",
+    "web/index.js": "export const a = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-local-class-shadow:acme_sdk",
+   "family": "py-local-class-shadow",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "class Client:\n    def send(self, x):\n        return x\n\n\nClient().send('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-local-class-shadow:mapkit",
+   "family": "py-local-class-shadow",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "class Router:\n    def route(self, x):\n        return x\n\n\nRouter().route('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-local-class-shadow:payfast",
+   "family": "py-local-class-shadow",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "class Gateway:\n    def charge(self, x):\n        return x\n\n\nGateway().charge('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-local-class-shadow:storekit",
+   "family": "py-local-class-shadow",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "class Bucket:\n    def upload(self, x):\n        return x\n\n\nBucket().upload('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-many-clean-files:acme_sdk",
+   "family": "py-many-clean-files",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "mod0.py": "def f0(x):\n    return x + 0\n",
+    "mod1.py": "def f1(x):\n    return x + 1\n",
+    "mod2.py": "def f2(x):\n    return x + 2\n",
+    "mod3.py": "def f3(x):\n    return x + 3\n",
+    "mod4.py": "def f4(x):\n    return x + 4\n",
+    "mod5.py": "def f5(x):\n    return x + 5\n",
+    "mod6.py": "def f6(x):\n    return x + 6\n",
+    "mod7.py": "def f7(x):\n    return x + 7\n",
+    "mod8.py": "def f8(x):\n    return x + 8\n",
+    "mod9.py": "def f9(x):\n    return x + 9\n",
+    "mod10.py": "def f10(x):\n    return x + 10\n",
+    "mod11.py": "def f11(x):\n    return x + 11\n",
+    "mod12.py": "def f12(x):\n    return x + 12\n",
+    "mod13.py": "def f13(x):\n    return x + 13\n",
+    "mod14.py": "def f14(x):\n    return x + 14\n",
+    "mod15.py": "def f15(x):\n    return x + 15\n",
+    "mod16.py": "def f16(x):\n    return x + 16\n",
+    "mod17.py": "def f17(x):\n    return x + 17\n",
+    "mod18.py": "def f18(x):\n    return x + 18\n",
+    "mod19.py": "def f19(x):\n    return x + 19\n",
+    "mod20.py": "def f20(x):\n    return x + 20\n",
+    "mod21.py": "def f21(x):\n    return x + 21\n",
+    "mod22.py": "def f22(x):\n    return x + 22\n",
+    "mod23.py": "def f23(x):\n    return x + 23\n",
+    "mod24.py": "def f24(x):\n    return x + 24\n",
+    "mod25.py": "def f25(x):\n    return x + 25\n",
+    "mod26.py": "def f26(x):\n    return x + 26\n",
+    "mod27.py": "def f27(x):\n    return x + 27\n",
+    "mod28.py": "def f28(x):\n    return x + 28\n",
+    "mod29.py": "def f29(x):\n    return x + 29\n",
+    "mod30.py": "def f30(x):\n    return x + 30\n",
+    "mod31.py": "def f31(x):\n    return x + 31\n",
+    "mod32.py": "def f32(x):\n    return x + 32\n",
+    "mod33.py": "def f33(x):\n    return x + 33\n",
+    "mod34.py": "def f34(x):\n    return x + 34\n",
+    "mod35.py": "def f35(x):\n    return x + 35\n",
+    "mod36.py": "def f36(x):\n    return x + 36\n",
+    "mod37.py": "def f37(x):\n    return x + 37\n",
+    "mod38.py": "def f38(x):\n    return x + 38\n",
+    "mod39.py": "def f39(x):\n    return x + 39\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-many-clean-files:mapkit",
+   "family": "py-many-clean-files",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "mod0.py": "def f0(x):\n    return x + 0\n",
+    "mod1.py": "def f1(x):\n    return x + 1\n",
+    "mod2.py": "def f2(x):\n    return x + 2\n",
+    "mod3.py": "def f3(x):\n    return x + 3\n",
+    "mod4.py": "def f4(x):\n    return x + 4\n",
+    "mod5.py": "def f5(x):\n    return x + 5\n",
+    "mod6.py": "def f6(x):\n    return x + 6\n",
+    "mod7.py": "def f7(x):\n    return x + 7\n",
+    "mod8.py": "def f8(x):\n    return x + 8\n",
+    "mod9.py": "def f9(x):\n    return x + 9\n",
+    "mod10.py": "def f10(x):\n    return x + 10\n",
+    "mod11.py": "def f11(x):\n    return x + 11\n",
+    "mod12.py": "def f12(x):\n    return x + 12\n",
+    "mod13.py": "def f13(x):\n    return x + 13\n",
+    "mod14.py": "def f14(x):\n    return x + 14\n",
+    "mod15.py": "def f15(x):\n    return x + 15\n",
+    "mod16.py": "def f16(x):\n    return x + 16\n",
+    "mod17.py": "def f17(x):\n    return x + 17\n",
+    "mod18.py": "def f18(x):\n    return x + 18\n",
+    "mod19.py": "def f19(x):\n    return x + 19\n",
+    "mod20.py": "def f20(x):\n    return x + 20\n",
+    "mod21.py": "def f21(x):\n    return x + 21\n",
+    "mod22.py": "def f22(x):\n    return x + 22\n",
+    "mod23.py": "def f23(x):\n    return x + 23\n",
+    "mod24.py": "def f24(x):\n    return x + 24\n",
+    "mod25.py": "def f25(x):\n    return x + 25\n",
+    "mod26.py": "def f26(x):\n    return x + 26\n",
+    "mod27.py": "def f27(x):\n    return x + 27\n",
+    "mod28.py": "def f28(x):\n    return x + 28\n",
+    "mod29.py": "def f29(x):\n    return x + 29\n",
+    "mod30.py": "def f30(x):\n    return x + 30\n",
+    "mod31.py": "def f31(x):\n    return x + 31\n",
+    "mod32.py": "def f32(x):\n    return x + 32\n",
+    "mod33.py": "def f33(x):\n    return x + 33\n",
+    "mod34.py": "def f34(x):\n    return x + 34\n",
+    "mod35.py": "def f35(x):\n    return x + 35\n",
+    "mod36.py": "def f36(x):\n    return x + 36\n",
+    "mod37.py": "def f37(x):\n    return x + 37\n",
+    "mod38.py": "def f38(x):\n    return x + 38\n",
+    "mod39.py": "def f39(x):\n    return x + 39\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-many-clean-files:payfast",
+   "family": "py-many-clean-files",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "mod0.py": "def f0(x):\n    return x + 0\n",
+    "mod1.py": "def f1(x):\n    return x + 1\n",
+    "mod2.py": "def f2(x):\n    return x + 2\n",
+    "mod3.py": "def f3(x):\n    return x + 3\n",
+    "mod4.py": "def f4(x):\n    return x + 4\n",
+    "mod5.py": "def f5(x):\n    return x + 5\n",
+    "mod6.py": "def f6(x):\n    return x + 6\n",
+    "mod7.py": "def f7(x):\n    return x + 7\n",
+    "mod8.py": "def f8(x):\n    return x + 8\n",
+    "mod9.py": "def f9(x):\n    return x + 9\n",
+    "mod10.py": "def f10(x):\n    return x + 10\n",
+    "mod11.py": "def f11(x):\n    return x + 11\n",
+    "mod12.py": "def f12(x):\n    return x + 12\n",
+    "mod13.py": "def f13(x):\n    return x + 13\n",
+    "mod14.py": "def f14(x):\n    return x + 14\n",
+    "mod15.py": "def f15(x):\n    return x + 15\n",
+    "mod16.py": "def f16(x):\n    return x + 16\n",
+    "mod17.py": "def f17(x):\n    return x + 17\n",
+    "mod18.py": "def f18(x):\n    return x + 18\n",
+    "mod19.py": "def f19(x):\n    return x + 19\n",
+    "mod20.py": "def f20(x):\n    return x + 20\n",
+    "mod21.py": "def f21(x):\n    return x + 21\n",
+    "mod22.py": "def f22(x):\n    return x + 22\n",
+    "mod23.py": "def f23(x):\n    return x + 23\n",
+    "mod24.py": "def f24(x):\n    return x + 24\n",
+    "mod25.py": "def f25(x):\n    return x + 25\n",
+    "mod26.py": "def f26(x):\n    return x + 26\n",
+    "mod27.py": "def f27(x):\n    return x + 27\n",
+    "mod28.py": "def f28(x):\n    return x + 28\n",
+    "mod29.py": "def f29(x):\n    return x + 29\n",
+    "mod30.py": "def f30(x):\n    return x + 30\n",
+    "mod31.py": "def f31(x):\n    return x + 31\n",
+    "mod32.py": "def f32(x):\n    return x + 32\n",
+    "mod33.py": "def f33(x):\n    return x + 33\n",
+    "mod34.py": "def f34(x):\n    return x + 34\n",
+    "mod35.py": "def f35(x):\n    return x + 35\n",
+    "mod36.py": "def f36(x):\n    return x + 36\n",
+    "mod37.py": "def f37(x):\n    return x + 37\n",
+    "mod38.py": "def f38(x):\n    return x + 38\n",
+    "mod39.py": "def f39(x):\n    return x + 39\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-many-clean-files:storekit",
+   "family": "py-many-clean-files",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "mod0.py": "def f0(x):\n    return x + 0\n",
+    "mod1.py": "def f1(x):\n    return x + 1\n",
+    "mod2.py": "def f2(x):\n    return x + 2\n",
+    "mod3.py": "def f3(x):\n    return x + 3\n",
+    "mod4.py": "def f4(x):\n    return x + 4\n",
+    "mod5.py": "def f5(x):\n    return x + 5\n",
+    "mod6.py": "def f6(x):\n    return x + 6\n",
+    "mod7.py": "def f7(x):\n    return x + 7\n",
+    "mod8.py": "def f8(x):\n    return x + 8\n",
+    "mod9.py": "def f9(x):\n    return x + 9\n",
+    "mod10.py": "def f10(x):\n    return x + 10\n",
+    "mod11.py": "def f11(x):\n    return x + 11\n",
+    "mod12.py": "def f12(x):\n    return x + 12\n",
+    "mod13.py": "def f13(x):\n    return x + 13\n",
+    "mod14.py": "def f14(x):\n    return x + 14\n",
+    "mod15.py": "def f15(x):\n    return x + 15\n",
+    "mod16.py": "def f16(x):\n    return x + 16\n",
+    "mod17.py": "def f17(x):\n    return x + 17\n",
+    "mod18.py": "def f18(x):\n    return x + 18\n",
+    "mod19.py": "def f19(x):\n    return x + 19\n",
+    "mod20.py": "def f20(x):\n    return x + 20\n",
+    "mod21.py": "def f21(x):\n    return x + 21\n",
+    "mod22.py": "def f22(x):\n    return x + 22\n",
+    "mod23.py": "def f23(x):\n    return x + 23\n",
+    "mod24.py": "def f24(x):\n    return x + 24\n",
+    "mod25.py": "def f25(x):\n    return x + 25\n",
+    "mod26.py": "def f26(x):\n    return x + 26\n",
+    "mod27.py": "def f27(x):\n    return x + 27\n",
+    "mod28.py": "def f28(x):\n    return x + 28\n",
+    "mod29.py": "def f29(x):\n    return x + 29\n",
+    "mod30.py": "def f30(x):\n    return x + 30\n",
+    "mod31.py": "def f31(x):\n    return x + 31\n",
+    "mod32.py": "def f32(x):\n    return x + 32\n",
+    "mod33.py": "def f33(x):\n    return x + 33\n",
+    "mod34.py": "def f34(x):\n    return x + 34\n",
+    "mod35.py": "def f35(x):\n    return x + 35\n",
+    "mod36.py": "def f36(x):\n    return x + 36\n",
+    "mod37.py": "def f37(x):\n    return x + 37\n",
+    "mod38.py": "def f38(x):\n    return x + 38\n",
+    "mod39.py": "def f39(x):\n    return x + 39\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-many-files-one-hit:acme_sdk",
+   "family": "py-many-files-one-hit",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "mod0.py": "def f0(x):\n    return x + 0\n",
+    "mod1.py": "def f1(x):\n    return x + 1\n",
+    "mod2.py": "def f2(x):\n    return x + 2\n",
+    "mod3.py": "def f3(x):\n    return x + 3\n",
+    "mod4.py": "def f4(x):\n    return x + 4\n",
+    "mod5.py": "def f5(x):\n    return x + 5\n",
+    "mod6.py": "def f6(x):\n    return x + 6\n",
+    "mod7.py": "def f7(x):\n    return x + 7\n",
+    "mod8.py": "def f8(x):\n    return x + 8\n",
+    "mod9.py": "def f9(x):\n    return x + 9\n",
+    "mod10.py": "def f10(x):\n    return x + 10\n",
+    "mod11.py": "def f11(x):\n    return x + 11\n",
+    "mod12.py": "def f12(x):\n    return x + 12\n",
+    "mod13.py": "def f13(x):\n    return x + 13\n",
+    "mod14.py": "def f14(x):\n    return x + 14\n",
+    "mod15.py": "def f15(x):\n    return x + 15\n",
+    "mod16.py": "def f16(x):\n    return x + 16\n",
+    "mod17.py": "def f17(x):\n    return x + 17\n",
+    "mod18.py": "def f18(x):\n    return x + 18\n",
+    "mod19.py": "def f19(x):\n    return x + 19\n",
+    "mod20.py": "def f20(x):\n    return x + 20\n",
+    "mod21.py": "def f21(x):\n    return x + 21\n",
+    "mod22.py": "def f22(x):\n    return x + 22\n",
+    "mod23.py": "def f23(x):\n    return x + 23\n",
+    "mod24.py": "def f24(x):\n    return x + 24\n",
+    "mod25.py": "def f25(x):\n    return x + 25\n",
+    "mod26.py": "def f26(x):\n    return x + 26\n",
+    "mod27.py": "def f27(x):\n    return x + 27\n",
+    "mod28.py": "def f28(x):\n    return x + 28\n",
+    "mod29.py": "def f29(x):\n    return x + 29\n",
+    "mod30.py": "def f30(x):\n    return x + 30\n",
+    "mod31.py": "def f31(x):\n    return x + 31\n",
+    "mod32.py": "def f32(x):\n    return x + 32\n",
+    "mod33.py": "def f33(x):\n    return x + 33\n",
+    "mod34.py": "def f34(x):\n    return x + 34\n",
+    "mod35.py": "def f35(x):\n    return x + 35\n",
+    "mod36.py": "def f36(x):\n    return x + 36\n",
+    "mod37.py": "def f37(x):\n    return x + 37\n",
+    "mod38.py": "def f38(x):\n    return x + 38\n",
+    "mod39.py": "def f39(x):\n    return x + 39\n",
+    "hit.py": "from acme_sdk import Client\n\nClient().send()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-many-files-one-hit:mapkit",
+   "family": "py-many-files-one-hit",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "mod0.py": "def f0(x):\n    return x + 0\n",
+    "mod1.py": "def f1(x):\n    return x + 1\n",
+    "mod2.py": "def f2(x):\n    return x + 2\n",
+    "mod3.py": "def f3(x):\n    return x + 3\n",
+    "mod4.py": "def f4(x):\n    return x + 4\n",
+    "mod5.py": "def f5(x):\n    return x + 5\n",
+    "mod6.py": "def f6(x):\n    return x + 6\n",
+    "mod7.py": "def f7(x):\n    return x + 7\n",
+    "mod8.py": "def f8(x):\n    return x + 8\n",
+    "mod9.py": "def f9(x):\n    return x + 9\n",
+    "mod10.py": "def f10(x):\n    return x + 10\n",
+    "mod11.py": "def f11(x):\n    return x + 11\n",
+    "mod12.py": "def f12(x):\n    return x + 12\n",
+    "mod13.py": "def f13(x):\n    return x + 13\n",
+    "mod14.py": "def f14(x):\n    return x + 14\n",
+    "mod15.py": "def f15(x):\n    return x + 15\n",
+    "mod16.py": "def f16(x):\n    return x + 16\n",
+    "mod17.py": "def f17(x):\n    return x + 17\n",
+    "mod18.py": "def f18(x):\n    return x + 18\n",
+    "mod19.py": "def f19(x):\n    return x + 19\n",
+    "mod20.py": "def f20(x):\n    return x + 20\n",
+    "mod21.py": "def f21(x):\n    return x + 21\n",
+    "mod22.py": "def f22(x):\n    return x + 22\n",
+    "mod23.py": "def f23(x):\n    return x + 23\n",
+    "mod24.py": "def f24(x):\n    return x + 24\n",
+    "mod25.py": "def f25(x):\n    return x + 25\n",
+    "mod26.py": "def f26(x):\n    return x + 26\n",
+    "mod27.py": "def f27(x):\n    return x + 27\n",
+    "mod28.py": "def f28(x):\n    return x + 28\n",
+    "mod29.py": "def f29(x):\n    return x + 29\n",
+    "mod30.py": "def f30(x):\n    return x + 30\n",
+    "mod31.py": "def f31(x):\n    return x + 31\n",
+    "mod32.py": "def f32(x):\n    return x + 32\n",
+    "mod33.py": "def f33(x):\n    return x + 33\n",
+    "mod34.py": "def f34(x):\n    return x + 34\n",
+    "mod35.py": "def f35(x):\n    return x + 35\n",
+    "mod36.py": "def f36(x):\n    return x + 36\n",
+    "mod37.py": "def f37(x):\n    return x + 37\n",
+    "mod38.py": "def f38(x):\n    return x + 38\n",
+    "mod39.py": "def f39(x):\n    return x + 39\n",
+    "hit.py": "from mapkit import Router\n\nRouter().route()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-many-files-one-hit:payfast",
+   "family": "py-many-files-one-hit",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "mod0.py": "def f0(x):\n    return x + 0\n",
+    "mod1.py": "def f1(x):\n    return x + 1\n",
+    "mod2.py": "def f2(x):\n    return x + 2\n",
+    "mod3.py": "def f3(x):\n    return x + 3\n",
+    "mod4.py": "def f4(x):\n    return x + 4\n",
+    "mod5.py": "def f5(x):\n    return x + 5\n",
+    "mod6.py": "def f6(x):\n    return x + 6\n",
+    "mod7.py": "def f7(x):\n    return x + 7\n",
+    "mod8.py": "def f8(x):\n    return x + 8\n",
+    "mod9.py": "def f9(x):\n    return x + 9\n",
+    "mod10.py": "def f10(x):\n    return x + 10\n",
+    "mod11.py": "def f11(x):\n    return x + 11\n",
+    "mod12.py": "def f12(x):\n    return x + 12\n",
+    "mod13.py": "def f13(x):\n    return x + 13\n",
+    "mod14.py": "def f14(x):\n    return x + 14\n",
+    "mod15.py": "def f15(x):\n    return x + 15\n",
+    "mod16.py": "def f16(x):\n    return x + 16\n",
+    "mod17.py": "def f17(x):\n    return x + 17\n",
+    "mod18.py": "def f18(x):\n    return x + 18\n",
+    "mod19.py": "def f19(x):\n    return x + 19\n",
+    "mod20.py": "def f20(x):\n    return x + 20\n",
+    "mod21.py": "def f21(x):\n    return x + 21\n",
+    "mod22.py": "def f22(x):\n    return x + 22\n",
+    "mod23.py": "def f23(x):\n    return x + 23\n",
+    "mod24.py": "def f24(x):\n    return x + 24\n",
+    "mod25.py": "def f25(x):\n    return x + 25\n",
+    "mod26.py": "def f26(x):\n    return x + 26\n",
+    "mod27.py": "def f27(x):\n    return x + 27\n",
+    "mod28.py": "def f28(x):\n    return x + 28\n",
+    "mod29.py": "def f29(x):\n    return x + 29\n",
+    "mod30.py": "def f30(x):\n    return x + 30\n",
+    "mod31.py": "def f31(x):\n    return x + 31\n",
+    "mod32.py": "def f32(x):\n    return x + 32\n",
+    "mod33.py": "def f33(x):\n    return x + 33\n",
+    "mod34.py": "def f34(x):\n    return x + 34\n",
+    "mod35.py": "def f35(x):\n    return x + 35\n",
+    "mod36.py": "def f36(x):\n    return x + 36\n",
+    "mod37.py": "def f37(x):\n    return x + 37\n",
+    "mod38.py": "def f38(x):\n    return x + 38\n",
+    "mod39.py": "def f39(x):\n    return x + 39\n",
+    "hit.py": "from payfast import Gateway\n\nGateway().charge()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-many-files-one-hit:storekit",
+   "family": "py-many-files-one-hit",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "mod0.py": "def f0(x):\n    return x + 0\n",
+    "mod1.py": "def f1(x):\n    return x + 1\n",
+    "mod2.py": "def f2(x):\n    return x + 2\n",
+    "mod3.py": "def f3(x):\n    return x + 3\n",
+    "mod4.py": "def f4(x):\n    return x + 4\n",
+    "mod5.py": "def f5(x):\n    return x + 5\n",
+    "mod6.py": "def f6(x):\n    return x + 6\n",
+    "mod7.py": "def f7(x):\n    return x + 7\n",
+    "mod8.py": "def f8(x):\n    return x + 8\n",
+    "mod9.py": "def f9(x):\n    return x + 9\n",
+    "mod10.py": "def f10(x):\n    return x + 10\n",
+    "mod11.py": "def f11(x):\n    return x + 11\n",
+    "mod12.py": "def f12(x):\n    return x + 12\n",
+    "mod13.py": "def f13(x):\n    return x + 13\n",
+    "mod14.py": "def f14(x):\n    return x + 14\n",
+    "mod15.py": "def f15(x):\n    return x + 15\n",
+    "mod16.py": "def f16(x):\n    return x + 16\n",
+    "mod17.py": "def f17(x):\n    return x + 17\n",
+    "mod18.py": "def f18(x):\n    return x + 18\n",
+    "mod19.py": "def f19(x):\n    return x + 19\n",
+    "mod20.py": "def f20(x):\n    return x + 20\n",
+    "mod21.py": "def f21(x):\n    return x + 21\n",
+    "mod22.py": "def f22(x):\n    return x + 22\n",
+    "mod23.py": "def f23(x):\n    return x + 23\n",
+    "mod24.py": "def f24(x):\n    return x + 24\n",
+    "mod25.py": "def f25(x):\n    return x + 25\n",
+    "mod26.py": "def f26(x):\n    return x + 26\n",
+    "mod27.py": "def f27(x):\n    return x + 27\n",
+    "mod28.py": "def f28(x):\n    return x + 28\n",
+    "mod29.py": "def f29(x):\n    return x + 29\n",
+    "mod30.py": "def f30(x):\n    return x + 30\n",
+    "mod31.py": "def f31(x):\n    return x + 31\n",
+    "mod32.py": "def f32(x):\n    return x + 32\n",
+    "mod33.py": "def f33(x):\n    return x + 33\n",
+    "mod34.py": "def f34(x):\n    return x + 34\n",
+    "mod35.py": "def f35(x):\n    return x + 35\n",
+    "mod36.py": "def f36(x):\n    return x + 36\n",
+    "mod37.py": "def f37(x):\n    return x + 37\n",
+    "mod38.py": "def f38(x):\n    return x + 38\n",
+    "mod39.py": "def f39(x):\n    return x + 39\n",
+    "hit.py": "from storekit import Bucket\n\nBucket().upload()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-markdown-mention:acme_sdk",
+   "family": "py-markdown-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "README.md": "Migrate away from `Client.send`.\n",
+    "app.py": "x = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-markdown-mention:mapkit",
+   "family": "py-markdown-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "README.md": "Migrate away from `Router.route`.\n",
+    "app.py": "x = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-markdown-mention:payfast",
+   "family": "py-markdown-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "README.md": "Migrate away from `Gateway.charge`.\n",
+    "app.py": "x = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-markdown-mention:storekit",
+   "family": "py-markdown-mention",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "README.md": "Migrate away from `Bucket.upload`.\n",
+    "app.py": "x = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-method-definition-only:acme_sdk",
+   "family": "py-method-definition-only",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "class OwnClient:\n    def send(self):\n        return 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-method-definition-only:mapkit",
+   "family": "py-method-definition-only",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "class OwnRouter:\n    def route(self):\n        return 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-method-definition-only:payfast",
+   "family": "py-method-definition-only",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "class OwnGateway:\n    def charge(self):\n        return 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-method-definition-only:storekit",
+   "family": "py-method-definition-only",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "class OwnBucket:\n    def upload(self):\n        return 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-module-alias:acme_sdk",
+   "family": "py-module-alias",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "import acme_sdk as sdk\n\nsdk.Client().send(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-module-alias:mapkit",
+   "family": "py-module-alias",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "import mapkit as sdk\n\nsdk.Router().route(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-module-alias:payfast",
+   "family": "py-module-alias",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "import payfast as sdk\n\nsdk.Gateway().charge(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-module-alias:storekit",
+   "family": "py-module-alias",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "import storekit as sdk\n\nsdk.Bucket().upload(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-multiline-kwargs:acme_sdk",
+   "family": "py-multiline-kwargs",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from acme_sdk import Client\n\nc = Client(api_key='k')\nc.send(\n    payload={'a': 1},\n    timeout=5,\n)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-multiline-kwargs:mapkit",
+   "family": "py-multiline-kwargs",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from mapkit import Router\n\nc = Router(api_key='k')\nc.route(\n    payload={'a': 1},\n    timeout=5,\n)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-multiline-kwargs:payfast",
+   "family": "py-multiline-kwargs",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from payfast import Gateway\n\nc = Gateway(api_key='k')\nc.charge(\n    payload={'a': 1},\n    timeout=5,\n)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-multiline-kwargs:storekit",
+   "family": "py-multiline-kwargs",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from storekit import Bucket\n\nc = Bucket(api_key='k')\nc.upload(\n    payload={'a': 1},\n    timeout=5,\n)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-nested-loop:acme_sdk",
+   "family": "py-nested-loop",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "svc/jobs.py": "import acme_sdk\n\n\ndef run(items):\n    for item in items:\n        acme_sdk.Client().send(item)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-nested-loop:mapkit",
+   "family": "py-nested-loop",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "svc/jobs.py": "import mapkit\n\n\ndef run(items):\n    for item in items:\n        mapkit.Router().route(item)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-nested-loop:payfast",
+   "family": "py-nested-loop",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "svc/jobs.py": "import payfast\n\n\ndef run(items):\n    for item in items:\n        payfast.Gateway().charge(item)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-nested-loop:storekit",
+   "family": "py-nested-loop",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "svc/jobs.py": "import storekit\n\n\ndef run(items):\n    for item in items:\n        storekit.Bucket().upload(item)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-other-sdk-same-name:acme_sdk",
+   "family": "py-other-sdk-same-name",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "import other_vendor\n\nother_vendor.Client().send('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-other-sdk-same-name:mapkit",
+   "family": "py-other-sdk-same-name",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "import other_vendor\n\nother_vendor.Router().route('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-other-sdk-same-name:payfast",
+   "family": "py-other-sdk-same-name",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "import other_vendor\n\nother_vendor.Gateway().charge('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-other-sdk-same-name:storekit",
+   "family": "py-other-sdk-same-name",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "import other_vendor\n\nother_vendor.Bucket().upload('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-param-annotation:acme_sdk",
+   "family": "py-param-annotation",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from acme_sdk import Client\n\n\ndef go(c: Client):\n    c.send('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-param-annotation:mapkit",
+   "family": "py-param-annotation",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from mapkit import Router\n\n\ndef go(c: Router):\n    c.route('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-param-annotation:payfast",
+   "family": "py-param-annotation",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from payfast import Gateway\n\n\ndef go(c: Gateway):\n    c.charge('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-param-annotation:storekit",
+   "family": "py-param-annotation",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from storekit import Bucket\n\n\ndef go(c: Bucket):\n    c.upload('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-self-attribute:acme_sdk",
+   "family": "py-self-attribute",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from acme_sdk import Client\n\n\nclass Svc:\n    def __init__(self):\n        self.client = Client()\n\n    def go(self):\n        self.client.send('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-self-attribute:mapkit",
+   "family": "py-self-attribute",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from mapkit import Router\n\n\nclass Svc:\n    def __init__(self):\n        self.client = Router()\n\n    def go(self):\n        self.client.route('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-self-attribute:payfast",
+   "family": "py-self-attribute",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from payfast import Gateway\n\n\nclass Svc:\n    def __init__(self):\n        self.client = Gateway()\n\n    def go(self):\n        self.client.charge('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-self-attribute:storekit",
+   "family": "py-self-attribute",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from storekit import Bucket\n\n\nclass Svc:\n    def __init__(self):\n        self.client = Bucket()\n\n    def go(self):\n        self.client.upload('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-star-import:acme_sdk",
+   "family": "py-star-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from acme_sdk import *\n\nClient().send()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-star-import:mapkit",
+   "family": "py-star-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from mapkit import *\n\nRouter().route()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-star-import:payfast",
+   "family": "py-star-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from payfast import *\n\nGateway().charge()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-star-import:storekit",
+   "family": "py-star-import",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "app.py": "from storekit import *\n\nBucket().upload()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-unrelated-class:acme_sdk",
+   "family": "py-unrelated-class",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "class Logger:\n    def send(self, x):\n        return x\n\n\nLogger().send('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-unrelated-class:mapkit",
+   "family": "py-unrelated-class",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "class Logger:\n    def route(self, x):\n        return x\n\n\nLogger().route('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-unrelated-class:payfast",
+   "family": "py-unrelated-class",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "class Logger:\n    def charge(self, x):\n        return x\n\n\nLogger().charge('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-unrelated-class:storekit",
+   "family": "py-unrelated-class",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "app.py": "class Logger:\n    def upload(self, x):\n        return x\n\n\nLogger().upload('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-vendored-site-packages:acme_sdk",
+   "family": "py-vendored-site-packages",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "x = 1\n",
+    ".venv/lib/python3.12/site-packages/thirdparty/x.py": "from acme_sdk import Client\nClient().send()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-vendored-site-packages:mapkit",
+   "family": "py-vendored-site-packages",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "x = 1\n",
+    ".venv/lib/python3.12/site-packages/thirdparty/x.py": "from mapkit import Router\nRouter().route()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-vendored-site-packages:payfast",
+   "family": "py-vendored-site-packages",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "x = 1\n",
+    ".venv/lib/python3.12/site-packages/thirdparty/x.py": "from payfast import Gateway\nGateway().charge()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-vendored-site-packages:storekit",
+   "family": "py-vendored-site-packages",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "app.py": "x = 1\n",
+    ".venv/lib/python3.12/site-packages/thirdparty/x.py": "from storekit import Bucket\nBucket().upload()\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-with-statement:acme_sdk",
+   "family": "py-with-statement",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from acme_sdk import Client\n\nwith Client() as c:\n    c.send('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-with-statement:mapkit",
+   "family": "py-with-statement",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from mapkit import Router\n\nwith Router() as c:\n    c.route('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Router.route",
+     "package": "mapkit-py",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-with-statement:payfast",
+   "family": "py-with-statement",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from payfast import Gateway\n\nwith Gateway() as c:\n    c.charge('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "py-with-statement:storekit",
+   "family": "py-with-statement",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "app.py": "from storekit import Bucket\n\nwith Bucket() as c:\n    c.upload('x')\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Bucket.upload",
+     "package": "storekit",
+     "ecosystem": "pypi"
+    }
+   ]
+  }
+ ]
+}

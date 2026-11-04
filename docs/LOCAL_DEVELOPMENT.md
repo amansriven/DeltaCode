@@ -167,6 +167,7 @@ make lint
 make test-backend
 make test-frontend
 make test-sandbox
+make test-postgres
 make benchmark
 make build
 make health

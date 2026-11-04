@@ -1,0 +1,2567 @@
+{
+  "schema_version": "1.0",
+  "description": "Real merged migrations in public repositories, frozen before scoring. Ground truth is the set of lines developers removed that use the changed API.",
+  "selected_at": "2026-11-04T01:11:48+00:00",
+  "selection_rules": [
+    "Merged public pull requests, in GitHub search result order for the listed queries.",
+    "First 10 qualifying per migration, one per repository, at most 150 examined.",
+    "Must remove more non-comment lines using the changed API than it adds.",
+    "Excludes forks, the library's own organization, repositories over 200 MB, and paths the analyzer ignores by policy.",
+    "Round 2 appended cases using exact API-name queries, before any scores were read."
+  ],
+  "migrations": [
+    {
+      "id": "openai-python-v1",
+      "description": "openai-python 1.0 removed module-level resource classes.",
+      "extensions": [
+        ".py"
+      ],
+      "pattern": "\\b(?:ChatCompletion|Completion|Embedding)\\.a?create\\s*\\(",
+      "queries": [
+        "openai v1 migration",
+        "migrate openai 1.0",
+        "upgrade openai python 1.0",
+        "openai chat.completions.create migrate",
+        "update openai api v1",
+        "\"ChatCompletion.create\"",
+        "\"openai.ChatCompletion\"",
+        "\"openai.Embedding\"",
+        "\"openai.Completion\"",
+        "\"ChatCompletion.acreate\""
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "ChatCompletion.create",
+          "package": "openai",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "ChatCompletion.acreate",
+          "package": "openai",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "Completion.create",
+          "package": "openai",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "Completion.acreate",
+          "package": "openai",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "Embedding.create",
+          "package": "openai",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "Embedding.acreate",
+          "package": "openai",
+          "ecosystem": "pypi"
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators",
+      "description": "Selenium 4 removed the find_element(s)_by_* driver methods.",
+      "extensions": [
+        ".py"
+      ],
+      "pattern": "\\.find_elements?_by_(?:id|name|xpath|css_selector|class_name|tag_name|link_text|partial_link_text)\\s*\\(",
+      "queries": [
+        "selenium 4 find_element",
+        "find_element_by deprecated",
+        "replace find_element_by",
+        "selenium 4 upgrade",
+        "update selenium locators",
+        "\"find_element_by\"",
+        "\"find_elements_by\"",
+        "\"find_element_by_id\"",
+        "\"find_element_by_xpath\"",
+        "\"find_element(By\""
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "find_element_by_id",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_xpath",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_css_selector",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_class_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_tag_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_link_text",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_element_by_partial_link_text",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_id",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_xpath",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_css_selector",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_class_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_tag_name",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_link_text",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "find_elements_by_partial_link_text",
+          "package": "selenium",
+          "ecosystem": "pypi"
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases",
+      "description": "NumPy 1.24 removed the np.float style builtin aliases.",
+      "extensions": [
+        ".py"
+      ],
+      "pattern": "\\b(?:np|numpy)\\.(?:float|int|bool|object|str|complex)\\b",
+      "queries": [
+        "np.float deprecated",
+        "numpy 1.24 np.int",
+        "replace np.float",
+        "np.bool numpy 1.24",
+        "fix numpy deprecated aliases"
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "numpy.float",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "numpy.int",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "numpy.bool",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "numpy.object",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "numpy.str",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "numpy.complex",
+          "package": "numpy",
+          "ecosystem": "pypi"
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators",
+      "description": "Pydantic 2 deprecated @validator and @root_validator.",
+      "extensions": [
+        ".py"
+      ],
+      "pattern": "^\\s*@(?:pydantic\\.)?(?:validator|root_validator)\\s*\\(",
+      "queries": [
+        "pydantic v2 migration",
+        "migrate to pydantic v2",
+        "upgrade pydantic 2",
+        "pydantic field_validator migrate",
+        "pydantic v2 upgrade validators",
+        "\"root_validator\"",
+        "\"field_validator\"",
+        "\"@validator\"",
+        "\"model_validator\""
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "pydantic.validator",
+          "package": "pydantic",
+          "ecosystem": "pypi"
+        },
+        {
+          "kind": "symbol",
+          "name": "pydantic.root_validator",
+          "package": "pydantic",
+          "ecosystem": "pypi"
+        }
+      ]
+    },
+    {
+      "id": "react-18-root",
+      "description": "React 18 replaced ReactDOM.render and hydrate with the root API.",
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx"
+      ],
+      "pattern": "\\bReactDOM\\.(?:render|hydrate)\\s*\\(",
+      "queries": [
+        "react 18 createRoot",
+        "upgrade react 18",
+        "migrate createRoot",
+        "react 18 migration",
+        "update to react 18",
+        "\"ReactDOM.render\"",
+        "\"createRoot\"",
+        "\"ReactDOM.hydrate\"",
+        "\"hydrateRoot\""
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "ReactDOM.render",
+          "package": "react-dom",
+          "ecosystem": "npm"
+        },
+        {
+          "kind": "symbol",
+          "name": "ReactDOM.hydrate",
+          "package": "react-dom",
+          "ecosystem": "npm"
+        }
+      ]
+    },
+    {
+      "id": "openai-node-v4",
+      "description": "openai-node v4 removed OpenAIApi and its create* methods.",
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".ts",
+        ".tsx"
+      ],
+      "pattern": "\\.create(?:ChatCompletion|Completion|Embedding)\\s*\\(",
+      "queries": [
+        "openai v4 node",
+        "openai sdk v4 upgrade",
+        "migrate openai node v4",
+        "upgrade openai v4",
+        "openai node library v4 migration",
+        "\"createChatCompletion\"",
+        "\"OpenAIApi\"",
+        "\"createCompletion\"",
+        "\"createEmbedding\""
+      ],
+      "targets": [
+        {
+          "kind": "symbol",
+          "name": "OpenAIApi.createChatCompletion",
+          "package": "openai",
+          "ecosystem": "npm"
+        },
+        {
+          "kind": "symbol",
+          "name": "OpenAIApi.createCompletion",
+          "package": "openai",
+          "ecosystem": "npm"
+        },
+        {
+          "kind": "symbol",
+          "name": "OpenAIApi.createEmbedding",
+          "package": "openai",
+          "ecosystem": "npm"
+        }
+      ]
+    }
+  ],
+  "rejections": {
+    "openai-python-v1": {
+      "examined": 46,
+      "rejected": {
+        "no_removed_usage": 34,
+        "usage_not_reduced": 3,
+        "repository_already_selected": 2
+      }
+    },
+    "selenium-4-locators": {
+      "examined": 41,
+      "rejected": {
+        "no_removed_usage": 12,
+        "library_owner": 16,
+        "usage_not_reduced": 2,
+        "repository_too_large": 1,
+        "fork": 1
+      }
+    },
+    "numpy-1.24-aliases": {
+      "examined": 0,
+      "rejected": {}
+    },
+    "pydantic-v2-validators": {
+      "examined": 18,
+      "rejected": {
+        "no_removed_usage": 13,
+        "library_owner": 1,
+        "repository_already_selected": 3
+      }
+    },
+    "react-18-root": {
+      "examined": 11,
+      "rejected": {
+        "usage_not_reduced": 1,
+        "no_removed_usage": 5
+      }
+    },
+    "openai-node-v4": {
+      "examined": 150,
+      "rejected": {
+        "no_removed_usage": 139,
+        "usage_not_reduced": 5,
+        "repository_too_large": 1,
+        "fork": 1
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "openai-python-v1:DigitalHarborFoundation/llm-math-education#6",
+      "migration": "openai-python-v1",
+      "repository": "DigitalHarborFoundation/llm-math-education",
+      "pull_request": 6,
+      "parent_sha": "da1c690c5f6a795d481a260d142e9bae115ac1a4",
+      "migration_sha": "e01dca0e72aeee96e7e3de30dc6c1451e979b42d",
+      "ground_truth": [
+        {
+          "path": "src/hint_generation/app.py",
+          "line": 52
+        },
+        {
+          "path": "src/hint_generation/app.py",
+          "line": 101
+        },
+        {
+          "path": "src/llm_math_education/embedding_utils.py",
+          "line": 44
+        },
+        {
+          "path": "src/pages/1_\ud83d\udca1_Hint_generation.py",
+          "line": 50
+        },
+        {
+          "path": "src/pages/1_\ud83d\udca1_Hint_generation.py",
+          "line": 99
+        },
+        {
+          "path": "src/streamlit_app/auth_utils.py",
+          "line": 72
+        },
+        {
+          "path": "src/usage_demo.py",
+          "line": 73
+        },
+        {
+          "path": "src/\ud83e\udd16_Math_QA.py",
+          "line": 73
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:gurbaaz27/linkedin-comments-scraper#4",
+      "migration": "selenium-4-locators",
+      "repository": "gurbaaz27/linkedin-comments-scraper",
+      "pull_request": 4,
+      "parent_sha": "9b5384187c0c50f866c76e03f45a419d03658733",
+      "migration_sha": "f571614dabf3b7e4adbb517dec67824bd9126fdd",
+      "ground_truth": [
+        {
+          "path": "main.py",
+          "line": 63
+        },
+        {
+          "path": "main.py",
+          "line": 66
+        },
+        {
+          "path": "main.py",
+          "line": 69
+        },
+        {
+          "path": "main.py",
+          "line": 79
+        },
+        {
+          "path": "main.py",
+          "line": 82
+        },
+        {
+          "path": "main.py",
+          "line": 87
+        },
+        {
+          "path": "main.py",
+          "line": 90
+        },
+        {
+          "path": "main.py",
+          "line": 92
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:mjkwon2021/CAT-Net#57",
+      "migration": "numpy-1.24-aliases",
+      "repository": "mjkwon2021/CAT-Net",
+      "pull_request": 57,
+      "parent_sha": "331b8059c3f55efec1d9075de79dd153413f2061",
+      "migration_sha": "5eb85900b0e72423c95a8d41bc835b86c8671f8a",
+      "ground_truth": [
+        {
+          "path": "Splicing/data/AbstractDataset.py",
+          "line": 99
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:ArturSepp/StochVolModels#33",
+      "migration": "numpy-1.24-aliases",
+      "repository": "ArturSepp/StochVolModels",
+      "pull_request": 33,
+      "parent_sha": "6aa6dfdd8fa50d36a74305820d97f214a1d29389",
+      "migration_sha": "b5cb3ac863f320ca5b164db7cfbed6296454d672",
+      "ground_truth": [
+        {
+          "path": "src/stochvolmodels/pricers/rough_logsv/rough_kernel.py",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:jchowk/pyND#2",
+      "migration": "numpy-1.24-aliases",
+      "repository": "jchowk/pyND",
+      "pull_request": 2,
+      "parent_sha": "6c429f2921ce8471aca8564aac024778368da951",
+      "migration_sha": "84a2d490dddf4bc8c9fa558757326a7aa49262f2",
+      "ground_truth": [
+        {
+          "path": "pyND/gbt/GBTspec.py",
+          "line": 174
+        },
+        {
+          "path": "pyND/hii/hii.py",
+          "line": 72
+        },
+        {
+          "path": "pyND/hii/hii.py",
+          "line": 139
+        },
+        {
+          "path": "pyND/hii/hii.py",
+          "line": 151
+        },
+        {
+          "path": "pyND/hii/hii.py",
+          "line": 361
+        },
+        {
+          "path": "pyND/hii/hii.py",
+          "line": 375
+        },
+        {
+          "path": "pyND/hii/hii.py",
+          "line": 607
+        },
+        {
+          "path": "pyND/ism/wham.py",
+          "line": 76
+        },
+        {
+          "path": "pyND/ism/wham.py",
+          "line": 77
+        },
+        {
+          "path": "pyND/plotting/plotting.py",
+          "line": 220
+        },
+        {
+          "path": "pyND/plotting/plotting.py",
+          "line": 222
+        },
+        {
+          "path": "pyND/plotting/plotting.py",
+          "line": 256
+        },
+        {
+          "path": "pyND/plotting/plotting.py",
+          "line": 260
+        },
+        {
+          "path": "pyND/spec/spec.py",
+          "line": 106
+        },
+        {
+          "path": "pyND/stis/stis.py",
+          "line": 55
+        },
+        {
+          "path": "pyND/uves/uves.py",
+          "line": 415
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:NSLS2/pyCHX#99",
+      "migration": "numpy-1.24-aliases",
+      "repository": "NSLS2/pyCHX",
+      "pull_request": 99,
+      "parent_sha": "9f70085b0e129df5310e82f565d8319686ee1c29",
+      "migration_sha": "5b923a772baf6dbb5997c0445982060d57bfb305",
+      "ground_truth": [
+        {
+          "path": "pyCHX/Two_Time_Correlation_Function.py",
+          "line": 292
+        },
+        {
+          "path": "pyCHX/Two_Time_Correlation_Function.py",
+          "line": 311
+        },
+        {
+          "path": "pyCHX/Two_Time_Correlation_Function.py",
+          "line": 331
+        },
+        {
+          "path": "pyCHX/chx_compress.py",
+          "line": 455
+        },
+        {
+          "path": "pyCHX/chx_crosscor.py",
+          "line": 487
+        },
+        {
+          "path": "pyCHX/chx_speckle.py",
+          "line": 116
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 224
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 433
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 709
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 710
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 711
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 782
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 783
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 784
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 785
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 816
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 817
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 818
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 819
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 1354
+        },
+        {
+          "path": "pyCHX/chx_specklecp.py",
+          "line": 1355
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/Two_Time_Correlation_Function.py",
+          "line": 292
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/Two_Time_Correlation_Function.py",
+          "line": 311
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/Two_Time_Correlation_Function.py",
+          "line": 331
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_compress.py",
+          "line": 254
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_compress.py",
+          "line": 255
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_compress.py",
+          "line": 464
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_compress.py",
+          "line": 547
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_compress.py",
+          "line": 794
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_correlationc.py",
+          "line": 1533
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_correlationc.py",
+          "line": 1540
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_correlationc.py",
+          "line": 1648
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_correlationc.py",
+          "line": 1655
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_generic_functions.py",
+          "line": 1441
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_generic_functions.py",
+          "line": 2641
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_generic_functions.py",
+          "line": 2642
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_speckle.py",
+          "line": 116
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 235
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 444
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 730
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 731
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 732
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 803
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 804
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 805
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 806
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 837
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 838
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 839
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 840
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 1393
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/chx_specklecp.py",
+          "line": 1394
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/xpcs_timepixel.py",
+          "line": 339
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/xpcs_timepixel.py",
+          "line": 347
+        },
+        {
+          "path": "pyCHX/v2/_commonspeckle/xpcs_timepixel.py",
+          "line": 439
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/Create_Report.py",
+          "line": 2021
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/Two_Time_Correlation_Function.py",
+          "line": 292
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/Two_Time_Correlation_Function.py",
+          "line": 311
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/Two_Time_Correlation_Function.py",
+          "line": 331
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_compress.py",
+          "line": 251
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_compress.py",
+          "line": 252
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_compress.py",
+          "line": 461
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_compress.py",
+          "line": 544
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_compress.py",
+          "line": 791
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_correlationc.py",
+          "line": 1533
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_correlationc.py",
+          "line": 1540
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_correlationc.py",
+          "line": 1648
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_correlationc.py",
+          "line": 1655
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_crosscor.py",
+          "line": 495
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_generic_functions.py",
+          "line": 1441
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_generic_functions.py",
+          "line": 2641
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_generic_functions.py",
+          "line": 2642
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_speckle.py",
+          "line": 116
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 229
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 438
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 724
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 725
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 726
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 797
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 798
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 799
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 800
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 831
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 832
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 833
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 834
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 1387
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/chx_specklecp.py",
+          "line": 1388
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/xpcs_timepixel.py",
+          "line": 339
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/xpcs_timepixel.py",
+          "line": 347
+        },
+        {
+          "path": "pyCHX/v2/_futurepyCHX/xpcs_timepixel.py",
+          "line": 439
+        },
+        {
+          "path": "pyCHX/xpcs_timepixel.py",
+          "line": 304
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:thorwhalen/loopyng#5",
+      "migration": "numpy-1.24-aliases",
+      "repository": "thorwhalen/loopyng",
+      "pull_request": 5,
+      "parent_sha": "170775f3a73ee51524e8e4d1e5cbcefa337c2b51",
+      "migration_sha": "790cae38a0bcd5a9713076e246284d007f2ce814",
+      "ground_truth": [
+        {
+          "path": "loopyng/utils/librosa_utils.py",
+          "line": 258
+        },
+        {
+          "path": "loopyng/utils/librosa_utils.py",
+          "line": 977
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:geometryprocessing/scanner-capture#1",
+      "migration": "numpy-1.24-aliases",
+      "repository": "geometryprocessing/scanner-capture",
+      "pull_request": 1,
+      "parent_sha": "f62709481ce0f7e600c17a2dfb6946e196a05a93",
+      "migration_sha": "5bc87e90b0cb2ffe1b9b6fd2f58e03c4a57c8367",
+      "ground_truth": [
+        {
+          "path": "src/atlas.py",
+          "line": 300
+        },
+        {
+          "path": "src/atlas.py",
+          "line": 301
+        },
+        {
+          "path": "src/atlas.py",
+          "line": 302
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:justinbois/dc_stat_think#7",
+      "migration": "numpy-1.24-aliases",
+      "repository": "justinbois/dc_stat_think",
+      "pull_request": 7,
+      "parent_sha": "feab6dbe5105eec346744a11cd8c17c3c4420074",
+      "migration_sha": "afede7fb1fb7f55b8746eb3e3f8b08dfa807d3ed",
+      "ground_truth": [
+        {
+          "path": "dc_stat_think/dc_stat_think.py",
+          "line": 1341
+        },
+        {
+          "path": "dc_stat_think/dc_stat_think.py",
+          "line": 1344
+        },
+        {
+          "path": "dc_stat_think/no_numba.py",
+          "line": 1349
+        },
+        {
+          "path": "dc_stat_think/no_numba.py",
+          "line": 1352
+        },
+        {
+          "path": "tests/test_dc_stat_think.py",
+          "line": 24
+        },
+        {
+          "path": "tests/test_dc_stat_think.py",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:tianrluo/AutoDiffPulses#4",
+      "migration": "numpy-1.24-aliases",
+      "repository": "tianrluo/AutoDiffPulses",
+      "pull_request": 4,
+      "parent_sha": "66bf480edf4031b9b9a05005a4136d311dd17d98",
+      "migration_sha": "73b0371b67a2bc893945c4cb65ff62910e3a2a3c",
+      "ground_truth": [
+        {
+          "path": "adpulses/io.py",
+          "line": 87
+        },
+        {
+          "path": "adpulses/io.py",
+          "line": 88
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:nigimitama/semopy-maintained#2",
+      "migration": "numpy-1.24-aliases",
+      "repository": "nigimitama/semopy-maintained",
+      "pull_request": 2,
+      "parent_sha": "af68eac157dbdcb8945c5c23a28c06a2cf582f8c",
+      "migration_sha": "92e6ba372e2dccc66824d3c816712a3927cf13c3",
+      "ground_truth": [
+        {
+          "path": "semopy/model_generalized_effects.py",
+          "line": 548
+        },
+        {
+          "path": "semopy/regularization.py",
+          "line": 71
+        }
+      ]
+    },
+    {
+      "id": "numpy-1.24-aliases:nasa/Kamodo-core#3",
+      "migration": "numpy-1.24-aliases",
+      "repository": "nasa/Kamodo-core",
+      "pull_request": 3,
+      "parent_sha": "2362877d142b2ae4fc183c44bf844eeb845d9b4c",
+      "migration_sha": "d333337a66fb51d525546fa1fce62bdcb1c6a911",
+      "ground_truth": [
+        {
+          "path": "kamodo/rpc/proto.py",
+          "line": 143
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:Ryckmat/Hyperion#11",
+      "migration": "pydantic-v2-validators",
+      "repository": "Ryckmat/Hyperion",
+      "pull_request": 11,
+      "parent_sha": "a4547ee3090aa888d9b60239f0512a2891a8b47b",
+      "migration_sha": "a37ef4b4792471381a96310bd55ba1afc587b4e1",
+      "ground_truth": [
+        {
+          "path": "src/hyperion/modules/ml/infrastructure/ml_config.py",
+          "line": 24
+        },
+        {
+          "path": "src/hyperion/settings.py",
+          "line": 154
+        },
+        {
+          "path": "src/hyperion/settings.py",
+          "line": 162
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:mcevik0/fabric-generic-cluster#25",
+      "migration": "pydantic-v2-validators",
+      "repository": "mcevik0/fabric-generic-cluster",
+      "pull_request": 25,
+      "parent_sha": "f00842294bbc6b90d4e4bdb7007df571ff3d6cf9",
+      "migration_sha": "0aec1e0c043c3cc985676c28818dfb90f03f412c",
+      "ground_truth": [
+        {
+          "path": "fabric_generic_cluster/models.py",
+          "line": 22
+        },
+        {
+          "path": "fabric_generic_cluster/models.py",
+          "line": 39
+        },
+        {
+          "path": "fabric_generic_cluster/models.py",
+          "line": 174
+        },
+        {
+          "path": "fabric_generic_cluster/models.py",
+          "line": 382
+        },
+        {
+          "path": "fabric_generic_cluster/models.py",
+          "line": 438
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:EfficientMoE/MoE-Infinity#252",
+      "migration": "pydantic-v2-validators",
+      "repository": "EfficientMoE/MoE-Infinity",
+      "pull_request": 252,
+      "parent_sha": "d261ec4071d140e915b21f4a748b29ebb74abbce",
+      "migration_sha": "93db23ebb26cdc3302c2d5664abc63e4e92876e0",
+      "ground_truth": [
+        {
+          "path": "moe_infinity/entrypoints/openai/protocol.py",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:eyecan-ai/pipelime-python#172",
+      "migration": "pydantic-v2-validators",
+      "repository": "eyecan-ai/pipelime-python",
+      "pull_request": 172,
+      "parent_sha": "57ccd289903c2a246b3709761e4606c35aaa86e4",
+      "migration_sha": "cf8eb38d76b8b80bd9ddce63f8fe897b6d12170c",
+      "ground_truth": [
+        {
+          "path": "pipelime/commands/piper.py",
+          "line": 505
+        },
+        {
+          "path": "pipelime/commands/resume.py",
+          "line": 29
+        },
+        {
+          "path": "pipelime/sequences/sources/readers.py",
+          "line": 38
+        },
+        {
+          "path": "pipelime/sequences/sources/readers.py",
+          "line": 177
+        },
+        {
+          "path": "pipelime/sequences/sources/readers.py",
+          "line": 244
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:odpi/egeria-python#525",
+      "migration": "pydantic-v2-validators",
+      "repository": "odpi/egeria-python",
+      "pull_request": 525,
+      "parent_sha": "0ed86be4483d2a7972f505dfc83aa292fb331534",
+      "migration_sha": "9ca7b69d3dc74e9c3fe1920dc4b8b1899b3f4464",
+      "ground_truth": [
+        {
+          "path": "pyegeria/view/_output_dashboard_sheet_models.py",
+          "line": 184
+        },
+        {
+          "path": "pyegeria/view/_output_format_models.py",
+          "line": 164
+        },
+        {
+          "path": "pyegeria/view/_output_format_models.py",
+          "line": 172
+        },
+        {
+          "path": "pyegeria/view/_output_format_models.py",
+          "line": 261
+        },
+        {
+          "path": "pyegeria/view/_output_format_models.py",
+          "line": 288
+        },
+        {
+          "path": "pyegeria/view/_output_format_models.py",
+          "line": 325
+        },
+        {
+          "path": "pyegeria/view/_output_format_models.py",
+          "line": 333
+        },
+        {
+          "path": "pyegeria/view/_output_format_models.py",
+          "line": 344
+        },
+        {
+          "path": "pyegeria/view/_output_format_models.py",
+          "line": 357
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:ynput/ayon-backend#1138",
+      "migration": "pydantic-v2-validators",
+      "repository": "ynput/ayon-backend",
+      "pull_request": 1138,
+      "parent_sha": "9824159debfeb135995dbc880fb625fdbfd4a5d4",
+      "migration_sha": "fb7ec8c4025bac6632fe362570fb86cde12d082f",
+      "ground_truth": [
+        {
+          "path": "api/bundles/models.py",
+          "line": 62
+        },
+        {
+          "path": "api/bundles/models.py",
+          "line": 107
+        },
+        {
+          "path": "ayon_server/access/permissions.py",
+          "line": 94
+        },
+        {
+          "path": "ayon_server/actions/context.py",
+          "line": 176
+        },
+        {
+          "path": "ayon_server/actions/context.py",
+          "line": 185
+        },
+        {
+          "path": "ayon_server/actions/manifest.py",
+          "line": 110
+        },
+        {
+          "path": "ayon_server/attributes/models.py",
+          "line": 150
+        },
+        {
+          "path": "ayon_server/config/ayonconfig.py",
+          "line": 255
+        },
+        {
+          "path": "ayon_server/installer/models.py",
+          "line": 34
+        },
+        {
+          "path": "ayon_server/models/enum_item.py",
+          "line": 111
+        },
+        {
+          "path": "ayon_server/models/enum_item.py",
+          "line": 119
+        },
+        {
+          "path": "ayon_server/models/file_info.py",
+          "line": 33
+        },
+        {
+          "path": "ayon_server/operations/project_level/validation.py",
+          "line": 32
+        },
+        {
+          "path": "ayon_server/settings/anatomy/__init__.py",
+          "line": 106
+        },
+        {
+          "path": "ayon_server/settings/anatomy/__init__.py",
+          "line": 111
+        },
+        {
+          "path": "ayon_server/settings/anatomy/aux_model.py",
+          "line": 27
+        },
+        {
+          "path": "ayon_server/settings/anatomy/statuses.py",
+          "line": 67
+        },
+        {
+          "path": "ayon_server/settings/anatomy/templates.py",
+          "line": 11
+        },
+        {
+          "path": "ayon_server/settings/anatomy/templates.py",
+          "line": 161
+        },
+        {
+          "path": "ayon_server/settings/anatomy/templates.py",
+          "line": 166
+        },
+        {
+          "path": "ayon_server/settings/models.py",
+          "line": 66
+        },
+        {
+          "path": "ayon_server/sqlfilter.py",
+          "line": 84
+        },
+        {
+          "path": "ayon_server/sqlfilter.py",
+          "line": 88
+        },
+        {
+          "path": "ayon_server/sqlfilter.py",
+          "line": 123
+        },
+        {
+          "path": "ayon_server/suggestions/models.py",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:grossi/isuzu-artist-portfolio#18",
+      "migration": "react-18-root",
+      "repository": "grossi/isuzu-artist-portfolio",
+      "pull_request": 18,
+      "parent_sha": "5a626e9f861167891ddd1803a20f70c892710986",
+      "migration_sha": "cb0fd7fb3680924b8e42136cf1ad08bf93f2f66f",
+      "ground_truth": [
+        {
+          "path": "src/index.js",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:ibznroglu/MyPortfolio#18",
+      "migration": "react-18-root",
+      "repository": "ibznroglu/MyPortfolio",
+      "pull_request": 18,
+      "parent_sha": "58a45102be37d89ccff745daa9239eec5fffa813",
+      "migration_sha": "64662e127295c395aa1551e01ac26a0b3af9a583",
+      "ground_truth": [
+        {
+          "path": "src/index.js",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:Vitorspk/docker-react#18",
+      "migration": "react-18-root",
+      "repository": "Vitorspk/docker-react",
+      "pull_request": 18,
+      "parent_sha": "57b7e141cb54143b979642f47db5273553d62007",
+      "migration_sha": "f91f78432efe7657537712b667abebaf82145319",
+      "ground_truth": [
+        {
+          "path": "src/App.test.js",
+          "line": 7
+        },
+        {
+          "path": "src/index.js",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:dqsmith/phaser-pixel-generator#18",
+      "migration": "react-18-root",
+      "repository": "dqsmith/phaser-pixel-generator",
+      "pull_request": 18,
+      "parent_sha": "caf5fbf403684a1627002f216b2fb948f65f09b9",
+      "migration_sha": "952e8d510c242d67784496acc9959d95090a0579",
+      "ground_truth": [
+        {
+          "path": "src/index.js",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:deuex-solutions/react-tutorial#18",
+      "migration": "react-18-root",
+      "repository": "deuex-solutions/react-tutorial",
+      "pull_request": 18,
+      "parent_sha": "39baeac6a1fbd5b128db246ebd8dab5c6c74a2ec",
+      "migration_sha": "50ece6e20323ca63402633f6a31b5f9dd4993797",
+      "ground_truth": [
+        {
+          "path": "demo/index.js",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:davletovb/hiyal#45",
+      "migration": "openai-python-v1",
+      "repository": "davletovb/hiyal",
+      "pull_request": 45,
+      "parent_sha": "2ffbb141cb2019a9fbda6466d128e29f131838a1",
+      "migration_sha": "80baadc0580e982a34d06a9dbe9342cb77637ee8",
+      "ground_truth": [
+        {
+          "path": "neva/agents/gpt.py",
+          "line": 167
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:NeonGeckoCom/neon-llm-chatgpt#28",
+      "migration": "openai-python-v1",
+      "repository": "NeonGeckoCom/neon-llm-chatgpt",
+      "pull_request": 28,
+      "parent_sha": "092ed7cec6e09806832502e5063457b23ae42bc8",
+      "migration_sha": "c6035ed5c09826df0081675f811facee19a2d350",
+      "ground_truth": [
+        {
+          "path": "neon_llm_chatgpt/chatgpt.py",
+          "line": 99
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:nitsuah/kryptos#283",
+      "migration": "openai-python-v1",
+      "repository": "nitsuah/kryptos",
+      "pull_request": 283,
+      "parent_sha": "27764dba09dc2814acd4baa9ccc3969e8e522195",
+      "migration_sha": "9349456fb45ba699e022a670f091595a38edd27c",
+      "ground_truth": [
+        {
+          "path": "src/kryptos/agents/ops_director.py",
+          "line": 276
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:lexmourao/cursor-memory-project#28",
+      "migration": "openai-python-v1",
+      "repository": "lexmourao/cursor-memory-project",
+      "pull_request": 28,
+      "parent_sha": "a6e2506034084bbd4b5d397afcea0efed36c9f73",
+      "migration_sha": "5798f2e1204ea928ce4abcbdca7b5b05607e0cf8",
+      "ground_truth": [
+        {
+          "path": "app/services/summarization_service.py",
+          "line": 63
+        },
+        {
+          "path": "scripts/retrieve_context.py",
+          "line": 51
+        },
+        {
+          "path": "scripts/summarize_chat.py",
+          "line": 64
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:ibrahimpuri/DockerCodeReviewer#1",
+      "migration": "openai-python-v1",
+      "repository": "ibrahimpuri/DockerCodeReviewer",
+      "pull_request": 1,
+      "parent_sha": "0199bf44336c3ddd4af568d2fb828adab91832c9",
+      "migration_sha": "4545c5451ef62704688fb9b90a5d80988aa03c11",
+      "ground_truth": [
+        {
+          "path": "ai_code_reviewer_backend.py",
+          "line": 39
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:RainRat/gpt-virus-scanner#7",
+      "migration": "openai-python-v1",
+      "repository": "RainRat/gpt-virus-scanner",
+      "pull_request": 7,
+      "parent_sha": "dacd5d2d99b96585142ab1e9a67642f90d1ab9b8",
+      "migration_sha": "7642c85ced468ef13b4741d65e9badc7d69d753d",
+      "ground_truth": [
+        {
+          "path": "gptscan.py",
+          "line": 84
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:End2EndAI/travel-ai-translator#1",
+      "migration": "openai-python-v1",
+      "repository": "End2EndAI/travel-ai-translator",
+      "pull_request": 1,
+      "parent_sha": "705f8ef01fadca2803a78a8d824cf70889ffae26",
+      "migration_sha": "061581e56ff44fc0d3a401583a690bc2e94fd61b",
+      "ground_truth": [
+        {
+          "path": "app.py",
+          "line": 182
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:DhruvGoswami10/TARS-WIZARD#3",
+      "migration": "openai-python-v1",
+      "repository": "DhruvGoswami10/TARS-WIZARD",
+      "pull_request": 3,
+      "parent_sha": "22fbff3885a571658f8b5b938398e4220f643ad0",
+      "migration_sha": "d6172bcb45e848082c76ca0d532679154bcceda4",
+      "ground_truth": [
+        {
+          "path": "software/TARSmaster.py",
+          "line": 294
+        },
+        {
+          "path": "software/bundle/voice.py",
+          "line": 100
+        }
+      ]
+    },
+    {
+      "id": "openai-python-v1:one9founders-org/backend#7",
+      "migration": "openai-python-v1",
+      "repository": "one9founders-org/backend",
+      "pull_request": 7,
+      "parent_sha": "1a0081f03e0a29c755d450acce03b1dcd060fbf7",
+      "migration_sha": "6e100c6c0a9056f971beb34e52941c9fb79346cf",
+      "ground_truth": [
+        {
+          "path": "api/management/commands/enrich_tools.py",
+          "line": 123
+        },
+        {
+          "path": "api/management/commands/enrich_tools.py",
+          "line": 161
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:Telefonica/toolium-examples#23",
+      "migration": "selenium-4-locators",
+      "repository": "Telefonica/toolium-examples",
+      "pull_request": 23,
+      "parent_sha": "01ed1c6efdafd5fc4c6f0a5d092c62076f211731",
+      "migration_sha": "bdb5f27789659174be678fac018e7a31d6a40a39",
+      "ground_truth": [
+        {
+          "path": "android/tests/test_android_gestures.py",
+          "line": 36
+        },
+        {
+          "path": "android/tests/test_android_without_pageobjects.py",
+          "line": 34
+        },
+        {
+          "path": "android/tests/test_android_without_pageobjects.py",
+          "line": 38
+        },
+        {
+          "path": "android/tests/test_android_without_pageobjects.py",
+          "line": 39
+        },
+        {
+          "path": "android/tests/test_android_without_toolium.py",
+          "line": 55
+        },
+        {
+          "path": "android/tests/test_android_without_toolium.py",
+          "line": 59
+        },
+        {
+          "path": "android/tests/test_android_without_toolium.py",
+          "line": 60
+        },
+        {
+          "path": "ios/tests/test_ios_without_pageobjects.py",
+          "line": 37
+        },
+        {
+          "path": "ios/tests/test_ios_without_pageobjects.py",
+          "line": 41
+        },
+        {
+          "path": "ios/tests/test_ios_without_toolium.py",
+          "line": 58
+        },
+        {
+          "path": "ios/tests/test_ios_without_toolium.py",
+          "line": 62
+        },
+        {
+          "path": "web/tests/test_web_actions.py",
+          "line": 31
+        },
+        {
+          "path": "web/tests/test_web_actions.py",
+          "line": 35
+        },
+        {
+          "path": "web/tests/test_web_actions.py",
+          "line": 49
+        },
+        {
+          "path": "web/tests/test_web_without_pageobjects.py",
+          "line": 38
+        },
+        {
+          "path": "web/tests/test_web_without_pageobjects.py",
+          "line": 39
+        },
+        {
+          "path": "web/tests/test_web_without_pageobjects.py",
+          "line": 40
+        },
+        {
+          "path": "web/tests/test_web_without_pageobjects.py",
+          "line": 41
+        },
+        {
+          "path": "web/tests/test_web_without_pageobjects.py",
+          "line": 45
+        },
+        {
+          "path": "web/tests/test_web_without_pageobjects.py",
+          "line": 47
+        },
+        {
+          "path": "web/tests/test_web_without_toolium.py",
+          "line": 48
+        },
+        {
+          "path": "web/tests/test_web_without_toolium.py",
+          "line": 49
+        },
+        {
+          "path": "web/tests/test_web_without_toolium.py",
+          "line": 50
+        },
+        {
+          "path": "web/tests/test_web_without_toolium.py",
+          "line": 51
+        },
+        {
+          "path": "web/tests/test_web_without_toolium.py",
+          "line": 55
+        },
+        {
+          "path": "web/tests/test_web_without_toolium.py",
+          "line": 57
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:Hari-Nagarajan/fairgame#863",
+      "migration": "selenium-4-locators",
+      "repository": "Hari-Nagarajan/fairgame",
+      "pull_request": 863,
+      "parent_sha": "adb29ec97bfaa3d56a72431e2305053ac4d5492d",
+      "migration_sha": "cb79d40b5a91e969399a95048a700d57ec37071f",
+      "ground_truth": [
+        {
+          "path": "stores/amazon.py",
+          "line": 343
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 352
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 366
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 370
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 411
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 421
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 435
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 532
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 560
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 579
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 604
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 671
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 906
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 1050
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 1217
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 1413
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 1494
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 1548
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 1579
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 1624
+        },
+        {
+          "path": "stores/amazon.py",
+          "line": 1674
+        },
+        {
+          "path": "utils/selenium_utils.py",
+          "line": 128
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:serhatbolsu/robotframework-appiumlibrary#363",
+      "migration": "selenium-4-locators",
+      "repository": "serhatbolsu/robotframework-appiumlibrary",
+      "pull_request": 363,
+      "parent_sha": "78ea30dcd56ec2f4dfb76bd211f88f4bc2367ddf",
+      "migration_sha": "9bfe4cb9fb2006116380ceb98cff46bd6e2b0017",
+      "ground_truth": [
+        {
+          "path": "AppiumLibrary/keywords/_element.py",
+          "line": 547
+        },
+        {
+          "path": "AppiumLibrary/keywords/_element.py",
+          "line": 558
+        },
+        {
+          "path": "AppiumLibrary/locators/elementfinder.py",
+          "line": 41
+        },
+        {
+          "path": "AppiumLibrary/locators/elementfinder.py",
+          "line": 42
+        },
+        {
+          "path": "AppiumLibrary/locators/elementfinder.py",
+          "line": 47
+        },
+        {
+          "path": "AppiumLibrary/locators/elementfinder.py",
+          "line": 52
+        },
+        {
+          "path": "AppiumLibrary/locators/elementfinder.py",
+          "line": 57
+        },
+        {
+          "path": "AppiumLibrary/locators/elementfinder.py",
+          "line": 76
+        },
+        {
+          "path": "AppiumLibrary/locators/elementfinder.py",
+          "line": 81
+        },
+        {
+          "path": "AppiumLibrary/locators/elementfinder.py",
+          "line": 86
+        },
+        {
+          "path": "AppiumLibrary/locators/elementfinder.py",
+          "line": 91
+        },
+        {
+          "path": "AppiumLibrary/locators/elementfinder.py",
+          "line": 146
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:SURFscz/SRAM-deploy#307",
+      "migration": "selenium-4-locators",
+      "repository": "SURFscz/SRAM-deploy",
+      "pull_request": 307,
+      "parent_sha": "12ac5b7f82f9d752fa8ac89a37bba791f6b68f4a",
+      "migration_sha": "9856e29347ddfb565622ceb9279892867364c6ba",
+      "ground_truth": [
+        {
+          "path": "ci-runner/features/steps/ci.py",
+          "line": 49
+        },
+        {
+          "path": "ci-runner/features/steps/ci.py",
+          "line": 50
+        },
+        {
+          "path": "ci-runner/features/steps/ci.py",
+          "line": 51
+        },
+        {
+          "path": "ci-runner/features/steps/ci.py",
+          "line": 63
+        },
+        {
+          "path": "ci-runner/features/steps/ci.py",
+          "line": 78
+        },
+        {
+          "path": "ci-runner/features/steps/ci.py",
+          "line": 79
+        },
+        {
+          "path": "ci-runner/features/steps/ci.py",
+          "line": 80
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:readthedocs/readthedocs-sphinx-search#115",
+      "migration": "selenium-4-locators",
+      "repository": "readthedocs/readthedocs-sphinx-search",
+      "pull_request": 115,
+      "parent_sha": "ec0750303687196a0bf2464f212bf6c290a13295",
+      "migration_sha": "5880a64bc514fef99a083c40f2dadc3e939cdc88",
+      "ground_truth": [
+        {
+          "path": "tests/test_ui.py",
+          "line": 40
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 43
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 81
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 142
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 150
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 168
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 171
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 194
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 197
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 223
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 248
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 252
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 279
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 289
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 298
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 316
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 326
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 335
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 353
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 359
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 375
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 380
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 401
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 405
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 415
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 421
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 430
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 451
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 455
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 465
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 468
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 473
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 478
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 484
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 489
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 514
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 543
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 546
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 608
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 655
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 658
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 669
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 688
+        },
+        {
+          "path": "tests/test_ui.py",
+          "line": 689
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:WildMeOrg/houston#424",
+      "migration": "selenium-4-locators",
+      "repository": "WildMeOrg/houston",
+      "pull_request": 424,
+      "parent_sha": "8102229421388e44234c07ee6cb73bf705b6fba0",
+      "migration_sha": "f36641a75f99bb6d85cd33d585ef9efdd5852445",
+      "ground_truth": [
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 107
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 108
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 109
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 110
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 111
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 133
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 134
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 136
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 139
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 171
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 177
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 178
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 179
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 180
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 183
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 193
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 203
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 209
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 210
+        },
+        {
+          "path": "integration_tests/conftest.py",
+          "line": 212
+        },
+        {
+          "path": "integration_tests/test_front_page.py",
+          "line": 4
+        },
+        {
+          "path": "integration_tests/test_front_page.py",
+          "line": 5
+        },
+        {
+          "path": "integration_tests/test_front_page.py",
+          "line": 6
+        },
+        {
+          "path": "integration_tests/test_front_page.py",
+          "line": 9
+        },
+        {
+          "path": "integration_tests/test_front_page.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:verlsk/pole_bot_fc#1",
+      "migration": "selenium-4-locators",
+      "repository": "verlsk/pole_bot_fc",
+      "pull_request": 1,
+      "parent_sha": "0dd73c0ecb2f057a4c9ee78b6b66270f090d5ae4",
+      "migration_sha": "e11bcae29447ea9fab79d790d0dc241819a47081",
+      "ground_truth": [
+        {
+          "path": "main.py",
+          "line": 14
+        },
+        {
+          "path": "main.py",
+          "line": 17
+        },
+        {
+          "path": "main.py",
+          "line": 18
+        },
+        {
+          "path": "main.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:dataXdevelopment/SEELE#26",
+      "migration": "selenium-4-locators",
+      "repository": "dataXdevelopment/SEELE",
+      "pull_request": 26,
+      "parent_sha": "c8c898f7c039da001e9f679e4f2eed2d0f463350",
+      "migration_sha": "711d1ed7eded9d07e8f6f518ac0cf30341a79253",
+      "ground_truth": [
+        {
+          "path": "Scrapers/meta_factored.py",
+          "line": 37
+        },
+        {
+          "path": "Scrapers/meta_factored.py",
+          "line": 43
+        },
+        {
+          "path": "Scrapers/meta_factored.py",
+          "line": 89
+        },
+        {
+          "path": "Scrapers/meta_factored.py",
+          "line": 91
+        }
+      ]
+    },
+    {
+      "id": "selenium-4-locators:f-is-h/douban-to-imdb#21",
+      "migration": "selenium-4-locators",
+      "repository": "f-is-h/douban-to-imdb",
+      "pull_request": 21,
+      "parent_sha": "15e8f3871d3eb4aef5e3703371a7712f5819c2d5",
+      "migration_sha": "2f4fc195afd1134ffec18fc06511079d9f00295a",
+      "ground_truth": [
+        {
+          "path": "csv_to_imdb.py",
+          "line": 16
+        },
+        {
+          "path": "csv_to_imdb.py",
+          "line": 53
+        },
+        {
+          "path": "csv_to_imdb.py",
+          "line": 59
+        },
+        {
+          "path": "csv_to_imdb.py",
+          "line": 61
+        },
+        {
+          "path": "csv_to_imdb.py",
+          "line": 74
+        },
+        {
+          "path": "csv_to_imdb.py",
+          "line": 77
+        },
+        {
+          "path": "csv_to_imdb.py",
+          "line": 87
+        },
+        {
+          "path": "csv_to_imdb.py",
+          "line": 91
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:ugurtheiron/icebreaker-agent#2",
+      "migration": "pydantic-v2-validators",
+      "repository": "ugurtheiron/icebreaker-agent",
+      "pull_request": 2,
+      "parent_sha": "a44492d53d0362f539b59168a1b45250c777ad75",
+      "migration_sha": "9f7bcdd9dfd15b3d9b1f950983868f87dc678b23",
+      "ground_truth": [
+        {
+          "path": "parsers.py",
+          "line": 68
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:flapperdeflipper/addons#292",
+      "migration": "pydantic-v2-validators",
+      "repository": "flapperdeflipper/addons",
+      "pull_request": 292,
+      "parent_sha": "6e9b8604bd4e102ceb5e58c5140283d8ce38ab93",
+      "migration_sha": "6ee278d0a1c3d3c045e283ed97affbbdedba0a60",
+      "ground_truth": [
+        {
+          "path": "searxng_with_mcp/mcp_server.py",
+          "line": 512
+        },
+        {
+          "path": "searxng_with_mcp/mcp_server.py",
+          "line": 521
+        },
+        {
+          "path": "searxng_with_mcp/mcp_server.py",
+          "line": 532
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:taha-kms/CLASSMATE-RAG#60",
+      "migration": "pydantic-v2-validators",
+      "repository": "taha-kms/CLASSMATE-RAG",
+      "pull_request": 60,
+      "parent_sha": "d51591d286044f5b35cb8c88363b1eb1363d8612",
+      "migration_sha": "9d6f2ca7f339faee4318931f0435d8c893b0527f",
+      "ground_truth": [
+        {
+          "path": "rag/metadata/validation.py",
+          "line": 106
+        },
+        {
+          "path": "rag/metadata/validation.py",
+          "line": 110
+        },
+        {
+          "path": "rag/metadata/validation.py",
+          "line": 120
+        },
+        {
+          "path": "rag/metadata/validation.py",
+          "line": 129
+        }
+      ]
+    },
+    {
+      "id": "pydantic-v2-validators:oslokommune/okdata-permission-api#204",
+      "migration": "pydantic-v2-validators",
+      "repository": "oslokommune/okdata-permission-api",
+      "pull_request": 204,
+      "parent_sha": "385421eb5c304648257fab527fd6003d111532d2",
+      "migration_sha": "10aedc3036d2bfe1e109b02b095b21a1f12bf3e5",
+      "ground_truth": [
+        {
+          "path": "models/models.py",
+          "line": 39
+        },
+        {
+          "path": "models/models.py",
+          "line": 70
+        },
+        {
+          "path": "models/models.py",
+          "line": 74
+        },
+        {
+          "path": "models/models.py",
+          "line": 92
+        },
+        {
+          "path": "models/models.py",
+          "line": 107
+        },
+        {
+          "path": "models/models.py",
+          "line": 141
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:brave-intl/publishers#5955",
+      "migration": "react-18-root",
+      "repository": "brave-intl/publishers",
+      "pull_request": 5955,
+      "parent_sha": "f517233344f2b796262eec57e2894b7863709901",
+      "migration_sha": "0936402af71656f568925e6603dcadeaf9072c52",
+      "ground_truth": [
+        {
+          "path": "app/javascript/packs/UserNavbar.jsx",
+          "line": 8
+        },
+        {
+          "path": "app/javascript/packs/WelcomeModal.jsx",
+          "line": 85
+        },
+        {
+          "path": "app/javascript/packs/views/admin/publishers/Duplicates.jsx",
+          "line": 53
+        },
+        {
+          "path": "app/javascript/packs/views/admin/referrals/UnattachedSearch.jsx",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:sirbrillig/gitnews-menubar#302",
+      "migration": "react-18-root",
+      "repository": "sirbrillig/gitnews-menubar",
+      "pull_request": 302,
+      "parent_sha": "b8ccaba4d927bd5b29ae1c578c282cb828bcda72",
+      "migration_sha": "457362cbbe12bb02462cca2320d58bb2935498c9",
+      "ground_truth": [
+        {
+          "path": "src/renderer/index.tsx",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:maangie/react_watch#48",
+      "migration": "react-18-root",
+      "repository": "maangie/react_watch",
+      "pull_request": 48,
+      "parent_sha": "e8a68824459801917f5dca30d39ef1968a742f58",
+      "migration_sha": "c5c8a8f3755af331a5819844f418b1a8226d4e85",
+      "ground_truth": [
+        {
+          "path": "src/App.test.jsx",
+          "line": 12
+        },
+        {
+          "path": "src/Timer.test.jsx",
+          "line": 18
+        },
+        {
+          "path": "src/index.jsx",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:chanlimchoi/RapidGarage#79",
+      "migration": "react-18-root",
+      "repository": "chanlimchoi/RapidGarage",
+      "pull_request": 79,
+      "parent_sha": "dfd04019800eac7c715742603eb79f205b5c1d4e",
+      "migration_sha": "df8d47389b8dedd6c0c3c873269dff732ce28f54",
+      "ground_truth": [
+        {
+          "path": "rapidgarage-frontend/app/index.jsx",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "react-18-root:worknenjoy/gitpay#1579",
+      "migration": "react-18-root",
+      "repository": "worknenjoy/gitpay",
+      "pull_request": 1579,
+      "parent_sha": "8d7fa7893fceba5f74c076fffa2e74da45d76e2d",
+      "migration_sha": "5287f7617616c17006af4f6ef962fd7c2c854298",
+      "ground_truth": [
+        {
+          "path": "frontend/src/index.js",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "openai-node-v4:Malshan20/sandbox-shimpilot#1",
+      "migration": "openai-node-v4",
+      "repository": "Malshan20/sandbox-shimpilot",
+      "pull_request": 1,
+      "parent_sha": "74b504eb5092ed07b80fd341f337e271e7950c06",
+      "migration_sha": "0594909f023335f99ede3772b7ab9b9de3d2e4cc",
+      "ground_truth": [
+        {
+          "path": "src/legacy/openai/chat.ts",
+          "line": 4
+        },
+        {
+          "path": "src/legacy/openai/completions.ts",
+          "line": 4
+        },
+        {
+          "path": "src/legacy/openai/embeddings.ts",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "openai-node-v4:Jay-122/apisync-openai-demo#1",
+      "migration": "openai-node-v4",
+      "repository": "Jay-122/apisync-openai-demo",
+      "pull_request": 1,
+      "parent_sha": "0940b585bc275e6b2e50fdc86e3c88be5cb1f3c1",
+      "migration_sha": "86674f4380e8e36b7fb5669e41b52a0314afd56e",
+      "ground_truth": [
+        {
+          "path": "src/api/generate.ts",
+          "line": 8
+        },
+        {
+          "path": "src/lib/openai.ts",
+          "line": 8
+        },
+        {
+          "path": "src/services/chat.ts",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "openai-node-v4:srmlcn/qa-agent#245",
+      "migration": "openai-node-v4",
+      "repository": "srmlcn/qa-agent",
+      "pull_request": 245,
+      "parent_sha": "0fcc2846b4993b98145a2aa83046692f54c716fc",
+      "migration_sha": "4393bb19cfc789e74263bf44bf55bf1bd6f80486",
+      "ground_truth": [
+        {
+          "path": "tests/unit/stagehand/llm-client.test.ts",
+          "line": 143
+        }
+      ]
+    },
+    {
+      "id": "openai-node-v4:jeremie7u/DREADNYX#2",
+      "migration": "openai-node-v4",
+      "repository": "jeremie7u/DREADNYX",
+      "pull_request": 2,
+      "parent_sha": "67098f99eb5727fe15dcac0d4e356e07fa4c0c4e",
+      "migration_sha": "a9b2137442758184615ba0005284ab41ef6ee36f",
+      "ground_truth": [
+        {
+          "path": "bot.js",
+          "line": 21
+        },
+        {
+          "path": "bot.js",
+          "line": 102
+        }
+      ]
+    }
+  ],
+  "extended_at": "2026-11-04T01:20:11+00:00",
+  "round_1_rejections": {
+    "openai-python-v1": {
+      "examined": 150,
+      "rejected": {
+        "no_removed_usage": 148,
+        "library_owner": 1
+      }
+    },
+    "selenium-4-locators": {
+      "examined": 150,
+      "rejected": {
+        "no_removed_usage": 144,
+        "no_merge_commit": 4,
+        "commit_unavailable": 1
+      }
+    },
+    "numpy-1.24-aliases": {
+      "examined": 31,
+      "rejected": {
+        "no_removed_usage": 13,
+        "fork": 5,
+        "repository_too_large": 3
+      }
+    },
+    "pydantic-v2-validators": {
+      "examined": 150,
+      "rejected": {
+        "library_owner": 29,
+        "no_removed_usage": 115
+      }
+    },
+    "react-18-root": {
+      "examined": 150,
+      "rejected": {
+        "no_removed_usage": 144,
+        "fork": 1
+      }
+    },
+    "openai-node-v4": {
+      "examined": 150,
+      "rejected": {
+        "no_removed_usage": 150
+      }
+    }
+  }
+}

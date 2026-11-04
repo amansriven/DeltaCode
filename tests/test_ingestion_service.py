@@ -162,6 +162,45 @@ def test_ingestion_suppresses_identical_artifact_without_normalizing_again(tmp_p
     assert repository.not_modified == 1
 
 
+def test_lost_baseline_starts_a_new_baseline_instead_of_failing_every_later_sync(tmp_path):
+    root = tmp_path / "artifacts"
+    store = FilesystemArtifactStore(root)
+    first = captured(store, "artifact-1", release_document(), 0)
+    second = captured(store, "artifact-2", release_document(" "), 1)
+    third = captured(store, "artifact-3", release_document("  "), 2)
+    repository = MemoryRepository()
+    service = IngestionService(
+        QueueCollector([first, second, third]), store, repository, DEFAULT_ADAPTERS
+    )
+    service.sync(configured_source(), idempotency_key="sync-first")
+
+    (root / first.object_ref).unlink()
+    recovered = service.sync(configured_source(), idempotency_key="sync-second")
+    following = service.sync(configured_source(), idempotency_key="sync-third")
+
+    assert recovered.artifact_id == "artifact-2"
+    assert following.artifact_id == "artifact-3"
+    assert repository.failures == []
+
+
+def test_corrupted_baseline_still_fails_loudly(tmp_path):
+    root = tmp_path / "artifacts"
+    store = FilesystemArtifactStore(root)
+    first = captured(store, "artifact-1", release_document(), 0)
+    second = captured(store, "artifact-2", release_document(" "), 1)
+    service = IngestionService(
+        QueueCollector([first, second]), store, MemoryRepository(), DEFAULT_ADAPTERS
+    )
+    service.sync(configured_source(), idempotency_key="sync-first")
+
+    path = root / first.object_ref
+    path.chmod(0o600)
+    path.write_bytes(b"tampered")
+
+    with pytest.raises(ValueError):
+        service.sync(configured_source(), idempotency_key="sync-second")
+
+
 def test_repository_idempotency_conflict_is_not_misreported_as_source_failure(tmp_path):
     store = FilesystemArtifactStore(tmp_path / "artifacts")
     first = captured(store, "artifact-1", release_document(), 0)

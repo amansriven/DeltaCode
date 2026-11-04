@@ -1,0 +1,1401 @@
+{
+ "schema_version": 2,
+ "description": "Held-out impact cases written after the v2 analyzer fixes.",
+ "families": 38,
+ "cases": [
+  {
+   "id": "h-dep-direct-reference:acme_sdk",
+   "family": "h-dep-direct-reference",
+   "category": "dependency",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "requirements.txt": "acme-sdk @ https://example.test/acme-sdk-2.0.0.tar.gz\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-direct-reference:payfast",
+   "family": "h-dep-direct-reference",
+   "category": "dependency",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "requirements.txt": "payfast @ https://example.test/payfast-2.0.0.tar.gz\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-env-marker:acme_sdk",
+   "family": "h-dep-env-marker",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "acme-sdk==2.4.0 ; python_version >= '3.9'\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-env-marker:payfast",
+   "family": "h-dep-env-marker",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "requirements.txt": "payfast==2.4.0 ; python_version >= '3.9'\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-fixed-version:acme_sdk",
+   "family": "h-dep-fixed-version",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "acme-sdk==4.2.1\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-fixed-version:payfast",
+   "family": "h-dep-fixed-version",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "payfast==4.2.1\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-lookalike:acme_sdk",
+   "family": "h-dep-lookalike",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "acme-sdk-ng==2.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-lookalike:payfast",
+   "family": "h-dep-lookalike",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "requirements.txt": "payfast-ng==2.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-nested-requirements-file:acme_sdk",
+   "family": "h-dep-nested-requirements-file",
+   "category": "dependency",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "requirements.txt": "-r base.txt\n",
+    "base.txt": "acme-sdk==2.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-nested-requirements-file:payfast",
+   "family": "h-dep-nested-requirements-file",
+   "category": "dependency",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "requirements.txt": "-r base.txt\n",
+    "base.txt": "payfast==2.0.0\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-poetry:acme_sdk",
+   "family": "h-dep-poetry",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "pyproject.toml": "[tool.poetry.dependencies]\npython = '^3.12'\nacme-sdk = '^2.1'\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-poetry:payfast",
+   "family": "h-dep-poetry",
+   "category": "dependency",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "pyproject.toml": "[tool.poetry.dependencies]\npython = '^3.12'\npayfast = '^2.1'\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-setup-py:acme_sdk",
+   "family": "h-dep-setup-py",
+   "category": "dependency",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "setup.py": "from setuptools import setup\nsetup(install_requires=['acme-sdk==2.0.0'])\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "acme-sdk",
+     "package": "acme-sdk",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-dep-setup-py:payfast",
+   "family": "h-dep-setup-py",
+   "category": "dependency",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "setup.py": "from setuptools import setup\nsetup(install_requires=['payfast==2.0.0'])\n"
+   },
+   "targets": [
+    {
+     "kind": "sdk_package",
+     "name": "payfast",
+     "package": "payfast",
+     "ecosystem": "pypi",
+     "version_scope": {
+      "affected_range": "<3.0",
+      "scheme": "semver"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-ep-fstring:acme_sdk",
+   "family": "h-ep-fstring",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "import requests\n\nBASE = 'https://x.test'\nrequests.get(f'{BASE}/v1/messages')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages"
+    }
+   ]
+  },
+  {
+   "id": "h-ep-fstring:payfast",
+   "family": "h-ep-fstring",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "import requests\n\nBASE = 'https://x.test'\nrequests.get(f'{BASE}/v2/charges/create')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create"
+    }
+   ]
+  },
+  {
+   "id": "h-ep-js-block-comment:acme_sdk",
+   "family": "h-ep-js-block-comment",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.js": "/* GET '/v1/messages' removed */\nexport const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages"
+    }
+   ]
+  },
+  {
+   "id": "h-ep-js-block-comment:payfast",
+   "family": "h-ep-js-block-comment",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.js": "/* GET '/v2/charges/create' removed */\nexport const x = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create"
+    }
+   ]
+  },
+  {
+   "id": "h-ep-js-query-string:acme_sdk",
+   "family": "h-ep-js-query-string",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.js": "fetch('/v1/messages?x=1');\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages"
+    }
+   ]
+  },
+  {
+   "id": "h-ep-js-query-string:payfast",
+   "family": "h-ep-js-query-string",
+   "category": "endpoint",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.js": "fetch('/v2/charges/create?x=1');\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create"
+    }
+   ]
+  },
+  {
+   "id": "h-ep-substring-path:acme_sdk",
+   "family": "h-ep-substring-path",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "import requests\n\nrequests.get('/prefix/v1/messages')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v1/messages"
+    }
+   ]
+  },
+  {
+   "id": "h-ep-substring-path:payfast",
+   "family": "h-ep-substring-path",
+   "category": "endpoint",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "import requests\n\nrequests.get('/prefix/v2/charges/create')\n"
+   },
+   "targets": [
+    {
+     "kind": "endpoint",
+     "name": "/v2/charges/create"
+    }
+   ]
+  },
+  {
+   "id": "h-fld-getattr:acme_sdk",
+   "family": "h-fld-getattr",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.py": "v = getattr(resp, 'legacy_token')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "h-fld-getattr:payfast",
+   "family": "h-fld-getattr",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.py": "v = getattr(resp, 'card_token')\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "h-fld-js-shorthand:acme_sdk",
+   "family": "h-fld-js-shorthand",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.js": "const legacy_token = 1;\nsend({ legacy_token });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "h-fld-js-shorthand:payfast",
+   "family": "h-fld-js-shorthand",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.js": "const card_token = 1;\nsend({ card_token });\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "h-fld-store:acme_sdk",
+   "family": "h-fld-store",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.py": "req.legacy_token = 'x'\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "h-fld-store:payfast",
+   "family": "h-fld-store",
+   "category": "field",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.py": "req.card_token = 'x'\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "h-fld-string-value-only:acme_sdk",
+   "family": "h-fld-string-value-only",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "label = 'legacy_token'\nprint(label)\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "legacy_token"
+    }
+   ]
+  },
+  {
+   "id": "h-fld-string-value-only:payfast",
+   "family": "h-fld-string-value-only",
+   "category": "field",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "label = 'card_token'\nprint(label)\n"
+   },
+   "targets": [
+    {
+     "kind": "field",
+     "name": "card_token"
+    }
+   ]
+  },
+  {
+   "id": "h-js-awaited-factory:acme_sdk",
+   "family": "h-js-awaited-factory",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.ts": "const v = (await getClient()).send(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-awaited-factory:payfast",
+   "family": "h-js-awaited-factory",
+   "category": "js-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.ts": "const v = (await getClient()).charge(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-block-comment:acme_sdk",
+   "family": "h-js-block-comment",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.ts": "/* client.send(x) was removed */\nexport const a = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-block-comment:payfast",
+   "family": "h-js-block-comment",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.ts": "/* gateway.charge(x) was removed */\nexport const a = 1;\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-newline-before-paren:acme_sdk",
+   "family": "h-js-newline-before-paren",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.ts": "const client = new Client();\nclient.send\n  (1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-newline-before-paren:payfast",
+   "family": "h-js-newline-before-paren",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.ts": "const gateway = new Gateway();\ngateway.charge\n  (1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-optional-chaining:acme_sdk",
+   "family": "h-js-optional-chaining",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.ts": "const client = new Client();\nclient?.send(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-optional-chaining:payfast",
+   "family": "h-js-optional-chaining",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.ts": "const gateway = new Gateway();\ngateway?.charge(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-similar-method:acme_sdk",
+   "family": "h-js-similar-method",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.ts": "const client = 1;\nclient.sendAll(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-similar-method:payfast",
+   "family": "h-js-similar-method",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.ts": "const gateway = 1;\ngateway.chargeAll(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-similar-receiver:acme_sdk",
+   "family": "h-js-similar-receiver",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.ts": "myclient.send(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-similar-receiver:payfast",
+   "family": "h-js-similar-receiver",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.ts": "mygateway.charge(1);\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-this-member:acme_sdk",
+   "family": "h-js-this-member",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.ts": "class S {\n  api = new Client();\n  go() { this.api.send(1); }\n}\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "@acme/sdk",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-js-this-member:payfast",
+   "family": "h-js-this-member",
+   "category": "js-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.ts": "class S {\n  api = new Gateway();\n  go() { this.api.charge(1); }\n}\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast-node",
+     "ecosystem": "npm"
+    }
+   ]
+  },
+  {
+   "id": "h-py-alias-of-alias:acme_sdk",
+   "family": "h-py-alias-of-alias",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from acme_sdk import Client\n\nc = Client()\nd = c\nd.send(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-alias-of-alias:payfast",
+   "family": "h-py-alias-of-alias",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from payfast import Gateway\n\nc = Gateway()\nd = c\nd.charge(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-async-with:acme_sdk",
+   "family": "h-py-async-with",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from acme_sdk import Client\n\n\nasync def go():\n    async with Client() as c:\n        await c.send(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-async-with:payfast",
+   "family": "h-py-async-with",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from payfast import Gateway\n\n\nasync def go():\n    async with Gateway() as c:\n        await c.charge(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-class-attribute:acme_sdk",
+   "family": "h-py-class-attribute",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.py": "from acme_sdk import Client\n\n\nclass S:\n    client = Client()\n\n\nS.client.send(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-class-attribute:payfast",
+   "family": "h-py-class-attribute",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.py": "from payfast import Gateway\n\n\nclass S:\n    client = Gateway()\n\n\nS.client.charge(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-class-reference-only:acme_sdk",
+   "family": "h-py-class-reference-only",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "from acme_sdk import Client\n\n\ndef is_client(x):\n    return isinstance(x, Client)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-class-reference-only:payfast",
+   "family": "h-py-class-reference-only",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "from payfast import Gateway\n\n\ndef is_client(x):\n    return isinstance(x, Gateway)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-comprehension:acme_sdk",
+   "family": "h-py-comprehension",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from acme_sdk import Client\n\nout = [Client().send(i) for i in range(3)]\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-comprehension:payfast",
+   "family": "h-py-comprehension",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from payfast import Gateway\n\nout = [Gateway().charge(i) for i in range(3)]\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-different-module-same-class:acme_sdk",
+   "family": "h-py-different-module-same-class",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "a.py": "from unrelated_lib import Client\n\nClient().send(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-different-module-same-class:payfast",
+   "family": "h-py-different-module-same-class",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": false,
+   "files": {
+    "a.py": "from unrelated_lib import Gateway\n\nGateway().charge(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-higher-order:acme_sdk",
+   "family": "h-py-higher-order",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from acme_sdk import Client\n\nc = Client()\nlist(map(c.send, [1, 2]))\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-higher-order:payfast",
+   "family": "h-py-higher-order",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from payfast import Gateway\n\nc = Gateway()\nlist(map(c.charge, [1, 2]))\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-import-unused:acme_sdk",
+   "family": "h-py-import-unused",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "from acme_sdk import Client\n\nx = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-import-unused:payfast",
+   "family": "h-py-import-unused",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "from payfast import Gateway\n\nx = 1\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-lambda:acme_sdk",
+   "family": "h-py-lambda",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from acme_sdk import Client\n\ncb = lambda: Client().send(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-lambda:payfast",
+   "family": "h-py-lambda",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from payfast import Gateway\n\ncb = lambda: Gateway().charge(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-other-object-same-method:acme_sdk",
+   "family": "h-py-other-object-same-method",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "import queue\n\nq = queue.Queue()\nq.send(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-other-object-same-method:payfast",
+   "family": "h-py-other-object-same-method",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "import queue\n\nq = queue.Queue()\nq.charge(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-partial-reference:acme_sdk",
+   "family": "h-py-partial-reference",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "import functools\nfrom acme_sdk import Client\n\nfn = functools.partial(Client().send, 1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-partial-reference:payfast",
+   "family": "h-py-partial-reference",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "import functools\nfrom payfast import Gateway\n\nfn = functools.partial(Gateway().charge, 1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-return-annotation:acme_sdk",
+   "family": "h-py-return-annotation",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from acme_sdk import Client\n\n\ndef get() -> Client:\n    return build()\n\n\nget().send(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-return-annotation:payfast",
+   "family": "h-py-return-annotation",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "from payfast import Gateway\n\n\ndef get() -> Gateway:\n    return build()\n\n\nget().charge(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-string-literal:acme_sdk",
+   "family": "h-py-string-literal",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "msg = 'Client.send() is gone'\nprint(msg)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-string-literal:payfast",
+   "family": "h-py-string-literal",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "a.py": "msg = 'Gateway.charge() is gone'\nprint(msg)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-test-fixture-string:acme_sdk",
+   "family": "h-py-test-fixture-string",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "tests/t.py": "def test_x():\n    assert 'calls Client.send' in 'calls Client.send'\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-test-fixture-string:payfast",
+   "family": "h-py-test-fixture-string",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": false,
+   "files": {
+    "tests/t.py": "def test_x():\n    assert 'calls Gateway.charge' in 'calls Gateway.charge'\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-tuple-unpack:acme_sdk",
+   "family": "h-py-tuple-unpack",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.py": "from acme_sdk import Client\n\na, b = Client(), Client()\na.send(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-tuple-unpack:payfast",
+   "family": "h-py-tuple-unpack",
+   "category": "python-symbol",
+   "difficulty": "hard",
+   "affected": true,
+   "files": {
+    "a.py": "from payfast import Gateway\n\na, b = Gateway(), Gateway()\na.charge(1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-unbound-call:acme_sdk",
+   "family": "h-py-unbound-call",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "import acme_sdk\n\nacme_sdk.Client.send(None, 1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Client.send",
+     "package": "acme-sdk",
+     "ecosystem": "pypi"
+    }
+   ]
+  },
+  {
+   "id": "h-py-unbound-call:payfast",
+   "family": "h-py-unbound-call",
+   "category": "python-symbol",
+   "difficulty": "easy",
+   "affected": true,
+   "files": {
+    "a.py": "import payfast\n\npayfast.Gateway.charge(None, 1)\n"
+   },
+   "targets": [
+    {
+     "kind": "symbol",
+     "name": "Gateway.charge",
+     "package": "payfast",
+     "ecosystem": "pypi"
+    }
+   ]
+  }
+ ]
+}

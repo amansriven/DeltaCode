@@ -21,6 +21,27 @@ def test_labeled_repository_benchmark_meets_release_thresholds():
     assert score.classifications["unsupported-go-negative"] == "unsupported"
 
 
+def test_adversarial_benchmark_v2_holds_its_measured_baseline():
+    """v2 labels ground truth; the floor guards the analyzer fixes it motivated."""
+    score = run_benchmark(Path("benchmarks/repository-impact-v2.json"))
+
+    assert score.cases >= 300
+    assert score.precision >= 0.98
+    assert score.recall >= 0.95
+    assert score.by_difficulty["easy"]["fp"] == 0
+    assert score.by_difficulty["easy"]["fn"] == 0
+    assert score.by_category["dependency"]["fn"] == 0
+
+
+def test_held_out_benchmark_holds_its_measured_baseline():
+    """Written after the fixes, so it measures generalization rather than tuning."""
+    score = run_benchmark(Path("benchmarks/repository-impact-holdout.json"))
+
+    assert score.cases >= 70
+    assert score.precision >= 0.95
+    assert score.recall >= 0.55
+
+
 def test_generation_limits_reject_excessive_aggregate_check_timeout():
     patch = PatchProposal(
         summary="Bounded proposal.",

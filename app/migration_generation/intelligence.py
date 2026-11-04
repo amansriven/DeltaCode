@@ -19,6 +19,7 @@ from app.openai_responses import OpenAIResponsesClient
 from .models import GenerationProposal, PlanningContext, SandboxExecutionResult
 
 MAX_GATEWAY_RESPONSE_BYTES = 5_000_000
+MAX_REVIEW_LOG_CHARS = 16_000
 
 
 class IntelligenceUnavailable(RuntimeError):
@@ -70,6 +71,29 @@ class StaticMigrationIntelligence:
         return self.review_result.model_copy(deep=True), self.recommendation.model_copy(deep=True)
 
 
+def _execution_for_review(execution: SandboxExecutionResult) -> dict:
+    """Bound logs sent to the model. Failures print last, so each stream keeps its tail.
+
+    Without this, verbose checks can push the review past the input limit after the proposal was
+    already paid for. Stored evidence keeps the full logs.
+    """
+    streams = max(1, len(execution.checks) * 2)
+    per_stream = MAX_REVIEW_LOG_CHARS // streams
+    return execution.model_copy(
+        update={
+            "checks": [
+                check.model_copy(
+                    update={
+                        "stdout": check.stdout[-per_stream:],
+                        "stderr": check.stderr[-per_stream:],
+                    }
+                )
+                for check in execution.checks
+            ]
+        }
+    ).model_dump(mode="json")
+
+
 class OpenAIMigrationIntelligence:
     """GPT-4o planning and review through strict, tool-free structured output."""
 
@@ -93,9 +117,14 @@ class OpenAIMigrationIntelligence:
                 "Edit only supplied files, preserve unrelated behavior, and reference only known "
                 "call-site ids and plan-step ids. For existing files, copy expected_sha256 exactly "
                 "from the context. Use argument-array verification commands without shell syntax. "
+                "Each edit's content replaces the whole file, so return every file complete, with "
+                "all unrelated lines and characters exactly as supplied. "
                 "Do not claim that any command has run. Record uncertainty instead of guessing."
             ),
-            user_input=json.dumps(context.model_dump(mode="json"), separators=(",", ":")),
+            # Raw Unicode, not \\u escapes: the model has to return this text exactly.
+            user_input=json.dumps(
+                context.model_dump(mode="json"), separators=(",", ":"), ensure_ascii=False
+            ),
             schema_name="delta_code_migration_proposal",
             schema=GenerationProposal.model_json_schema(),
             max_output_tokens=6_000,
@@ -126,9 +155,10 @@ class OpenAIMigrationIntelligence:
                     "context": context.model_dump(mode="json"),
                     "plan": plan.model_dump(mode="json"),
                     "patch": patch.model_dump(mode="json"),
-                    "execution": execution.model_dump(mode="json"),
+                    "execution": _execution_for_review(execution),
                 },
                 separators=(",", ":"),
+                ensure_ascii=False,
             ),
             schema_name="delta_code_migration_review",
             schema=ReviewProposal.model_json_schema(),

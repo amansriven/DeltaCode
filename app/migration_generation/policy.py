@@ -14,6 +14,10 @@ from .models import PatchProposal, SandboxExecutionRequest, SandboxFile
 MAX_BUNDLE_FILES = 1000
 MAX_BUNDLE_BYTES = 6_000_000
 MAX_EDIT_BYTES = 2_000_000
+# An edit replaces the whole file, so a partial answer would silently delete the rest of it.
+# Migrations rarely shrink a file, and these limits leave room for removing a compatibility shim.
+MAX_LINES_REMOVED_UNCHECKED = 20
+MAX_LINE_LOSS_RATIO = 0.15
 DENIED_PATH_PREFIXES = (
     ".git",
     ".github/workflows",
@@ -37,13 +41,27 @@ DENIED_FILE_NAMES = {
     "service-account.json",
     ".netrc",
 }
+# Values that are code rather than credentials: os.getenv("KEY"), config["key"], Optional[str],
+# settings.api_key, access_token, SecretStr. Segments allow at most two trailing digits, because
+# unquoted secrets usually mix digits in, and a JWT's dotted form is excluded by name.
+_CODE_SEGMENT = r"[A-Za-z_]+\d{0,2}"
+_CODE_VALUE = (
+    r"(?!eyJ)(?:"
+    rf"{_CODE_SEGMENT}(?:\.{_CODE_SEGMENT})*\s*[(\[]"
+    rf"|{_CODE_SEGMENT}(?:\.{_CODE_SEGMENT})+(?![\w.-])"
+    r"|[a-z]+(?:_[a-z]+)+(?![\w.-])"
+    r"|[A-Z][a-z]+(?:[A-Z][a-z]+)*(?![\w.-])"
+    r")"
+)
+REDACTED_MARKER = "[REDACTED]"
 SECRET_PATTERNS = (
     re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{20,}\b"),
     re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b"),
     re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
     re.compile(
-        r"(?i)\b(?:api[_-]?key|secret|token|password)\s*[:=]\s*"
+        r"\b(?i:api[_-]?key|secret|token|password)\s*[:=]\s*"
+        rf"(?!{_CODE_VALUE})"
         r"(['\"]?)[^'\"\s]{8,}\1"
     ),
 )
@@ -137,6 +155,10 @@ def validate_patch(
         if contains_secret(edit.content):
             raise PatchPolicyError("generated patch contains credential-like material")
         destination = root / path
+        if REDACTED_MARKER in edit.content and (
+            not destination.is_file() or REDACTED_MARKER.encode() not in destination.read_bytes()
+        ):
+            raise PatchPolicyError("generated patch writes a redaction marker into the file")
         if destination.is_symlink():
             raise PatchPolicyError("generated patch cannot modify a symbolic link")
         if destination.exists():
@@ -146,6 +168,12 @@ def validate_patch(
             expected = hashlib.sha256(existing).hexdigest()
             if edit.expected_sha256 != expected:
                 raise PatchPolicyError("generated patch base digest is stale")
+            old_lines = len(existing.splitlines())
+            lost_lines = old_lines - len(edit.content.splitlines())
+            if lost_lines > max(MAX_LINES_REMOVED_UNCHECKED, old_lines * MAX_LINE_LOSS_RATIO):
+                raise PatchPolicyError(
+                    f"generated patch removes {lost_lines} of {old_lines} lines from a file"
+                )
             change_type = "modified"
         else:
             if edit.expected_sha256 is not None:

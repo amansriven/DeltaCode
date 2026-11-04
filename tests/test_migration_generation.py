@@ -19,7 +19,11 @@ from app.migration_generation.executor import (
     SandboxUnavailable,
     StaticSandboxExecutor,
 )
-from app.migration_generation.intelligence import StaticMigrationIntelligence
+from app.migration_generation.intelligence import (
+    MAX_REVIEW_LOG_CHARS,
+    StaticMigrationIntelligence,
+    _execution_for_review,
+)
 from app.migration_generation.models import (
     GenerationProposal,
     PatchProposal,
@@ -28,6 +32,7 @@ from app.migration_generation.models import (
 from app.migration_generation.policy import (
     PatchPolicyError,
     build_sandbox_request,
+    contains_secret,
     normalize_repository_path,
     validate_patch,
 )
@@ -218,6 +223,81 @@ def test_context_leaves_out_generated_lockfiles_but_keeps_the_manifest(tmp_path:
     )
 
     assert [item.path for item in context.files] == ["package.json"]
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        'client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))',
+        'openai.api_key = os.getenv("OPENAI_API_KEY")',
+        'api_key=os.environ["OPENAI_API_KEY"]',
+        "client = OpenAI(api_key=settings.openai_api_key)",
+        "api_key=self.config.api_key,",
+        "client = OpenAI(api_key=openai_api_key)",
+        "token = get_access_token()",
+        "access_token = response.json()",
+        'password = request.form["password"]',
+        "secret = config.secret_value",
+        "token: Optional[str] = None",
+        "api_key: SecretStr",
+        '{"api_key": os.environ.get("KEY")}',
+    ],
+)
+def test_code_that_reads_a_credential_is_not_a_credential(line):
+    assert contains_secret(line) is False
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        'api_key = "abcd1234efgh5678"',
+        "api_key='abcd1234efgh5678'",
+        'password = "correcthorsebattery"',
+        'token: "short.dotted.value"',
+        "password: hunter2hunter2",
+        "token=abcd1234efgh5678",
+        "SECRET=Abc123Def456Ghi",
+        "token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.dozjgNryP4J3jVmNHl0w5N",
+        "token: eyJhbGci.eyJzdWIi.abcdefgh",
+        "api_key = abc123def.ghi456jkl",
+        'key = "sk-abcdefghijklmnopqrstuvwxyz123456"',
+        "ghp_abcdefghijklmnopqrstuvwxyz123456",
+        "-----BEGIN RSA PRIVATE KEY-----",
+        'password = "os.getenv(not_really_code)"',
+    ],
+)
+def test_real_credentials_are_still_caught(line):
+    assert contains_secret(line) is True
+
+
+def test_patch_cannot_write_a_redaction_marker_into_a_file(tmp_path: Path):
+    (tmp_path / "app.py").write_text("value = 1\n")
+    digest = hashlib.sha256(b"value = 1\n").hexdigest()
+
+    with pytest.raises(PatchPolicyError, match="redaction marker"):
+        validate_patch(tmp_path, _plan(), _proposal("value = [REDACTED]\n", digest))
+
+
+def test_review_logs_are_bounded_and_keep_the_end_of_the_output():
+    execution = SandboxExecutionResult(
+        attempt_id="attempt-1",
+        status="failed",
+        checks=[
+            {"id": "tests", "kind": "unit_test", "status": "failed", "command": "pytest",
+             "exit_code": 1, "duration_ms": 1,
+             "stdout": "x" * 19_990 + "FAILED_END", "stderr": ""}
+        ],
+        executor={"id": "local-docker", "version": "1.0.0"},
+        duration_ms=1,
+        network_policy="deny_all",
+        destroyed=True,
+    )
+
+    logged = _execution_for_review(execution)["checks"][0]["stdout"]
+
+    assert len(logged) == MAX_REVIEW_LOG_CHARS // 2
+    assert logged.endswith("FAILED_END")
+    assert len(execution.checks[0].stdout) == 20_000
 
 
 def _guard_execution(*checks) -> SandboxExecutionResult:

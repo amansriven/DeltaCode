@@ -149,6 +149,111 @@ def test_requirements_keep_named_packages_and_drop_everything_pip_could_be_steer
     assert python_requirements(tmp_path) == ["httpx", "numpy==1.26.4", "pytest-mock", "requests>=2"]
 
 
+def test_an_upgrade_replaces_the_old_pin_instead_of_conflicting_with_it():
+    assert migration_eval._with_upgrade(
+        ["OpenAI==0.28.1", "requests>=2"], "openai>=1,<2"
+    ) == ["openai>=1,<2", "requests>=2"]
+    assert migration_eval._with_upgrade(["requests>=2"], None) == ["requests>=2"]
+
+
+def test_files_too_large_to_rewrite_stop_before_any_spend(monkeypatch, tmp_path):
+    monkeypatch.setitem(migration_eval.GUIDES, "fixture", GUIDE)
+    root = _repository(tmp_path)
+    (root / "app.py").write_text(APP + "# padding line for size\n" * 900)
+
+    result = evaluate_tree(root, CASE, MIGRATION, 1, ScriptedModel("unused"))
+
+    assert result.stage == "output_too_large"
+    assert result.cost_usd == 0
+
+
+def test_a_file_with_a_real_secret_stops_before_any_spend(monkeypatch, tmp_path):
+    monkeypatch.setitem(migration_eval.GUIDES, "fixture", GUIDE)
+    root = _repository(tmp_path)
+    (root / "app.py").write_text(APP + 'password = "correcthorsebattery"\n')
+
+    result = evaluate_tree(root, CASE, MIGRATION, 1, ScriptedModel("unused"))
+
+    assert result.stage == "contains_redacted_secret"
+
+
+def test_per_request_limit_fails_one_case_and_only_the_budget_ends_a_run(monkeypatch, tmp_path):
+    monkeypatch.setitem(migration_eval.GUIDES, "fixture", GUIDE)
+
+    class Refuses:
+        def __init__(self, message: str) -> None:
+            self.message = message
+
+        def propose(self, context):
+            raise migration_eval.OpenAIBudgetExceeded(self.message)
+
+    monkeypatch.setattr(migration_eval, "prepare_image", lambda *_a, **_k: ("image", True))
+    monkeypatch.setattr(migration_eval, "remove_image", lambda *_a: None)
+    monkeypatch.setattr(migration_eval, "run_tests", lambda *_a: (0, set(), set()))
+    root = _repository(tmp_path)
+
+    per_request = Refuses("model request exceeds the per-request cost limit")
+    result = evaluate_tree(root, CASE, MIGRATION, 1, per_request)
+    assert result.stage == "generation_failed"
+
+    with pytest.raises(migration_eval.OpenAIBudgetExceeded):
+        evaluate_tree(root, CASE, MIGRATION, 1, Refuses("total model budget would be exceeded"))
+
+
+@requires_docker
+def test_paid_patch_survives_a_scoring_crash(monkeypatch, tmp_path):
+    monkeypatch.setitem(migration_eval.GUIDES, "fixture", GUIDE)
+    monkeypatch.setattr(
+        migration_eval,
+        "_run_tests_after",
+        lambda *_a: (_ for _ in ()).throw(RuntimeError("disk full")),
+    )
+    root = tmp_path / "repo"
+    root.mkdir()
+    patches = tmp_path / "patches"
+
+    result = evaluate_tree(
+        _repository(root),
+        CASE,
+        MIGRATION,
+        1,
+        ScriptedModel(APP.replace(".send(", ".send_v2(")),
+        patches_dir=patches,
+    )
+
+    assert result.stage == "completed"
+    assert "scoring incomplete" in result.detail
+    assert len(list(patches.iterdir())) == 1
+
+
+@requires_docker
+def test_pytest_keeps_going_past_a_broken_module_and_repository_options(monkeypatch, tmp_path):
+    monkeypatch.setitem(migration_eval.GUIDES, "fixture", GUIDE)
+    root = _repository(tmp_path)
+    (root / "test_broken.py").write_text("import module_that_is_not_installed\n")
+    (root / "pytest.ini").write_text("[pytest]\naddopts = --cov=app --not-a-real-option\n")
+
+    result = evaluate_tree(
+        root, CASE, MIGRATION, 1, ScriptedModel(APP.replace(".send(", ".send_v2("))
+    )
+
+    assert result.baseline_passed == 1
+
+
+@requires_docker
+def test_rehearsal_runs_a_real_tree_through_every_stage_for_free(monkeypatch, tmp_path):
+    monkeypatch.setitem(migration_eval.GUIDES, "fixture", GUIDE)
+
+    result = evaluate_tree(
+        _repository(tmp_path), CASE, MIGRATION, 1, migration_eval.RehearsalModel()
+    )
+
+    assert result.stage == "completed", result.detail
+    assert result.cost_usd == 0
+    assert result.usage_after == result.usage_before
+    assert result.regressions == []
+
+
 def test_pytest_outcomes_are_read_from_the_report_lines():
     passed, failed = parse_pytest_outcomes(
         "PASSED tests/a.py::test_one\n"

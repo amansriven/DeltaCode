@@ -19,6 +19,7 @@ from app.openai_responses import OpenAIResponsesClient
 from .models import GenerationProposal, PlanningContext, SandboxExecutionResult
 
 MAX_GATEWAY_RESPONSE_BYTES = 5_000_000
+MAX_REVIEW_LOG_CHARS = 16_000
 
 
 class IntelligenceUnavailable(RuntimeError):
@@ -68,6 +69,29 @@ class StaticMigrationIntelligence:
     ) -> tuple[AttemptReview, Recommendation]:
         del context, plan, patch, execution
         return self.review_result.model_copy(deep=True), self.recommendation.model_copy(deep=True)
+
+
+def _execution_for_review(execution: SandboxExecutionResult) -> dict:
+    """Bound logs sent to the model. Failures print last, so each stream keeps its tail.
+
+    Without this, verbose checks can push the review past the input limit after the proposal was
+    already paid for. Stored evidence keeps the full logs.
+    """
+    streams = max(1, len(execution.checks) * 2)
+    per_stream = MAX_REVIEW_LOG_CHARS // streams
+    return execution.model_copy(
+        update={
+            "checks": [
+                check.model_copy(
+                    update={
+                        "stdout": check.stdout[-per_stream:],
+                        "stderr": check.stderr[-per_stream:],
+                    }
+                )
+                for check in execution.checks
+            ]
+        }
+    ).model_dump(mode="json")
 
 
 class OpenAIMigrationIntelligence:
@@ -126,7 +150,7 @@ class OpenAIMigrationIntelligence:
                     "context": context.model_dump(mode="json"),
                     "plan": plan.model_dump(mode="json"),
                     "patch": patch.model_dump(mode="json"),
-                    "execution": execution.model_dump(mode="json"),
+                    "execution": _execution_for_review(execution),
                 },
                 separators=(",", ":"),
             ),

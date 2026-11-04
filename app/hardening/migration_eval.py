@@ -16,22 +16,32 @@ import re
 import statistics
 import subprocess
 import tempfile
+import threading
 import time
 import tomllib
 import traceback
+import uuid
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
 from packaging.requirements import InvalidRequirement, Requirement
+from packaging.utils import canonicalize_name
 
 # isort: split
 # app.hardening.limits and the migration service import each other; this order resolves the cycle.
 from app.migration_generation.service import MigrationGenerationService
 
 # isort: split
-from app.control_plane.models import Guidance, NormalizedChange
+from app.control_plane.models import (
+    AttemptReview,
+    ComponentVersion,
+    Guidance,
+    NormalizedChange,
+    Recommendation,
+)
 from app.hardening.backtest import COMMENT_PREFIXES, _download
 from app.hardening.benchmark import _change
 from app.hardening.limits import BudgetExceeded, GenerationLimits
@@ -75,6 +85,19 @@ REVIEW_MAX_OUTPUT_TOKENS = 3_000
 EXPECTED_REVIEW_OUTPUT_TOKENS = 800
 PROMPT_OVERHEAD_CHARS = 1_000
 TEST_TIMEOUT_SECONDS = 240
+PER_TEST_TIMEOUT_SECONDS = 30
+# Edits carry whole files, so anything above this is truncated after the model has been paid.
+OUTPUT_CHARS_PER_TOKEN = 3.3
+OUTPUT_OVERHEAD_TOKENS = 700
+# Room the review needs beyond the context, within the client's 120 KB input limit.
+MAX_CONTEXT_BYTES_FOR_REVIEW = 85_000
+MAX_CONSECUTIVE_PAID_FAILURES = 3
+PAID_FAILURE_STAGES = {"generation_failed", "patch_rejected"}
+# Told to the model because nothing else in its context says how verification runs.
+SANDBOX_INSTRUCTIONS = (
+    "Verification runs offline with the repository's dependencies already installed. Do not "
+    "propose install or network commands. Prefer the repository's own tests."
+)
 INSTALL_TIMEOUT_SECONDS = 300
 TEST_OUTPUT_LIMIT = 2_000_000
 PYTEST_OUTCOME = re.compile(r"^(PASSED|FAILED|ERROR) (\S+)", re.MULTILINE)
@@ -222,6 +245,15 @@ def _fits_sandbox_bundle(files: dict[str, bytes]) -> bool:
     return len(files) <= MAX_BUNDLE_FILES and size <= MAX_BUNDLE_BYTES
 
 
+def _with_upgrade(requirements: list[str], upgrade: str | None) -> list[str]:
+    """Replace any existing pin of the upgraded package, since both cannot install together."""
+    if not upgrade:
+        return requirements
+    name = canonicalize_name(Requirement(upgrade).name)
+    kept = [item for item in requirements if canonicalize_name(Requirement(item).name) != name]
+    return sorted({*kept, upgrade})
+
+
 def _clean_requirement(line: str) -> str | None:
     """Accept only a named requirement; options, paths, and URLs never reach pip."""
     try:
@@ -255,7 +287,7 @@ def python_requirements(root: Path) -> list[str]:
 def prepare_image(requirements: list[str], base: str = PYTHON_IMAGE) -> tuple[str, bool]:
     """Commit an image with wheel-only dependencies. Returns the tag and whether all installed."""
     digest = hashlib.sha256(json.dumps([base, requirements]).encode()).hexdigest()[:24]
-    tag = f"delta-code-eval:{digest}"
+    tag = f"delta-code-eval:{digest}-{uuid.uuid4().hex[:8]}"
     container = IsolatedContainer(base, network="bridge")
     install = ["python", "-m", "pip", "install", "--only-binary=:all:", "--no-cache-dir",
                "--disable-pip-version-check", "--root-user-action=ignore"]
@@ -264,11 +296,14 @@ def prepare_image(requirements: list[str], base: str = PYTHON_IMAGE) -> tuple[st
         container.start()
         container.upload({})
         code, _out, _err = container.exec(
-            [*install, "pytest", *requirements], timeout_seconds=INSTALL_TIMEOUT_SECONDS
+            [*install, "pytest", "pytest-timeout", *requirements],
+            timeout_seconds=INSTALL_TIMEOUT_SECONDS,
         )
         if code != 0:
             # One unavailable wheel should not cost the rest; the outcome is recorded either way.
-            container.exec([*install, "pytest"], timeout_seconds=INSTALL_TIMEOUT_SECONDS)
+            container.exec(
+                [*install, "pytest", "pytest-timeout"], timeout_seconds=INSTALL_TIMEOUT_SECONDS
+            )
             for requirement in requirements:
                 code, _out, _err = container.exec(
                     [*install, requirement], timeout_seconds=INSTALL_TIMEOUT_SECONDS
@@ -303,7 +338,13 @@ def run_tests(image: str, files: dict[str, bytes]) -> tuple[int | None, set[str]
         container.start()
         container.upload(files)
         exit_code, stdout, _stderr = container.exec(
-            ["python", "-m", "pytest", "-q", "-rA", "--tb=no", "-p", "no:cacheprovider"],
+            [
+                "python", "-m", "pytest", "-q", "-rA", "--tb=no", "-p", "no:cacheprovider",
+                # One unimportable module or a missing plugin named in a repository's addopts
+                # must not hide every other test.
+                "--continue-on-collection-errors", "-o", "addopts=",
+                f"--timeout={PER_TEST_TIMEOUT_SECONDS}",
+            ],
             timeout_seconds=TEST_TIMEOUT_SECONDS,
             env={
                 "CI": "true",
@@ -472,9 +513,8 @@ def _run_tests_after(
     baseline: set[str],
     baseline_failed: set[str],
 ) -> None:
-    guide = GUIDES[migration["id"]]
-    extra = [guide["after_requirement"]] if guide["after_requirement"] else []
-    image, _complete = prepare_image(sorted({*python_requirements(root), *extra}))
+    upgrade = GUIDES[migration["id"]]["after_requirement"]
+    image, _complete = prepare_image(_with_upgrade(python_requirements(root), upgrade))
     try:
         exit_code, passed, failed = run_tests(image, _tree_files(root))
     finally:
@@ -494,11 +534,10 @@ def _run_human_control(
     baseline: set[str],
 ) -> None:
     """Score the developers' real migration the same way, so a regression has a reference point."""
-    guide = GUIDES[migration["id"]]
+    upgrade = GUIDES[migration["id"]]["after_requirement"]
     with tempfile.TemporaryDirectory(prefix="delta-code-eval-") as directory:
         root = _download(client, case["repository"], case["migration_sha"], Path(directory))
-        extra = [guide["after_requirement"]] if guide["after_requirement"] else []
-        image, _complete = prepare_image(sorted({*python_requirements(root), *extra}))
+        image, _complete = prepare_image(_with_upgrade(python_requirements(root), upgrade))
         try:
             _exit, passed, _failed = run_tests(image, _tree_files(root))
         finally:
@@ -516,6 +555,7 @@ def evaluate_tree(
     *,
     http: httpx.Client | None = None,
     usage=None,
+    patches_dir: Path | None = None,
 ) -> EvalResult:
     """Run one case through the production service. No intelligence means estimate only."""
     guide = GUIDES[migration["id"]]
@@ -534,6 +574,7 @@ def evaluate_tree(
         context = assemble_planning_context(
             migration_id=f"migration-{index}",
             attempt_id=f"eval-{index}",
+            developer_instructions=SANDBOX_INSTRUCTIONS,
             repository=repository,
             snapshot=snapshot,
             change=change,
@@ -551,6 +592,22 @@ def evaluate_tree(
         return result
     context_json = json.dumps(context.model_dump(mode="json"), separators=(",", ":"))
     result.context_bytes = len(context_json.encode())
+    # Each of these fails only after money is spent, so stop here and record the product limit.
+    if any(item.redaction_count for item in context.files):
+        result.stage = "contains_redacted_secret"
+        return result
+    call_site_paths = {site.path for site in impact.call_sites}
+    rewrite_chars = sum(len(item.content) for item in context.files if item.path in call_site_paths)
+    if (
+        rewrite_chars / OUTPUT_CHARS_PER_TOKEN + OUTPUT_OVERHEAD_TOKENS
+        > PROPOSE_MAX_OUTPUT_TOKENS
+    ):
+        result.stage = "output_too_large"
+        result.detail = f"{rewrite_chars} characters to rewrite"
+        return result
+    if result.context_bytes > MAX_CONTEXT_BYTES_FOR_REVIEW:
+        result.stage = "review_input_too_large"
+        return result
     result.expected_cost_usd, result.worst_case_cost_usd = _estimate(
         context_json, sum(len(item.content) for item in context.files)
     )
@@ -581,8 +638,13 @@ def evaluate_tree(
                 result.stage = "patch_rejected"
                 result.detail = str(exc)[:300]
                 return result
-            except OpenAIBudgetExceeded:
-                raise
+            except OpenAIBudgetExceeded as exc:
+                # A per-request limit fails one case; only the run's own budget ends the run.
+                if str(exc).startswith(("daily", "total")):
+                    raise
+                result.stage = "generation_failed"
+                result.detail = f"{type(exc).__name__}: {exc}"[:300]
+                return result
             except Exception as exc:
                 result.stage = "generation_failed"
                 result.detail = f"{type(exc).__name__}: {exc}"[:300]
@@ -592,6 +654,11 @@ def evaluate_tree(
                 if usage:
                     result.cost_usd = round(usage().cost_usd - spent_before, 5)
             patch_bytes = store.read(generated.patch_object_ref)
+        if patches_dir is not None:
+            # Saved before scoring: the patch is what was paid for, and scoring can still fail.
+            patches_dir.mkdir(parents=True, exist_ok=True)
+            name = hashlib.sha256(case["id"].encode()).hexdigest()[:16]
+            (patches_dir / f"{name}.json").write_bytes(patch_bytes)
         evidence = generated.evidence
         result.recommendation = evidence.recommendation.action
         statuses = {check.status for check in evidence.verification_checks}
@@ -600,13 +667,81 @@ def evaluate_tree(
         _score_patch(result, root, case, migration, change, edited)
         result.stage = "completed"
         if baseline_passed:
-            _run_tests_after(result, root, migration, baseline_passed, baseline_failed)
-            if http is not None:
-                _run_human_control(http, result, case, migration, baseline_passed)
+            try:
+                _run_tests_after(result, root, migration, baseline_passed, baseline_failed)
+                if http is not None:
+                    _run_human_control(http, result, case, migration, baseline_passed)
+            except Exception as exc:
+                result.detail = f"scoring incomplete: {type(exc).__name__}: {exc}"[:300]
     finally:
         if prepared:
             remove_image(image)
     return result
+
+
+class RehearsalModel:
+    """Free stand-in for GPT-4o: returns a no-op patch so real repositories exercise everything.
+
+    A test that regresses under a no-op patch is flaky or depends on the upgraded library, so its
+    result says nothing about the model. Knowing that before paying is the point.
+    """
+
+    def propose(self, context):
+        sites = {site.path for site in context.impact.call_sites}
+        supplied = next(item for item in context.files if item.path in sites)
+        python = supplied.path.endswith((".py", ".pyi"))
+        command = ["python", "-m", "compileall", "-q", "."] if python else ["node", "--version"]
+        return GenerationProposal.model_validate(
+            {
+                "plan": {
+                    "summary": "Rehearsal.",
+                    "steps": [
+                        {
+                            "id": "step-1",
+                            "description": "No-op edit.",
+                            "call_site_ids": [],
+                            "expected_paths": [supplied.path],
+                        }
+                    ],
+                    "verification_strategy": ["Rehearsal."],
+                    "assumptions": [],
+                    "unresolved": [],
+                },
+                "patch": {
+                    "summary": "Rehearsal.",
+                    "edits": [
+                        {
+                            "path": supplied.path,
+                            "expected_sha256": supplied.sha256,
+                            "content": supplied.content,
+                            "plan_step_ids": ["step-1"],
+                        }
+                    ],
+                    "tests": [],
+                    "verification_commands": [
+                        {"id": "rehearsal", "kind": "build", "argv": command}
+                    ],
+                    "generator": {"id": "rehearsal", "version": "1.0"},
+                },
+            }
+        )
+
+    def review(self, context, plan, patch, execution):
+        del context, plan, patch, execution
+        return (
+            AttemptReview(
+                summary="Rehearsal.",
+                findings=[],
+                provenance="model_inferred",
+                model=ComponentVersion(id="rehearsal", version="1.0"),
+            ),
+            Recommendation(
+                action="snooze",
+                rationale="Rehearsal.",
+                confidence={"score": 0, "basis": "inferred"},
+                unresolved=[],
+            ),
+        )
 
 
 def summarize(results: list[EvalResult]) -> dict:
@@ -665,68 +800,112 @@ def main() -> None:
     parser.add_argument("--max-cost", type=float, default=0.0, help="hard USD limit for this run")
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--migration", default=None)
+    parser.add_argument("--rehearsal", action="store_true", help="real repositories, no model")
+    parser.add_argument("--workers", type=int, default=1, help="rehearsal and dry-run only")
+    parser.add_argument("--resume", action="store_true", help="keep finished cases in --out")
+    parser.add_argument("--patches-dir", type=Path, default=None)
     arguments = parser.parse_args()
-    if not arguments.dry_run and arguments.max_cost <= 0:
+    free = arguments.dry_run or arguments.rehearsal
+    if not free and arguments.max_cost <= 0:
         parser.error("a real run requires --max-cost")
     document = json.loads(arguments.dataset.read_text(encoding="utf-8"))
     migrations = {item["id"]: item for item in document["migrations"]}
-    cases = [
+    selected = [
         case for case in document["cases"]
         if not arguments.migration or case["migration"] == arguments.migration
     ][: arguments.limit]
-    intelligence = None
+    finished: dict[str, EvalResult] = {}
+    if arguments.resume and arguments.out.exists():
+        for item in json.loads(arguments.out.read_text(encoding="utf-8"))["cases"]:
+            if item["stage"] not in {"harness_error", "budget_exhausted", "halted"}:
+                finished[item["id"]] = EvalResult(**item)
+    already_spent = sum(item.cost_usd for item in finished.values())
+
+    intelligence: MigrationIntelligence | None = RehearsalModel() if arguments.rehearsal else None
     usage = None
-    if not arguments.dry_run:
-        budget = ProcessBudget(arguments.max_cost, arguments.max_cost)
-        openai = OpenAIResponsesClient(budget=budget)
+    if not free:
+        # Prior spend counts, so resuming cannot exceed the cap the run was approved for.
+        remaining = arguments.max_cost - already_spent
+        if remaining <= 0:
+            parser.error("--max-cost is already spent")
+        openai = OpenAIResponsesClient(budget=ProcessBudget(remaining, remaining))
         intelligence = OpenAIMigrationIntelligence(openai)
         usage = lambda: openai.usage  # noqa: E731
-    results: list[EvalResult] = []
-    stopped = False
+
+    results: dict[str, EvalResult] = dict(finished)
+    lock = threading.Lock()
+    state = {"stop": None, "consecutive_failures": 0}
+
+    def stopped_result(case: dict, stage: str) -> EvalResult:
+        return EvalResult(
+            id=case["id"], migration=case["migration"], repository=case["repository"], stage=stage
+        )
+
+    def save() -> None:
+        ordered = [results[case["id"]] for case in selected if case["id"] in results]
+        report = {"summary": summarize(ordered), "cases": [asdict(item) for item in ordered]}
+        arguments.out.write_text(
+            json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+
+    def run_one(position: int, case: dict, http: httpx.Client) -> None:
+        if case["id"] in finished:
+            return
+        if state["stop"]:
+            with lock:
+                results[case["id"]] = stopped_result(case, state["stop"])
+                save()
+            return
+        migration = migrations[case["migration"]]
+        try:
+            with tempfile.TemporaryDirectory(prefix="delta-code-eval-") as directory:
+                root = _download(http, case["repository"], case["parent_sha"], Path(directory))
+                result = evaluate_tree(
+                    root,
+                    case,
+                    migration,
+                    position,
+                    intelligence,
+                    http=http,
+                    usage=usage,
+                    patches_dir=arguments.patches_dir,
+                )
+        except OpenAIBudgetExceeded:
+            state["stop"] = "budget_exhausted"
+            result = stopped_result(case, "budget_exhausted")
+        except Exception as exc:
+            result = stopped_result(case, "harness_error")
+            result.detail = "".join(traceback.format_exception_only(exc)).strip()[:300]
+        with lock:
+            results[case["id"]] = result
+            if not free:
+                # The same failure repeating means something is wrong; stop paying to learn it.
+                if result.stage in PAID_FAILURE_STAGES:
+                    state["consecutive_failures"] += 1
+                    if state["consecutive_failures"] >= MAX_CONSECUTIVE_PAID_FAILURES:
+                        state["stop"] = "halted"
+                elif result.stage == "completed":
+                    state["consecutive_failures"] = 0
+            save()
+        print(
+            f"[{position}/{len(selected)}] {case['id']} {result.stage} ${result.cost_usd} "
+            f"{result.detail or ''}",
+            flush=True,
+        )
+
+    workers = arguments.workers if free else 1
     with httpx.Client(timeout=httpx.Timeout(120, connect=15), follow_redirects=True) as http:
-        for index, case in enumerate(cases, start=1):
-            migration = migrations[case["migration"]]
-            if stopped:
-                results.append(
-                    EvalResult(
-                        id=case["id"],
-                        migration=case["migration"],
-                        repository=case["repository"],
-                        stage="budget_exhausted",
-                    )
-                )
-                continue
-            try:
-                with tempfile.TemporaryDirectory(prefix="delta-code-eval-") as directory:
-                    root = _download(http, case["repository"], case["parent_sha"], Path(directory))
-                    result = evaluate_tree(
-                        root, case, migration, index, intelligence, http=http, usage=usage
-                    )
-            except OpenAIBudgetExceeded:
-                stopped = True
-                result = EvalResult(
-                    id=case["id"],
-                    migration=case["migration"],
-                    repository=case["repository"],
-                    stage="budget_exhausted",
-                )
-            except Exception as exc:
-                detail = "".join(traceback.format_exception_only(exc)).strip()[:300]
-                result = EvalResult(
-                    id=case["id"],
-                    migration=case["migration"],
-                    repository=case["repository"],
-                    stage="harness_error",
-                    detail=detail,
-                )
-            results.append(result)
-            print(f"[{index}/{len(cases)}] {case['id']} {result.stage} {result.detail or ''}",
-                  flush=True)
-            report = {"summary": summarize(results), "cases": [asdict(item) for item in results]}
-            arguments.out.write_text(
-                json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-            )
-    print(json.dumps(summarize(results), indent=2, sort_keys=True))
+        with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+            futures = [
+                pool.submit(run_one, position, case, http)
+                for position, case in enumerate(selected, start=1)
+            ]
+            for future in futures:
+                future.result()
+    ordered = [results[case["id"]] for case in selected if case["id"] in results]
+    print(json.dumps(summarize(ordered), indent=2, sort_keys=True))
+    if state["stop"] == "halted":
+        print(f"halted after {MAX_CONSECUTIVE_PAID_FAILURES} paid failures in a row", flush=True)
 
 
 if __name__ == "__main__":

@@ -30,6 +30,7 @@ def _bundled(path: str, content: bytes) -> SandboxFile:
 
 def add_python_checks(
     request: SandboxExecutionRequest,
+    root: Path,
     proposal: PatchProposal,
     baseline_tests: set[str] | None,
 ) -> SandboxExecutionRequest:
@@ -41,12 +42,18 @@ def add_python_checks(
     edited = {edit.path for edit in proposal.edits}
     if not any(path.endswith(".py") for path in edited):
         return request
-    supplied = {item.path: item.content_base64 for item in request.files}
+    # Read from the repository, since secret-bearing or trimmed files aren't in the bundle.
+    originals = {
+        path: base64.b64encode((root / path).read_bytes()).decode()
+        if (root / path).is_file()
+        else None
+        for path in sorted(edited)
+    }
     files = [
         _bundled(HARNESS_SCRIPT, (Path(__file__).parent / "verify_python.py").read_bytes()),
         _bundled(
             f"{HARNESS_DIRECTORY}/originals.json",
-            json.dumps({path: supplied.get(path) for path in sorted(edited)}).encode(),
+            json.dumps(originals).encode(),
         ),
     ]
     checks = [

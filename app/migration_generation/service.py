@@ -31,6 +31,7 @@ from .policy import (
     ReplacementError,
     build_sandbox_request,
     contains_secret,
+    drop_disallowed_commands,
     normalize_repository_path,
     validate_patch,
 )
@@ -54,6 +55,7 @@ class GenerationResult:
     evidence: MigrationEvidence
     patch_object_ref: str
     attempts: int = 1
+    repair_reasons: tuple[str, ...] = ()
 
 
 def _validate_plan(context: PlanningContext, plan) -> None:
@@ -205,6 +207,7 @@ class MigrationGenerationService:
         created_at = started_at or datetime.now(UTC)
         self.limits.validate_context(context)
         attempts = 0
+        repair_reasons: list[str] = []
         prompt = context
         while True:
             attempts += 1
@@ -214,6 +217,7 @@ class MigrationGenerationService:
             except ReplacementError as exc:
                 if not can_repair:
                     raise
+                repair_reasons.append(str(exc))
                 prompt = _with_repair_feedback(context, str(exc))
                 continue
             patch_bytes, patch, execution = self._verify(
@@ -222,6 +226,7 @@ class MigrationGenerationService:
             report = regression_report(execution)
             if report is None or not can_repair:
                 break
+            repair_reasons.append(report)
             prompt = _with_repair_feedback(context, report)
         patch_object_ref = self.artifact_store.put(patch_bytes, patch.sha256)
         review, recommendation = self.intelligence.review(
@@ -275,7 +280,10 @@ class MigrationGenerationService:
             completed_at=completed_at,
         )
         return GenerationResult(
-            evidence=evidence, patch_object_ref=patch_object_ref, attempts=attempts
+            evidence=evidence,
+            patch_object_ref=patch_object_ref,
+            attempts=attempts,
+            repair_reasons=tuple(repair_reasons),
         )
 
     def _verify(
@@ -287,16 +295,17 @@ class MigrationGenerationService:
     ) -> tuple[bytes, PatchEvidence, SandboxExecutionResult]:
         self.limits.validate_proposal(proposal)
         _validate_plan(context, proposal.plan)
-        patch_bytes, patch = validate_patch(root, proposal.plan, proposal.patch)
+        proposed = drop_disallowed_commands(proposal.patch)
+        patch_bytes, patch = validate_patch(root, proposal.plan, proposed)
         request = build_sandbox_request(
             root,
             context.attempt_id,
             context.snapshot.content_digest,
             patch,
-            proposal.patch,
+            proposed,
         )
         execution = self.executor.execute(
-            add_python_checks(request, proposal.patch, baseline_tests)
+            add_python_checks(request, root, proposed, baseline_tests)
         )
         self.limits.validate_execution(execution)
         return patch_bytes, patch, execution

@@ -45,6 +45,7 @@ from app.control_plane.models import (
 from app.hardening.backtest import COMMENT_PREFIXES, _download
 from app.hardening.benchmark import _change
 from app.hardening.limits import BudgetExceeded, GenerationLimits
+from app.hardening.simulated_openai import SimulatedResponsesAPI
 from app.ingestion.storage import FilesystemArtifactStore
 from app.migration_generation.context import assemble_planning_context
 from app.migration_generation.executor import (
@@ -73,7 +74,11 @@ from app.repository_intelligence.models import (
     RepositorySnapshot,
     RepositoryWorkspace,
 )
-from app.repository_intelligence.workspace import _walk_entries, workspace_fingerprint
+from app.repository_intelligence.workspace import (
+    WorkspacePolicyError,
+    _walk_entries,
+    workspace_fingerprint,
+)
 
 PYTHON_IMAGE = "python:3.12-slim"
 NODE_IMAGE = "node:22-slim"
@@ -84,13 +89,15 @@ EXPECTED_REVIEW_OUTPUT_TOKENS = 800
 PROMPT_OVERHEAD_CHARS = 1_000
 TEST_TIMEOUT_SECONDS = 240
 PER_TEST_TIMEOUT_SECONDS = 30
-# Output tracks the call sites to rewrite, not file size. Past the cap, the answer is truncated
-# after the model has been paid.
-OUTPUT_TOKENS_PER_CALL_SITE = 80
+# Output tracks the lines to rewrite, not file size: each comes back twice, as old and new text.
+# Past the cap, the answer is truncated after the model has been paid.
+OUTPUT_CHARS_PER_TOKEN = 3.3
+OUTPUT_CHARS_PER_CALL_SITE = 100
 OUTPUT_OVERHEAD_TOKENS = 700
 # A failed check costs one more proposal. This is a guess until a run measures it.
 EXPECTED_REPAIR_RATE = 0.3
 MAX_CONSECUTIVE_PAID_FAILURES = 3
+SIMULATED_BUDGET_USD = 2.50
 PAID_FAILURE_STAGES = {"generation_failed", "patch_rejected"}
 # Told to the model because nothing else in its context says how verification runs.
 SANDBOX_INSTRUCTIONS = (
@@ -98,6 +105,8 @@ SANDBOX_INSTRUCTIONS = (
     "propose install or network commands. Prefer the repository's own tests."
 )
 INSTALL_TIMEOUT_SECONDS = 300
+# Machine-learning dependencies make images of several gigabytes.
+IMAGE_COMMIT_TIMEOUT_SECONDS = 900
 TEST_OUTPUT_LIMIT = 2_000_000
 PYTEST_OUTCOME = re.compile(r"^(PASSED|FAILED|ERROR) (\S+)", re.MULTILINE)
 MANIFEST_NAME = re.compile(r"^requirements[\w.-]*\.txt$")
@@ -152,8 +161,10 @@ GUIDES = {
             "@classmethod, and @model_validator(mode='before'|'after'). pre=True becomes "
             "mode='before'; always=True is replaced by Field(validate_default=True); the values "
             "argument becomes info: ValidationInfo with info.data. field_validator accepts only "
-            "field names, mode, and check_fields. A before model validator is a classmethod that "
-            "receives the raw input data, not a ValidationInfo. An after model validator is an "
+            "field names, mode, and check_fields, so allow_reuse is dropped and each_item needs "
+            "the item's type annotated or the list validated in a loop. A before model validator "
+            "is a classmethod that receives the raw input data, not a ValidationInfo. An after "
+            "model validator is an "
             "instance method returning self. Update the pydantic requirement to >=2."
         ),
     },
@@ -207,6 +218,7 @@ class EvalResult:
     model_check_status: str | None = None
     model_checks: list[dict] = field(default_factory=list)
     attempts: int = 0
+    repair_reasons: list[str] = field(default_factory=list)
     baseline_passed: int | None = None
     baseline_exit: int | None = None
     after_passed: int | None = None
@@ -296,7 +308,7 @@ def prepare_image(requirements: list[str], base: str = PYTHON_IMAGE) -> tuple[st
             [container.docker, "commit", container.name, tag],
             check=True,
             capture_output=True,
-            timeout=300,
+            timeout=IMAGE_COMMIT_TIMEOUT_SECONDS,
         )
     finally:
         container.destroy()
@@ -425,13 +437,24 @@ def _analyze_tree(root: Path, repository: str, sha: str, change: NormalizedChang
     return reference, snapshot, impact
 
 
-def _estimate(context_json: str, context_file_chars: int, call_sites: int) -> tuple[float, float]:
+def _expected_output_tokens(root: Path, impact) -> int:
+    lines: dict[str, list[str]] = {}
+    chars = 0
+    for site in impact.call_sites:
+        if site.path not in lines:
+            text = (root / site.path).read_text(encoding="utf-8", errors="replace")
+            lines[site.path] = text.split("\n")
+        rewritten = lines[site.path][site.start_line - 1 : site.end_line]
+        chars += sum(len(line) for line in rewritten) * 2 + OUTPUT_CHARS_PER_CALL_SITE
+    return int(chars / OUTPUT_CHARS_PER_TOKEN) + OUTPUT_OVERHEAD_TOKENS
+
+
+def _estimate(
+    context_json: str, context_file_chars: int, expected_output: int
+) -> tuple[float, float]:
     schema_chars = len(json.dumps(ModelGenerationProposal.model_json_schema()))
     propose_input = (len(context_json) + schema_chars + PROMPT_OVERHEAD_CHARS) / CHARS_PER_TOKEN
-    expected_propose_output = min(
-        call_sites * OUTPUT_TOKENS_PER_CALL_SITE + OUTPUT_OVERHEAD_TOKENS,
-        PROPOSE_MAX_OUTPUT_TOKENS,
-    )
+    expected_propose_output = min(expected_output, PROPOSE_MAX_OUTPUT_TOKENS)
     # The review gets diffs instead of whole files.
     review_input = (
         len(context_json) - context_file_chars + PROMPT_OVERHEAD_CHARS + 16_000
@@ -515,7 +538,7 @@ def _run_human_control(
     case: dict,
     migration: dict,
     baseline: set[str],
-) -> None:
+) -> set[str]:
     """Score the developers' real migration the same way, so a regression has a reference point."""
     upgrade = GUIDES[migration["id"]]["after_requirement"]
     with tempfile.TemporaryDirectory(prefix="delta-code-eval-") as directory:
@@ -527,6 +550,16 @@ def _run_human_control(
             remove_image(image)
     result.human_passed = len(passed)
     result.human_regressions = len(baseline - passed)
+    return passed
+
+
+def _save_refused(patches_dir: Path | None, case: dict, intelligence) -> None:
+    """A refused answer was still paid for, and it's the only evidence of why it was refused."""
+    answer = getattr(intelligence, "last_proposal", None)
+    if patches_dir is not None and answer is not None:
+        patches_dir.mkdir(parents=True, exist_ok=True)
+        name = hashlib.sha256(case["id"].encode()).hexdigest()[:16]
+        (patches_dir / f"{name}.refused.json").write_text(json.dumps(answer), encoding="utf-8")
 
 
 def evaluate_tree(
@@ -545,9 +578,14 @@ def evaluate_tree(
     pattern = re.compile(migration["pattern"])
     result = EvalResult(id=case["id"], migration=case["migration"], repository=case["repository"])
     change = _guided_change(migration, index)
-    repository, snapshot, impact = _analyze_tree(
-        root, case["repository"], case["parent_sha"], change, f"eval-{index}"
-    )
+    try:
+        repository, snapshot, impact = _analyze_tree(
+            root, case["repository"], case["parent_sha"], change, f"eval-{index}"
+        )
+    except WorkspacePolicyError as exc:
+        result.stage = "repository_too_large"
+        result.detail = str(exc)[:300]
+        return result
     result.flagged_sites = len(impact.call_sites)
     result.usage_before = _usage_lines(root, pattern, migration["extensions"])
     if not impact.call_sites:
@@ -581,14 +619,13 @@ def evaluate_tree(
     if any(item.redaction_count for item in context.files):
         result.stage = "contains_redacted_secret"
         return result
-    call_sites = len(impact.call_sites)
-    expected_output = call_sites * OUTPUT_TOKENS_PER_CALL_SITE + OUTPUT_OVERHEAD_TOKENS
+    expected_output = _expected_output_tokens(root, impact)
     if expected_output > PROPOSE_MAX_OUTPUT_TOKENS:
         result.stage = "output_too_large"
-        result.detail = f"{call_sites} call sites to rewrite"
+        result.detail = f"about {expected_output} tokens to rewrite"
         return result
     result.expected_cost_usd, result.worst_case_cost_usd = _estimate(
-        context_json, sum(len(item.content) for item in context.files), call_sites
+        context_json, sum(len(item.content) for item in context.files), expected_output
     )
     if intelligence is None:
         result.stage = "estimated"
@@ -609,7 +646,17 @@ def evaluate_tree(
         image, _complete = prepare_image(
             _with_upgrade(python_requirements(root), guide["after_requirement"])
         )
+    reachable_tests = baseline_passed
     try:
+        # A test the developers' own migration can't pass here says nothing about a generated
+        # patch, and treating it as a regression would pay for a pointless repair.
+        if baseline_passed and http is not None:
+            try:
+                reachable_tests = baseline_passed & _run_human_control(
+                    http, result, case, migration, baseline_passed
+                )
+            except Exception as exc:
+                result.detail = f"human control failed: {type(exc).__name__}: {exc}"[:300]
         with tempfile.TemporaryDirectory(prefix="delta-code-eval-") as artifacts:
             store = FilesystemArtifactStore(Path(artifacts))
             service = MigrationGenerationService(
@@ -618,10 +665,11 @@ def evaluate_tree(
             started = time.monotonic()
             spent_before = usage().cost_usd if usage else 0.0
             try:
-                generated = service.run(context, root, baseline_tests=baseline_passed)
+                generated = service.run(context, root, baseline_tests=reachable_tests)
             except PatchPolicyError as exc:
                 result.stage = "patch_rejected"
                 result.detail = str(exc)[:300]
+                _save_refused(patches_dir, case, intelligence)
                 return result
             except OpenAIBudgetExceeded as exc:
                 # A per-request limit fails one case; only the run's own budget ends the run.
@@ -633,6 +681,7 @@ def evaluate_tree(
             except Exception as exc:
                 result.stage = "generation_failed"
                 result.detail = f"{type(exc).__name__}: {exc}"[:300]
+                _save_refused(patches_dir, case, intelligence)
                 return result
             finally:
                 result.seconds = round(time.monotonic() - started, 1)
@@ -646,6 +695,7 @@ def evaluate_tree(
             (patches_dir / f"{name}.json").write_bytes(patch_bytes)
         evidence = generated.evidence
         result.attempts = generated.attempts
+        result.repair_reasons = [reason[:300] for reason in generated.repair_reasons]
         result.recommendation = evidence.recommendation.action
         statuses = {check.status for check in evidence.verification_checks}
         result.model_check_status = "passed" if statuses == {"passed"} else "not_passed"
@@ -665,8 +715,6 @@ def evaluate_tree(
         if baseline_passed:
             try:
                 _run_tests_after(result, root, image, baseline_passed, baseline_failed)
-                if http is not None:
-                    _run_human_control(http, result, case, migration, baseline_passed)
             except Exception as exc:
                 result.detail = f"scoring incomplete: {type(exc).__name__}: {exc}"[:300]
     finally:
@@ -770,6 +818,7 @@ def summarize(results: list[EvalResult]) -> dict:
         "old_usage_lines_after": usage_after,
         "repositories_with_passing_baseline_tests": len(tested),
         "repositories_without_test_regressions": len(no_regressions),
+        "patches_needing_a_repair": sum(1 for item in done if item.attempts > 1),
         "human_control_repositories": len(controlled),
         "human_control_without_regressions": sum(
             1 for item in controlled if item.human_regressions == 0
@@ -797,11 +846,16 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--migration", default=None)
     parser.add_argument("--rehearsal", action="store_true", help="real repositories, no model")
+    parser.add_argument(
+        "--simulate",
+        action="store_true",
+        help="the real client and pipeline against a simulated API, so nothing is spent",
+    )
     parser.add_argument("--workers", type=int, default=1, help="rehearsal and dry-run only")
     parser.add_argument("--resume", action="store_true", help="keep finished cases in --out")
     parser.add_argument("--patches-dir", type=Path, default=None)
     arguments = parser.parse_args()
-    free = arguments.dry_run or arguments.rehearsal
+    free = arguments.dry_run or arguments.rehearsal or arguments.simulate
     if not free and arguments.max_cost <= 0:
         parser.error("a real run requires --max-cost")
     document = json.loads(arguments.dataset.read_text(encoding="utf-8"))
@@ -819,6 +873,16 @@ def main() -> None:
 
     intelligence: MigrationIntelligence | None = RehearsalModel() if arguments.rehearsal else None
     usage = None
+    if arguments.simulate:
+        limit = arguments.max_cost or SIMULATED_BUDGET_USD
+        simulator = SimulatedResponsesAPI(document)
+        openai = OpenAIResponsesClient(
+            api_key="simulated",
+            client=httpx.Client(transport=httpx.MockTransport(simulator.handle)),
+            budget=ProcessBudget(limit, limit),
+        )
+        intelligence = OpenAIMigrationIntelligence(openai)
+        usage = lambda: openai.usage  # noqa: E731
     if not free:
         # Prior spend counts, so resuming cannot exceed the cap the run was approved for.
         remaining = arguments.max_cost - already_spent

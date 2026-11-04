@@ -23,6 +23,7 @@ from .models import (
     SandboxFile,
     StructuredEdit,
     TextReplacement,
+    VerificationCommand,
 )
 
 MAX_BUNDLE_FILES = 1000
@@ -157,21 +158,44 @@ def validate_argv(argv: list[str]) -> list[str]:
     return argv
 
 
+def _replacement_pattern(old_text: str, *, tolerant: bool) -> re.Pattern[str]:
+    """Match whole tokens, so replacing np.float cannot rewrite np.float64."""
+    if tolerant:
+        lines = (re.escape(line.rstrip(" \t\r")) for line in old_text.split("\n"))
+        body = r"[ \t]*\r?\n".join(lines)
+    else:
+        body = re.escape(old_text)
+    prefix = r"(?<!\w)" if re.match(r"\w", old_text[0]) else ""
+    suffix = r"(?!\w)" if re.match(r"\w", old_text[-1]) else ""
+    return re.compile(f"{prefix}{body}{suffix}")
+
+
 def _apply_replacements(path: str, text: str, replacements: list[TextReplacement]) -> str:
     for replacement in replacements:
-        old_text, new_text = replacement.old_text, replacement.new_text
-        if not old_text:
+        if not replacement.old_text:
             raise ReplacementError(f"replacement for {path} has no text to match")
-        matches = text.count(old_text)
-        if not matches and "\r\n" in text:
-            old_text = old_text.replace("\n", "\r\n")
-            new_text = new_text.replace("\n", "\r\n")
-            matches = text.count(old_text)
+        # Models often normalize line endings and trailing spaces, which change nothing that runs.
+        for tolerant in (False, True):
+            pattern = _replacement_pattern(replacement.old_text, tolerant=tolerant)
+            matches = len(pattern.findall(text))
+            if matches:
+                break
         if not matches:
             raise ReplacementError(f"replacement text was not found in {path}")
         if matches > 1 and not replacement.replace_all:
-            raise ReplacementError(f"replacement text matches {matches} places in {path}")
-        text = text.replace(old_text, new_text)
+            # A whole line copied from the file can also appear inside longer lines.
+            whole_lines = re.compile(rf"(?m)^{pattern.pattern}(?=\r?$)")
+            if len(whole_lines.findall(text)) == 1:
+                pattern, matches = whole_lines, 1
+            else:
+                raise ReplacementError(
+                    f"replacement text matches {matches} places in {path}; include more "
+                    "surrounding lines, or set replace_all if every match should change"
+                )
+        new_text = replacement.new_text
+        if "\r\n" in text:
+            new_text = new_text.replace("\r\n", "\n").replace("\n", "\r\n")
+        text = pattern.sub(lambda _match, value=new_text: value, text)
     return text
 
 
@@ -219,6 +243,21 @@ def materialize_proposal(
             generator=generator,
         ),
     )
+
+
+def drop_disallowed_commands(proposal: PatchProposal) -> PatchProposal:
+    """A disallowed command is simply never run. It shouldn't cost a patch already paid for."""
+    allowed = []
+    for command in proposal.verification_commands:
+        try:
+            validate_argv(command.argv)
+        except PatchPolicyError:
+            continue
+        allowed.append(command)
+    if len(allowed) == len(proposal.verification_commands):
+        return proposal
+    fallback = VerificationCommand(id="version", kind="other", argv=["python", "--version"])
+    return proposal.model_copy(update={"verification_commands": allowed or [fallback]})
 
 
 def validate_patch(

@@ -14,6 +14,7 @@ from app.control_plane.models import (
     ImpactEvidence,
     MigrationPlan,
     NormalizedChange,
+    PatchEvidence,
     Recommendation,
 )
 from app.ingestion.storage import FilesystemArtifactStore
@@ -48,6 +49,7 @@ from app.migration_generation.policy import (
     validate_patch,
 )
 from app.migration_generation.service import MigrationGenerationService, _guard_recommendation
+from app.migration_generation.verification import add_python_checks
 from app.openai_responses import strict_json_schema
 from app.repository_intelligence.models import RepositoryRef, RepositorySnapshot
 
@@ -430,6 +432,78 @@ def test_replacements_apply_in_order(tmp_path: Path):
     assert proposal.patch.edits[0].content == "client.send_v2(2)\n"
 
 
+def test_replacement_cannot_rewrite_a_longer_name(tmp_path: Path):
+    source = "a = np.float(1)\nb = np.float64(1)\nc = np.float_(1)\nd = np.floating\n"
+    (tmp_path / "app.py").write_text(source)
+
+    proposal = materialize_proposal(
+        _context(tmp_path),
+        _model_proposal({"old_text": "np.float", "new_text": "float", "replace_all": True}),
+        GENERATOR,
+    )
+
+    assert proposal.patch.edits[0].content == source.replace("np.float(", "float(")
+
+
+def test_whole_line_copy_is_not_ambiguous_with_longer_lines(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = run(1)\nif a:\n    x = run(1)\nend = x = run(1)\n")
+
+    proposal = materialize_proposal(
+        _context(tmp_path),
+        _model_proposal({"old_text": "x = run(1)", "new_text": "x = go(1)"}),
+        GENERATOR,
+    )
+
+    assert proposal.patch.edits[0].content == "x = go(1)\nif a:\n    x = run(1)\nend = x = run(1)\n"
+
+
+def test_ambiguous_text_tells_the_model_how_to_fix_it(tmp_path: Path):
+    (tmp_path / "app.py").write_text("x = run(1)\nx = run(1)\n")
+
+    with pytest.raises(ReplacementError, match="include more surrounding lines"):
+        materialize_proposal(
+            _context(tmp_path),
+            _model_proposal({"old_text": "x = run(1)", "new_text": "x = go(1)"}),
+            GENERATOR,
+        )
+
+
+def test_replacement_ignores_differences_in_trailing_spaces(tmp_path: Path):
+    (tmp_path / "app.py").write_text("first = 1   \nclient.send(1)\t\nend = 1\n")
+
+    proposal = materialize_proposal(
+        _context(tmp_path),
+        _model_proposal({"old_text": "first = 1\nclient.send(1)  ", "new_text": "changed = 2"}),
+        GENERATOR,
+    )
+
+    assert proposal.patch.edits[0].content == "changed = 2\t\nend = 1\n"
+
+
+def test_replacement_text_is_inserted_literally(tmp_path: Path):
+    (tmp_path / "app.py").write_text("client.send(1)\n")
+
+    proposal = materialize_proposal(
+        _context(tmp_path),
+        _model_proposal({"old_text": "client.send(1)", "new_text": r"path = '\1\g<0>\n'"}),
+        GENERATOR,
+    )
+
+    assert proposal.patch.edits[0].content == "path = '\\1\\g<0>\\n'\n"
+
+
+def test_added_lines_follow_the_files_line_endings(tmp_path: Path):
+    (tmp_path / "app.py").write_bytes(b"import a\r\nclient.send(1)\r\n")
+
+    proposal = materialize_proposal(
+        _context(tmp_path),
+        _model_proposal({"old_text": "import a", "new_text": "import a\nimport b"}),
+        GENERATOR,
+    )
+
+    assert proposal.patch.edits[0].content == "import a\r\nimport b\r\nclient.send(1)\r\n"
+
+
 def test_replacement_keeps_windows_line_endings(tmp_path: Path):
     (tmp_path / "app.py").write_bytes(b"import a\r\nclient.send(1)\r\nend = 1\r\n")
 
@@ -536,6 +610,13 @@ def test_large_file_is_windowed_around_call_sites_and_restored_exactly(tmp_path:
 
     assert proposal.patch.edits[0].content == source.replace("client.send(1)", "client.send_v2(1)")
     validate_patch(tmp_path, proposal.plan, proposal.patch)
+
+
+def test_files_too_large_to_return_are_refused_before_any_spend(tmp_path: Path):
+    (tmp_path / "app.py").write_text(_large_source(2000, total=30_000))
+
+    with pytest.raises(PatchPolicyError, match="too large to patch"):
+        _context_with(tmp_path, _impact_at(2000))
 
 
 def test_small_file_is_sent_whole(tmp_path: Path):
@@ -703,6 +784,63 @@ def test_python_patch_runs_delta_code_checks_instead_of_the_models(tmp_path: Pat
     assert base64.b64decode(originals["app.py"]) == b"client.send(1)\n"
     assert result.attempts == 1
     assert result.evidence.recommendation.action == "approve"
+
+
+def test_disallowed_model_command_is_dropped_instead_of_wasting_the_patch(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "app.js").write_text("client.send(1)\n")
+    (root / "app.py").write_text("client.send(1)\n")
+    executor = ScriptedExecutor({})
+
+    class BadCommandModel(RecordingModel):
+        def propose(self, context):
+            proposal = super().propose(context)
+            patch = proposal.patch.model_copy(
+                update={
+                    "verification_commands": [
+                        {"id": "bad", "kind": "unit_test", "argv": ["./run_tests.sh"]}
+                    ]
+                }
+            )
+            return GenerationProposal.model_validate(
+                {"plan": proposal.plan.model_dump(), "patch": patch.model_dump()}
+            )
+
+    result = _service(tmp_path, BadCommandModel(tmp_path, "client.send_v2(1)\n"), executor).run(
+        _context(root), root
+    )
+
+    assert result.attempts == 1
+    assert "./run_tests.sh" not in str(executor.requests[0].checks)
+
+
+def test_import_check_compares_with_files_left_out_of_the_bundle(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "app.py").write_text('client.send(1)\ntoken = "abcdefghijklmnop"\n')
+    context = _context(root)
+    (root / "app.py").write_text('client.send(1)\ntoken = "abcdefghijklmnop"\n')
+    proposal = _proposal("client.send_v2(1)\n", context.files[0].sha256)
+    request = build_sandbox_request(
+        root,
+        "attempt-1",
+        "sha256:" + "0" * 64,
+        PatchEvidence(
+            artifact_id="patch-1",
+            sha256="1" * 64,
+            summary="Patch",
+            files=[{"path": "app.py", "change_type": "modified", "plan_step_ids": ["step-1"]}],
+        ),
+        proposal,
+    )
+    assert "app.py" not in {item.path for item in request.files}
+
+    checked = add_python_checks(request, root, proposal, None)
+
+    bundled = {item.path: item for item in checked.files}
+    originals = json.loads(base64.b64decode(bundled[".delta-code/originals.json"].content_base64))
+    assert originals["app.py"] is not None
 
 
 def test_no_baseline_means_no_test_check_and_no_approval(tmp_path: Path):

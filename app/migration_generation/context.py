@@ -17,6 +17,8 @@ MAX_CONTEXT_BYTES = 70_000
 MAX_CONTEXT_FILE_BYTES = 64_000
 MAX_CHANGE_VALUE_BYTES = 20_000
 # A file too large to send whole keeps its imports and the code around each call site.
+# Windowed files still come back whole, and an answer over the proposal limit fails after payment.
+MAX_EDITABLE_BYTES = 900_000
 WINDOW_HEAD_LINES = 30
 WINDOW_MARGIN_LINES = 15
 # Generated files: too large to send, and a tool rebuilds them rather than a model editing them.
@@ -97,6 +99,8 @@ def _redact_value(value: Any) -> Any:
 def _fit_files(files: list[ContextFile], sites_by_path: dict[str, list[CallSite]]) -> None:
     """Window the largest files until the context fits. Everything else stays whole."""
     total = sum(len(item.content.encode()) for item in files)
+    if total > MAX_EDITABLE_BYTES:
+        raise PatchPolicyError("impact files are too large to patch")
     for item in sorted(files, key=lambda file: len(file.content.encode()), reverse=True):
         size = len(item.content.encode())
         if size <= MAX_CONTEXT_FILE_BYTES and total <= MAX_CONTEXT_BYTES:

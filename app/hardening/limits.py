@@ -29,7 +29,7 @@ def _bounded_env(name: str, default: int, *, minimum: int, maximum: int) -> int:
 @dataclass(frozen=True)
 class GenerationLimits:
     max_context_bytes: int = 100_000
-    max_proposal_bytes: int = 250_000
+    max_proposal_bytes: int = 1_000_000
     max_total_check_timeout_ms: int = 600_000
     max_sandbox_duration_ms: int = 600_000
 
@@ -40,7 +40,7 @@ class GenerationLimits:
                 "GENERATION_MAX_CONTEXT_BYTES", 100_000, minimum=10_000, maximum=1_000_000
             ),
             max_proposal_bytes=_bounded_env(
-                "GENERATION_MAX_PROPOSAL_BYTES", 250_000, minimum=10_000, maximum=1_000_000
+                "GENERATION_MAX_PROPOSAL_BYTES", 1_000_000, minimum=10_000, maximum=1_000_000
             ),
             max_total_check_timeout_ms=_bounded_env(
                 "GENERATION_MAX_CHECK_TIMEOUT_MS", 600_000, minimum=1_000, maximum=1_200_000

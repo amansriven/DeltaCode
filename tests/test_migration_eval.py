@@ -156,10 +156,11 @@ def test_an_upgrade_replaces_the_old_pin_instead_of_conflicting_with_it():
     assert migration_eval._with_upgrade(["requests>=2"], None) == ["requests>=2"]
 
 
-def test_too_many_call_sites_stop_before_any_spend(monkeypatch, tmp_path):
+def test_too_much_to_rewrite_stops_before_any_spend(monkeypatch, tmp_path):
     monkeypatch.setitem(migration_eval.GUIDES, "fixture", GUIDE)
     root = _repository(tmp_path)
-    (root / "app.py").write_text(APP + "    Client().send(2)\n" * 80)
+    long_call = "    Client().send('" + "x" * 500 + "')\n"
+    (root / "app.py").write_text(APP + long_call * 40)
 
     result = evaluate_tree(root, CASE, MIGRATION, 1, ScriptedModel("unused"))
 

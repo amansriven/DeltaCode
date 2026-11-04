@@ -107,6 +107,8 @@ class OpenAIMigrationIntelligence:
         self.client = client or OpenAIResponsesClient()
         if not self.client.available:
             raise ValueError("OPENAI_API_KEY is required for migration intelligence")
+        # What the model last answered, so a refused answer that was paid for can be audited.
+        self.last_proposal: dict | None = None
 
     @property
     def usage(self):
@@ -140,6 +142,7 @@ class OpenAIMigrationIntelligence:
             schema=ModelGenerationProposal.model_json_schema(),
             max_output_tokens=6_000,
         )
+        self.last_proposal = payload
         return materialize_proposal(
             context,
             ModelGenerationProposal.model_validate(payload),

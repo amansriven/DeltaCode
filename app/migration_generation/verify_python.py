@@ -15,12 +15,18 @@ import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 STATE = Path(".delta-code")
 PROBE_SECONDS = 20
+# Inside the sandbox's 120-second command limit, so a slow repository gets a verdict on what ran.
+IMPORT_CHECK_SECONDS = 100
 TEST_SECONDS = 105
-PER_TEST_SECONDS = 15
+# The same limit the baseline ran under, or a slow test would look like a regression.
+PER_TEST_SECONDS = 30
+MAX_FAILURE_LOG_CHARS = 3000
+MAX_REPORTED_TESTS = 10
 NO_VERDICT = 3
 # 0 and 1 mean tests ran. 5 means none were collected, which is what losing them all looks like.
 PYTEST_RAN = {0, 1, 5}
@@ -119,7 +125,7 @@ def _probe(path: str) -> None:
     sys.path[:0] = [os.getcwd(), f"{os.getcwd()}/src", str(Path(path).parent)]
     outcome: dict = {"import": "ok", "signatures": []}
     try:
-        outcome["signatures"] = _signature_errors(Path(path).read_text())
+        outcome["signatures"] = _signature_errors(Path(path).read_text(encoding="utf-8"))
     except (SyntaxError, ValueError) as exc:
         outcome["import"] = f"does not parse: {exc}"
     module = path.removesuffix(".py").removesuffix("/__init__")
@@ -134,7 +140,10 @@ def _probe(path: str) -> None:
     print("DELTA-CODE-PROBE " + json.dumps(outcome))
 
 
-def _run_probe(path: str) -> dict | None:
+def _run_probe(path: str, deadline: float) -> dict | None:
+    remaining = deadline - time.monotonic()
+    if remaining <= 1:
+        return None
     try:
         completed = subprocess.run(
             [sys.executable, __file__, "probe", path],
@@ -142,7 +151,7 @@ def _run_probe(path: str) -> dict | None:
             text=True,
             errors="replace",
             stdin=subprocess.DEVNULL,
-            timeout=PROBE_SECONDS,
+            timeout=min(PROBE_SECONDS, remaining),
             env=_environment(),
         )
     except subprocess.TimeoutExpired:
@@ -157,16 +166,24 @@ def _check_imports() -> int:
     originals = json.loads((STATE / "originals.json").read_text())
     patched = {path: Path(path).read_bytes() for path in originals}
     paths = [path for path in sorted(originals) if path.endswith(".py")]
-    after = {path: _run_probe(path) for path in paths}
-    for path, encoded in originals.items():
-        if encoded is None:
-            Path(path).unlink()
-        else:
-            Path(path).write_bytes(base64.b64decode(encoded))
+    deadline = time.monotonic() + IMPORT_CHECK_SECONDS
+    # Half for each side: a verdict needs both, so finishing one alone would be wasted.
+    halfway = time.monotonic() + IMPORT_CHECK_SECONDS / 2
+    after = {path: _run_probe(path, halfway) for path in paths}
     clean = {"import": "ok", "signatures": []}
-    before = {path: _run_probe(path) if originals[path] else clean for path in paths}
-    for path, content in patched.items():
-        Path(path).write_bytes(content)
+    try:
+        for path, encoded in originals.items():
+            if encoded is None:
+                Path(path).unlink()
+            else:
+                Path(path).write_bytes(base64.b64decode(encoded))
+        before = {
+            path: _run_probe(path, deadline) if originals[path] is not None else clean
+            for path in paths
+        }
+    finally:
+        for path, content in patched.items():
+            Path(path).write_bytes(content)
     regressions = []
     for path in paths:
         new, old = after[path], before[path]
@@ -178,7 +195,8 @@ def _check_imports() -> int:
             regressions.append(f"{path} calls {error}")
     for regression in regressions:
         print(f"REGRESSION {regression}")
-    print(f"Checked {len(paths)} edited Python files.")
+    compared = sum(1 for path in paths if after[path] is not None and before[path] is not None)
+    print(f"Compared {compared} of {len(paths)} edited Python files.")
     return 1 if regressions else 0
 
 
@@ -209,10 +227,12 @@ def _check_tests() -> int:
         print(f"pytest stopped with exit code {completed.returncode}, so there is no verdict.")
         return NO_VERDICT
     regressions = sorted(baseline - set(PASSED_TEST.findall(completed.stdout)))
-    for test in regressions[:30]:
+    for test in regressions[:MAX_REPORTED_TESTS]:
         print(f"REGRESSION {test} passed before the patch and does not now")
     if regressions:
-        print(completed.stdout[:6000])
+        # Failure details sit before pytest's long list of passing tests, not at either end.
+        start = max(completed.stdout.find("= FAILURES ="), completed.stdout.find("= ERRORS ="), 0)
+        print(completed.stdout[start:][:MAX_FAILURE_LOG_CHARS])
         return 1
     print(f"All {len(baseline)} tests that passed before the patch still pass.")
     return 0

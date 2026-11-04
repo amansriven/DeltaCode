@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import logging
 from typing import Protocol
 
 from pydantic import ValidationError
@@ -11,6 +12,8 @@ from app.ingestion.adapters import AdapterError, SourceAdapter
 from app.ingestion.collector import CollectionError, HTTPSCollector
 from app.ingestion.models import CapturedArtifact, IngestionResult, ProviderSource
 from app.ingestion.storage import ArtifactStore
+
+logger = logging.getLogger(__name__)
 
 
 class IngestionRepository(Protocol):
@@ -93,9 +96,18 @@ class IngestionService:
                 self.repository.record_failure(source, exc.code)
             raise
 
-        previous_input = (
-            (previous, self.artifact_store.read(previous.object_ref)) if previous else None
-        )
+        previous_input = None
+        if previous:
+            try:
+                previous_input = (previous, self.artifact_store.read(previous.object_ref))
+            except FileNotFoundError:
+                # Without its bytes no diff is possible, and failing here would repeat on every
+                # later change. Start a new baseline; this one change cannot be detected.
+                logger.warning(
+                    "baseline artifact %s is missing for source %s; starting a new baseline",
+                    previous.id,
+                    source.id,
+                )
         current_input = (captured, self.artifact_store.read(captured.object_ref))
         try:
             changes = adapter.normalize(source, previous_input, current_input)

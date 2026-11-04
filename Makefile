@@ -12,7 +12,7 @@ VERCEL_SCOPE ?=
 
 .PHONY: help setup backend-setup frontend-setup frontend-env sandbox-setup \
 	db-up db-down db-logs db-schema api worker frontend-dev frontend-start \
-	lint test test-backend test-frontend test-sandbox benchmark build health health-live \
+	lint test test-backend test-postgres test-frontend test-sandbox benchmark build health health-live \
 	deploy deploy-backend deploy-web deploy-worker deploy-frontend
 
 help:
@@ -27,6 +27,7 @@ help:
 	@echo "  make lint              Lint backend and frontend"
 	@echo "  make test              Run every backend and frontend check"
 	@echo "  make test-sandbox      Type-check and test the Sandbox Worker"
+	@echo "  make test-postgres     Run SQL tests against a disposable PostgreSQL container"
 	@echo "  make benchmark         Run the labeled repository-impact release gate"
 	@echo "  make build             Build the production frontend"
 	@echo "  make health            Check the local backend health endpoint"
@@ -95,6 +96,15 @@ test: lint test-backend test-frontend test-sandbox benchmark
 
 test-backend:
 	$(PYTHON) -m pytest -q
+
+test-postgres:
+	docker run --rm -d --name delta-code-test-postgres -e POSTGRES_USER=deltacode \
+		-e POSTGRES_PASSWORD=deltacode -e POSTGRES_DB=deltacode -p 127.0.0.1:55432:5432 \
+		postgres:16-alpine
+	@trap 'docker stop delta-code-test-postgres >/dev/null' EXIT; \
+	until docker exec delta-code-test-postgres pg_isready -U deltacode -d deltacode -h 127.0.0.1 >/dev/null 2>&1; do sleep 1; done; \
+	TEST_DATABASE_URL=postgresql://deltacode:deltacode@127.0.0.1:55432/deltacode \
+		$(PYTHON) -m pytest -q tests/test_ingestion_postgres.py
 
 test-frontend:
 	cd frontend && npm test

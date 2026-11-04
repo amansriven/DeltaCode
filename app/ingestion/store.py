@@ -225,8 +225,8 @@ class PostgresIngestionRepository:
                 conn.execute(
                     """UPDATE provider_sources SET status = %s,
                        data = data || jsonb_build_object(
-                         'status', %s, 'consecutive_failures', %s,
-                         'last_attempt_at', %s::timestamptz, 'last_error_code', %s
+                         'status', %s::text, 'consecutive_failures', %s::int,
+                         'last_attempt_at', %s::timestamptz, 'last_error_code', %s::text
                        ) WHERE workspace_id = %s AND id = %s""",
                     (status, status, failures, now, code, source.workspace_id, source.id),
                 )
@@ -267,7 +267,7 @@ def _refresh_provider_health(conn, workspace_id: str, provider_id: str) -> None:
     conn.execute(
         """UPDATE providers SET status = %s,
            data = data || jsonb_build_object(
-             'status', %s, 'source_count', %s, 'last_synced_at', %s::timestamptz,
+             'status', %s::text, 'source_count', %s::int, 'last_synced_at', %s::timestamptz,
              'updated_at', %s::timestamptz
            ),
            updated_at = %s WHERE workspace_id = %s AND id = %s""",
@@ -469,6 +469,15 @@ def list_sources(
     page = rows[:limit]
     next_cursor = _encode_cursor(page[-1][2], page[-1][0]) if len(rows) > limit else None
     return [row[1] for row in page], next_cursor
+
+
+def list_enabled_sources() -> list[tuple[str, str]]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            """SELECT workspace_id, id FROM provider_sources
+               WHERE enabled ORDER BY workspace_id, id"""
+        ).fetchall()
+    return [(row[0], row[1]) for row in rows]
 
 
 def queue_source_sync(

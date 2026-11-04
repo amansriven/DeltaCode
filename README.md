@@ -90,7 +90,8 @@ as official for a provider are accepted. Every capture is content-addressed,
 deduplicated, and normalized into a provider-independent
 [change contract](docs/architecture/schemas/normalized-change.schema.json)
 with full provenance. A per-source health view shows which feeds are healthy,
-degraded, failing, or never synced.
+degraded, failing, or never synced. The worker sweeps every enabled source hourly, and a
+repeated tick cannot queue a second sync.
 
 ### Trace the blast radius
 

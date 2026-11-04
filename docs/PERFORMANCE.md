@@ -12,8 +12,9 @@ These results describe the code in this repository, not the deployed service.
 | Migrated repositories marked affected with no call site left | 0 of 50 | Same run |
 | Analysis time per repository | 55 ms median, 3.5 s maximum (up to 1,911 files) | Same run, on a developer laptop |
 | Correct GPT-4o migration patches, by diff review | **61%** (19 of 31 repositories) | [Grades](../benchmarks/migration-eval-holdout-review.json) |
-| Generation cost | $0.04 median per repository, $1.44 total | [Results](../benchmarks/migration-eval-holdout.json) |
-| Automated tests | 282 passing, plus 3 run only against PostgreSQL | See [Tests](#tests) |
+| Same review after two fixes, on different repositories | **74%** (14 of 19 repositories) | [Grades](../benchmarks/migration-eval-tuning-review.json) |
+| Generation cost | About $0.04 median per repository | [First run](../benchmarks/migration-eval-holdout.json), [second run](../benchmarks/migration-eval-tuning.json) |
+| Automated tests | 292 passing, plus 3 run only against PostgreSQL | See [Tests](#tests) |
 
 ## Real-migration backtest
 
@@ -123,18 +124,53 @@ the API and damages nothing else, so correct does not mean proven in production.
 
 Tests could not settle this. Only 4 of the 30 had tests passing offline before the patch, and in all
 4 the developers' own migration also failed some of those tests in this environment. The model
-recommended approval once and revision 29 times. Its verification logs were not kept, so that split
-cannot be explained from this run.
+recommended approval once and revision 29 times. The retest below shows why that happens.
 
-### Known defects this exposed
+### Fixes and retest
 
-- **Non-ASCII text is at risk.** Six patches touched files containing non-ASCII text, and five of
-  them lost all of it. Prompts encode those characters as `\uXXXX` escapes, which is the suspected
-  cause. This has not been tested.
-- **Nothing rejects a patch that shrinks a file.** Whole-file edits let a partial answer replace a
-  complete file.
+The first run led to two fixes:
+
+- **Prompt encoding.** Prompts sent non-ASCII text as `\uXXXX` escapes, and five of the six patches
+  touching such files lost all of it. A controlled test sent one file with 44 non-ASCII characters
+  three times each way. Escaped prompts kept 0, 40, and 0 characters and never returned the exact
+  patch. Raw Unicode kept all 44 and returned the exact patch every time.
+- **Lost code.** Patches now fail policy if they remove more than 15% of a file and more than 20
+  lines, and the prompt says that each edit replaces the whole file.
+
+The retest ran on the 54 tuning repositories, which had never gone through generation. The analyzer
+had been tuned on them, but neither fix was developed from them. 19 reached the model.
+
+| Migration | First run (31 repositories) | Retest (19 different repositories) |
+| --- | --- | --- |
+| React 18 root API | 8 / 8 | 5 / 6 |
+| NumPy 1.24 removed aliases | 4 / 5 | 1 / 1 |
+| Selenium 4 locators | 5 / 7 | 4 / 4 |
+| OpenAI Python 1.0 | 2 / 9 | 2 / 5 |
+| Pydantic 2 validators | 0 / 2 | 2 / 3 |
+| **Total** | **19 / 31 (61%)** | **14 / 19 (74%)** |
+
+The repositories and migration mix differ, and the samples are small, so this does not prove how much
+the fixes raised accuracy. The defect categories are clearer. Patches losing large parts of a file
+went from 4 to 0, and corrupted characters from five patches to none, though two patches deleted
+comments containing non-ASCII text. The 15% limit never fired, so the lost-code result cannot be
+credited to it alone.
+
+Of the 5 retest misses, 4 misused the API or test setup, and 1 was refused as credential-like. That
+proposal was not saved, so whether the refusal was correct is unknown.
+
+Four retest repositories had usable tests, and they agreed with the review each time: the two with no
+regressions were graded correct, and the two with regressions were graded defective.
+
+### Remaining limits
+
+- **The model guesses verification commands.** In the retest, 17 of 18 first checks failed, mostly
+  because a guessed path such as `tests` did not exist, or because JavaScript tools were not installed.
+  So the model recommended revision on 17 of 18 patches, including most correct ones. Its
+  recommendation is not currently a useful quality signal, and the repository's real test command
+  should be detected rather than guessed.
 - **Large files cannot be migrated.** Edits must fit in 6,000 output tokens, so files above roughly
   17 KB are skipped. Sending targeted edits instead of whole files would remove this limit.
+- **Refused proposals are not saved**, which makes a refusal impossible to audit afterward.
 
 ## Synthetic benchmarks
 
@@ -155,7 +191,7 @@ unsupported.
 
 | Suite | Tests | Notes |
 | --- | --- | --- |
-| Backend | 272 | Includes real Docker isolation tests, skipped when Docker is not running |
+| Backend | 282 | Includes real Docker isolation tests, skipped when Docker is not running |
 | PostgreSQL | 3 | Skipped without `TEST_DATABASE_URL`; run by `make test-postgres` and CI |
 | Frontend | 6 | Server-rendered routes and identity |
 | Sandbox worker | 4 | Path, argument, quoting, and log-redaction policy |

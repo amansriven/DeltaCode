@@ -21,3 +21,6 @@ frontend/.DS_Store
 sandbox-worker/node_modules/
 sandbox-worker/dist/
 sandbox-worker/.dev.vars
+
+# Test coverage data
+.coverage

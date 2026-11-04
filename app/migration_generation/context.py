@@ -15,6 +15,17 @@ MAX_CONTEXT_FILES = 20
 MAX_CONTEXT_BYTES = 70_000
 MAX_CONTEXT_FILE_BYTES = 64_000
 MAX_CHANGE_VALUE_BYTES = 20_000
+# Generated files: too large to send, and a tool rebuilds them rather than a model editing them.
+LOCKFILE_NAMES = {
+    "package-lock.json",
+    "npm-shrinkwrap.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "bun.lock",
+    "poetry.lock",
+    "uv.lock",
+    "Pipfile.lock",
+}
 
 
 def _redact(value: str) -> tuple[str, int]:
@@ -75,6 +86,7 @@ def assemble_planning_context(
             dependency.source_path
             for dependency in impact.dependency_matches
             if dependency.source_path
+            and Path(dependency.source_path).name not in LOCKFILE_NAMES
         ],
     }
     paths = sorted({normalize_repository_path(path) for path in evidence_paths})

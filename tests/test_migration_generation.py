@@ -31,7 +31,7 @@ from app.migration_generation.policy import (
     normalize_repository_path,
     validate_patch,
 )
-from app.migration_generation.service import MigrationGenerationService
+from app.migration_generation.service import MigrationGenerationService, _guard_recommendation
 from app.repository_intelligence.models import RepositoryRef, RepositorySnapshot
 
 
@@ -188,6 +188,90 @@ def test_context_only_includes_affected_files_and_redacts_secrets(tmp_path: Path
     assert context.change.before == {"api_key": "[REDACTED]"}
     assert context.previous_attempt_id == "attempt-0"
     assert context.developer_instructions == "Update the internal wrapper first."
+
+
+def test_context_leaves_out_generated_lockfiles_but_keeps_the_manifest(tmp_path: Path):
+    (tmp_path / "package.json").write_text('{"dependencies": {"example-sdk": "1.0.0"}}')
+    (tmp_path / "package-lock.json").write_text("x" * 700_000)
+    impact_payload = _impact().model_dump(mode="json")
+    impact_payload["call_sites"] = []
+    impact_payload["dependency_matches"] = [
+        {
+            "ecosystem": "npm",
+            "package": "example-sdk",
+            "resolved_version": "1.0.0",
+            "source_path": path,
+            "detection_method": method,
+            "evidence": "Declared provider dependency.",
+        }
+        for path, method in (("package.json", "manifest"), ("package-lock.json", "lockfile"))
+    ]
+
+    context = assemble_planning_context(
+        migration_id="migration-1",
+        attempt_id="attempt-1",
+        repository=_repository(),
+        snapshot=_snapshot(),
+        change=_change(),
+        impact=ImpactEvidence.model_validate(impact_payload),
+        root=tmp_path,
+    )
+
+    assert [item.path for item in context.files] == ["package.json"]
+
+
+def _guard_execution(*checks) -> SandboxExecutionResult:
+    return SandboxExecutionResult(
+        attempt_id="attempt-1",
+        status="passed",
+        checks=[
+            {"id": f"check-{index}", "kind": kind, "status": "passed", "command": command,
+             "exit_code": 0, "duration_ms": 1}
+            for index, (kind, command) in enumerate(checks)
+        ],
+        executor={"id": "local-docker", "version": "1.0.0"},
+        duration_ms=1,
+        network_policy="deny_all",
+        destroyed=True,
+    )
+
+
+def _approve() -> Recommendation:
+    return Recommendation(
+        action="approve",
+        rationale="All checks passed.",
+        confidence={"score": 1, "basis": "inferred"},
+        unresolved=[],
+    )
+
+
+@pytest.mark.parametrize(
+    "checks",
+    [
+        [("other", "python --version")],
+        [("unit_test", "python --version")],
+        [("unit_test", "pytest --help")],
+        [("lint", "ruff check .")],
+        [("format", "ruff format --check .")],
+    ],
+)
+def test_checks_that_cannot_fail_on_the_patch_do_not_earn_approval(checks):
+    guarded = _guard_recommendation(_approve(), _guard_execution(*checks))
+
+    assert guarded.action == "revise"
+    assert "no check exercised" in guarded.rationale
+
+
+@pytest.mark.parametrize(
+    "checks",
+    [
+        [("unit_test", "pytest -q")],
+        [("lint", "ruff check ."), ("type_check", "mypy app")],
+        [("build", "npm run build")],
+    ],
+)
+def test_a_check_that_exercises_the_code_keeps_approval(checks):
+    assert _guard_recommendation(_approve(), _guard_execution(*checks)).action == "approve"
 
 
 def test_context_includes_dependency_evidence_file(tmp_path: Path):

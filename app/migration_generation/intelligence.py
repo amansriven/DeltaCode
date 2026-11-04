@@ -117,9 +117,14 @@ class OpenAIMigrationIntelligence:
                 "Edit only supplied files, preserve unrelated behavior, and reference only known "
                 "call-site ids and plan-step ids. For existing files, copy expected_sha256 exactly "
                 "from the context. Use argument-array verification commands without shell syntax. "
+                "Each edit's content replaces the whole file, so return every file complete, with "
+                "all unrelated lines and characters exactly as supplied. "
                 "Do not claim that any command has run. Record uncertainty instead of guessing."
             ),
-            user_input=json.dumps(context.model_dump(mode="json"), separators=(",", ":")),
+            # Raw Unicode, not \\u escapes: the model has to return this text exactly.
+            user_input=json.dumps(
+                context.model_dump(mode="json"), separators=(",", ":"), ensure_ascii=False
+            ),
             schema_name="delta_code_migration_proposal",
             schema=GenerationProposal.model_json_schema(),
             max_output_tokens=6_000,
@@ -153,6 +158,7 @@ class OpenAIMigrationIntelligence:
                     "execution": _execution_for_review(execution),
                 },
                 separators=(",", ":"),
+                ensure_ascii=False,
             ),
             schema_name="delta_code_migration_review",
             schema=ReviewProposal.model_json_schema(),

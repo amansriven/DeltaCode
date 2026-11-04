@@ -199,6 +199,7 @@ class EvalResult:
     replacement_added: int | None = None
     recommendation: str | None = None
     model_check_status: str | None = None
+    model_checks: list[dict] = field(default_factory=list)
     baseline_passed: int | None = None
     baseline_exit: int | None = None
     after_passed: int | None = None
@@ -663,6 +664,16 @@ def evaluate_tree(
         result.recommendation = evidence.recommendation.action
         statuses = {check.status for check in evidence.verification_checks}
         result.model_check_status = "passed" if statuses == {"passed"} else "not_passed"
+        result.model_checks = [
+            {
+                "kind": check.kind,
+                "status": check.status,
+                "command": check.command[:200],
+                "exit_code": check.exit_code,
+                "log_tail": (check.display_log or "")[-300:],
+            }
+            for check in evidence.verification_checks
+        ]
         edited = _apply_edits(root, patch_bytes)
         _score_patch(result, root, case, migration, change, edited)
         result.stage = "completed"

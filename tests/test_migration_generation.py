@@ -21,6 +21,7 @@ from app.migration_generation.executor import (
 )
 from app.migration_generation.intelligence import (
     MAX_REVIEW_LOG_CHARS,
+    OpenAIMigrationIntelligence,
     StaticMigrationIntelligence,
     _execution_for_review,
 )
@@ -276,6 +277,59 @@ def test_patch_cannot_write_a_redaction_marker_into_a_file(tmp_path: Path):
 
     with pytest.raises(PatchPolicyError, match="redaction marker"):
         validate_patch(tmp_path, _plan(), _proposal("value = [REDACTED]\n", digest))
+
+
+def _big_file(tmp_path: Path, lines: int) -> str:
+    content = "".join(f"value_{index} = {index}\n" for index in range(lines))
+    (tmp_path / "app.py").write_text(content)
+    return hashlib.sha256(content.encode()).hexdigest()
+
+
+@pytest.mark.parametrize(
+    ("original", "kept"),
+    [(581, 15), (674, 251), (254, 193), (100, 79)],
+)
+def test_patch_that_drops_much_of_a_file_is_rejected(tmp_path: Path, original, kept):
+    digest = _big_file(tmp_path, original)
+    partial = "".join(f"value_{index} = {index}\n" for index in range(kept))
+
+    with pytest.raises(PatchPolicyError, match="removes"):
+        validate_patch(tmp_path, _plan(), _proposal(partial, digest))
+
+
+@pytest.mark.parametrize(
+    ("original", "kept"),
+    [(100, 100), (100, 105), (100, 81), (30, 11), (20, 1)],
+)
+def test_ordinary_edits_and_small_removals_are_allowed(tmp_path: Path, original, kept):
+    digest = _big_file(tmp_path, original)
+    edited = "".join(f"value_{index} = {index}\n" for index in range(kept))
+
+    validate_patch(tmp_path, _plan(), _proposal(edited, digest))
+
+
+def test_prompts_send_unicode_text_rather_than_escapes(tmp_path: Path):
+    class RecordingClient:
+        available = True
+        model = "gpt-4o"
+        usage = None
+
+        def __init__(self) -> None:
+            self.user_input = ""
+
+        def generate_json(self, *, user_input, **_options):
+            self.user_input = user_input
+            raise RuntimeError("stop after capturing the prompt")
+
+    (tmp_path / "app.py").write_text("note = 'caf\u00e9 \u2014 \u2713'\n")
+    client = RecordingClient()
+    intelligence = OpenAIMigrationIntelligence(client)
+
+    with pytest.raises(RuntimeError):
+        intelligence.propose(_context(tmp_path))
+
+    assert "caf\u00e9 \u2014 \u2713" in client.user_input
+    assert "\\u2014" not in client.user_input
 
 
 def test_review_logs_are_bounded_and_keep_the_end_of_the_output():

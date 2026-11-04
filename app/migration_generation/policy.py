@@ -14,6 +14,10 @@ from .models import PatchProposal, SandboxExecutionRequest, SandboxFile
 MAX_BUNDLE_FILES = 1000
 MAX_BUNDLE_BYTES = 6_000_000
 MAX_EDIT_BYTES = 2_000_000
+# An edit replaces the whole file, so a partial answer would silently delete the rest of it.
+# Migrations rarely shrink a file, and these limits leave room for removing a compatibility shim.
+MAX_LINES_REMOVED_UNCHECKED = 20
+MAX_LINE_LOSS_RATIO = 0.15
 DENIED_PATH_PREFIXES = (
     ".git",
     ".github/workflows",
@@ -164,6 +168,12 @@ def validate_patch(
             expected = hashlib.sha256(existing).hexdigest()
             if edit.expected_sha256 != expected:
                 raise PatchPolicyError("generated patch base digest is stale")
+            old_lines = len(existing.splitlines())
+            lost_lines = old_lines - len(edit.content.splitlines())
+            if lost_lines > max(MAX_LINES_REMOVED_UNCHECKED, old_lines * MAX_LINE_LOSS_RATIO):
+                raise PatchPolicyError(
+                    f"generated patch removes {lost_lines} of {old_lines} lines from a file"
+                )
             change_type = "modified"
         else:
             if edit.expected_sha256 is not None:

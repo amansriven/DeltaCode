@@ -314,6 +314,9 @@ Prometheus metrics using a fixed set of labels.
 - **Analyzer release gate:** a labeled benchmark of affected, unaffected,
   uncertain, and unsupported cases across Python, TypeScript, JavaScript, and
   npm (`make benchmark`).
+- **Real-migration backtest:** on 50 held-out migrations from public repositories,
+  impact analysis found 95.5% of the lines developers actually changed. See
+  [measured performance](docs/PERFORMANCE.md), including what has not been measured yet.
 - **Contract fixtures:** JSON schemas and example payloads for normalized
   changes and migration evidence, checked by the test suite.
 - **CI on every pull request:** Ruff and pytest for the backend, ESLint plus a
@@ -367,6 +370,7 @@ openly instead of making confident guesses:
 
 ## Documentation
 
+- [Measured performance](docs/PERFORMANCE.md)
 - [Product RFC](docs/architecture/phase-0-rfc.md)
 - [Architecture overview](docs/architecture/README.md)
 - [Domain model](docs/architecture/domain-model.md)

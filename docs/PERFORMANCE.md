@@ -1,7 +1,7 @@
 # Performance
 
-Measured results for Delta Code's repository impact analysis, recorded on 2026-11-04. These
-results describe the code in this repository, not the deployed service.
+Measured results for Delta Code's impact analysis and migration generation, recorded on 2026-11-04.
+These results describe the code in this repository, not the deployed service.
 
 ## Summary
 
@@ -11,10 +11,9 @@ results describe the code in this repository, not the deployed service.
 | Repositories with every changed line found | 45 of 50 | Same run |
 | Migrated repositories marked affected with no call site left | 0 of 50 | Same run |
 | Analysis time per repository | 55 ms median, 3.5 s maximum (up to 1,911 files) | Same run, on a developer laptop |
-| Automated tests | 246 passing, plus 3 run only against PostgreSQL | See [Tests](#tests) |
-
-End-to-end migration generation has not been measured yet. See
-[What has not been measured](#what-has-not-been-measured).
+| Correct GPT-4o migration patches, by diff review | **61%** (19 of 31 repositories) | [Grades](../benchmarks/migration-eval-holdout-review.json) |
+| Generation cost | $0.04 median per repository, $1.44 total | [Results](../benchmarks/migration-eval-holdout.json) |
+| Automated tests | 282 passing, plus 3 run only against PostgreSQL | See [Tests](#tests) |
 
 ## Real-migration backtest
 
@@ -87,6 +86,56 @@ The synthetic benchmarks caught none of these.
 - Pydantic accounts for 58% of the held-out lines. The mean across migrations is also 95.5%.
 - Analysis is semantic for Python and lexical for JavaScript and TypeScript.
 
+## Migration generation
+
+GPT-4o ran through the production migration service on the held-out repositories, with verification
+in a local Docker sandbox that has networking off. The hosted sandbox was not involved.
+
+Of the 50 repositories, 31 reached the model. The other 19 stopped before any spend: 6 had too much
+context, 5 were too large to upload, 4 had files too large to return whole, 3 had no call sites
+found, and 1 contained what looks like a real secret.
+
+| Migration | Correct | Attempted |
+| --- | --- | --- |
+| React 18 root API | 8 | 8 |
+| NumPy 1.24 removed aliases | 4 | 5 |
+| Selenium 4 locators | 5 | 7 |
+| OpenAI Python 1.0 | 2 | 9 |
+| Pydantic 2 validators | 0 | 2 |
+| **Total** | **19** | **31** |
+
+Each patch was read as a diff against its parent commit. This was an AI-assisted review, and the
+patches were not run against the services they call. A patch counts as correct only if it migrates
+the API and damages nothing else, so correct does not mean proven in production.
+
+| Why the 12 others failed | Repositories |
+| --- | --- |
+| Wrong use of the new API, such as an invalid argument or a client built at import time | 5 |
+| Lost code: returned part of a file, or removed about 60 lines | 4 |
+| Stripped non-ASCII characters from an otherwise correct migration | 1 |
+| Changed the repository's own method instead of the library call | 1 |
+| Proposed a verification command the policy refuses, so no patch was produced | 1 |
+
+### Automatic checks were not enough
+
+26 of the 30 patches passed the automatic checks for parsing and for removing the old API, but only
+19 were correct. One passed while deleting about 60 lines, including a license notice.
+
+Tests could not settle this. Only 4 of the 30 had tests passing offline before the patch, and in all
+4 the developers' own migration also failed some of those tests in this environment. The model
+recommended approval once and revision 29 times. Its verification logs were not kept, so that split
+cannot be explained from this run.
+
+### Known defects this exposed
+
+- **Non-ASCII text is at risk.** Six patches touched files containing non-ASCII text, and five of
+  them lost all of it. Prompts encode those characters as `\uXXXX` escapes, which is the suspected
+  cause. This has not been tested.
+- **Nothing rejects a patch that shrinks a file.** Whole-file edits let a partial answer replace a
+  complete file.
+- **Large files cannot be migrated.** Edits must fit in 6,000 output tokens, so files above roughly
+  17 KB are skipped. Sending targeted edits instead of whole files would remove this limit.
+
 ## Synthetic benchmarks
 
 Hand-written cases that cover hard patterns such as aliases, factories, and name collisions. Each
@@ -106,7 +155,7 @@ unsupported.
 
 | Suite | Tests | Notes |
 | --- | --- | --- |
-| Backend | 236 | Includes real Docker isolation tests, skipped when Docker is not running |
+| Backend | 272 | Includes real Docker isolation tests, skipped when Docker is not running |
 | PostgreSQL | 3 | Skipped without `TEST_DATABASE_URL`; run by `make test-postgres` and CI |
 | Frontend | 6 | Server-rendered routes and identity |
 | Sandbox worker | 4 | Path, argument, quoting, and log-redaction policy |
@@ -115,13 +164,12 @@ Backend line coverage is 73% overall and 95% for the impact analyzer.
 
 ## What has not been measured
 
-- **Migration generation.** The harness in `app/hardening/migration_eval.py` is built and tested
-  with a scripted model, but has not run with GPT-4o. It will score patches only on checks the
-  model does not choose: whether the patch parses, whether the old API is gone, and whether tests
-  that passed before still pass.
-- **Hosted sandbox verification.** The evaluation uses a local Docker sandbox with networking off.
-  The hosted Cloudflare Sandbox is not configured on the current deployment, so migration generation
-  cannot finish there yet.
+- **Hosted sandbox verification.** The evaluation used a local Docker sandbox. The hosted Cloudflare
+  Sandbox is not configured on the current deployment, so migration generation cannot finish there
+  yet.
+- **Whether patches work when run.** Few repositories have tests that can run offline, so most
+  patches were judged by reading them.
+- **JavaScript and TypeScript syntax in JSX and TSX files**, which the local check cannot parse.
 - **Real usage.** There are no production usage or adoption figures.
 
 ## Reproducing
@@ -133,6 +181,13 @@ make backtest                # real tuning set; downloads repositories
 make backtest-holdout        # real held-out set; report it, never tune against it
 make test-postgres           # SQL tests against a disposable PostgreSQL container
 make migration-eval-estimate # model cost estimate; makes no model calls
+```
+
+The paid evaluation needs an explicit spend limit, and it can resume without paying twice:
+
+```bash
+python -m app.hardening.migration_eval benchmarks/repository-impact-backtest-holdout.json \
+  --out benchmarks/migration-eval-holdout.json --max-cost 5 --resume --patches-dir <directory>
 ```
 
 `benchmarks/build_backtest.py` regenerates the case lists. GitHub search results change over time,

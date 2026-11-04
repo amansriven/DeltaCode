@@ -315,7 +315,8 @@ Prometheus metrics using a fixed set of labels.
   uncertain, and unsupported cases across Python, TypeScript, JavaScript, and
   npm (`make benchmark`).
 - **Real-migration backtest:** on 50 held-out migrations from public repositories,
-  impact analysis found 95.5% of the lines developers actually changed. See
+  impact analysis found 95.5% of the lines developers actually changed, and 61% of GPT-4o's
+  migration patches were correct by diff review. See
   [measured performance](docs/PERFORMANCE.md), including what has not been measured yet.
 - **Contract fixtures:** JSON schemas and example payloads for normalized
   changes and migration evidence, checked by the test suite.

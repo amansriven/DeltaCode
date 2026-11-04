@@ -1,0 +1,218 @@
+{
+  "description": "Grades from reading each patch as a diff against its parent commit. Nothing was executed against a live service.",
+  "counts": {
+    "correct": 19,
+    "defective": 11,
+    "no_patch": 1
+  },
+  "by_migration": {
+    "openai-python-v1": {
+      "correct": 2,
+      "attempted": 9
+    },
+    "selenium-4-locators": {
+      "correct": 5,
+      "attempted": 7
+    },
+    "numpy-1.24-aliases": {
+      "correct": 4,
+      "attempted": 5
+    },
+    "pydantic-v2-validators": {
+      "correct": 0,
+      "attempted": 2
+    },
+    "react-18-root": {
+      "correct": 8,
+      "attempted": 8
+    }
+  },
+  "cases": [
+    {
+      "id": "openai-python-v1:skyflyt/ai_gmail_reader#14",
+      "grade": "correct",
+      "category": null,
+      "note": "Client created and response read through attributes."
+    },
+    {
+      "id": "openai-python-v1:PrefectHQ/marvin#624",
+      "grade": "defective",
+      "category": "code_loss",
+      "note": "Replaced three files with short snippets (581 lines became 15); does not parse."
+    },
+    {
+      "id": "openai-python-v1:hrqneto/dramagotchi-terminal#1",
+      "grade": "defective",
+      "category": "code_loss",
+      "note": "Cut the file from 216 to 59 lines and corrupted non-ASCII text; does not parse."
+    },
+    {
+      "id": "openai-python-v1:oussamaelfig/briefbot#2",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Module-level OpenAI() raises at import without a key; 13 of 13 tests fail."
+    },
+    {
+      "id": "openai-python-v1:Njwacky/blaqVibe#112",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Passes api_key positionally, which OpenAI() rejects; also stripped non-ASCII text."
+    },
+    {
+      "id": "openai-python-v1:tarynichibanhooray-coder/poetry-transformer#4",
+      "grade": "defective",
+      "category": "text_damage",
+      "note": "API migration is right, but it stripped status characters from strings."
+    },
+    {
+      "id": "openai-python-v1:MichaelFu1998-create/pr-review-assistant#1",
+      "grade": "correct",
+      "category": null,
+      "note": "Call migrated; 15 of 15 tests still pass. Also loosened an existing openai>=1.40 pin to >=1.0, which was unnecessary."
+    },
+    {
+      "id": "openai-python-v1:nyasu12/pdf-biodata-extractor#1",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Module-level OpenAI() runs before the key is set, so it raises at import without one."
+    },
+    {
+      "id": "openai-python-v1:techpizzeria/pizzabot#2",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Reads message[\"content\"], but v1 messages are not subscriptable."
+    },
+    {
+      "id": "selenium-4-locators:andrebrener/fb_group_members#1",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted and By imported."
+    },
+    {
+      "id": "selenium-4-locators:sshroot23cs/pytest_ui_framework#2",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted; By was already imported."
+    },
+    {
+      "id": "selenium-4-locators:boterop/html2object#16",
+      "grade": "defective",
+      "category": "wrong_target",
+      "note": "Rewrote the repository's own method rather than a Selenium call; 2 tests regress."
+    },
+    {
+      "id": "selenium-4-locators:ibm-developer-skills-network/duwjx-tdd_bdd_PracticeCode#12",
+      "grade": "no_patch",
+      "category": "policy",
+      "note": "verification executable is not allowed"
+    },
+    {
+      "id": "selenium-4-locators:IgniteTalks/AddAttendeesToEventBrite#2",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted and By imported."
+    },
+    {
+      "id": "selenium-4-locators:anantdark/PythonAutomation#5",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted across both files."
+    },
+    {
+      "id": "selenium-4-locators:coffeehat/BIT-srun-login-script#9",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted and By imported."
+    },
+    {
+      "id": "numpy-1.24-aliases:TutteInstitute/vectorizers#164",
+      "grade": "correct",
+      "category": null,
+      "note": "Aliases replaced; sized NumPy types left alone."
+    },
+    {
+      "id": "numpy-1.24-aliases:rheineke/deep_learning#1",
+      "grade": "correct",
+      "category": null,
+      "note": "Aliases replaced with builtins."
+    },
+    {
+      "id": "numpy-1.24-aliases:adimajo/glmdisc_python#7",
+      "grade": "correct",
+      "category": null,
+      "note": "Aliases replaced with builtins."
+    },
+    {
+      "id": "numpy-1.24-aliases:Lupphes/LatentFingerprintGrader#4",
+      "grade": "defective",
+      "category": "code_loss",
+      "note": "Migrated the aliases but deleted about 60 lines including the license notice."
+    },
+    {
+      "id": "numpy-1.24-aliases:davised/automlsa2#9",
+      "grade": "correct",
+      "category": null,
+      "note": "Aliases replaced with builtins."
+    },
+    {
+      "id": "pydantic-v2-validators:a5r0n/WhatsappApiClient#7",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Passes validate_default to field_validator, which does not accept it, and loses pre=True."
+    },
+    {
+      "id": "pydantic-v2-validators:sondeko143/vstreamer-tool#2",
+      "grade": "defective",
+      "category": "code_loss",
+      "note": "Cut 674 lines to 251; does not parse; 5 of 5 tests fail."
+    },
+    {
+      "id": "react-18-root:IBM/guardium-supported-datasources#223",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct. Also fixed an unrelated comment typo."
+    },
+    {
+      "id": "react-18-root:wagtail/wagtail-autocomplete#309",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:jgrancher/resume#31",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:tvhoang3005/Audio#2",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:ganoninc/emojis-weather-map#101",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct in app and tests."
+    },
+    {
+      "id": "react-18-root:guyellis/learn#1072",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:mfsiat/pixabay-gallery#84",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:sawady/sim88#5",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct in app and tests."
+    }
+  ]
+}

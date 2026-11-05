@@ -11,10 +11,11 @@ These results describe the code in this repository, not the deployed service.
 | Repositories with every changed line found | 45 of 50 | Same run |
 | Migrated repositories marked affected with no call site left | 0 of 50 | Same run |
 | Analysis time per repository | 55 ms median, 3.5 s maximum (up to 1,911 files) | Same run, on a developer laptop |
-| Correct GPT-4o migration patches, by diff review | **61%** (19 of 31 repositories) | [Grades](../benchmarks/migration-eval-holdout-review.json) |
-| Same review after two fixes, on different repositories | **74%** (14 of 19 repositories) | [Grades](../benchmarks/migration-eval-tuning-review.json) |
-| Generation cost | About $0.04 median per repository | [First run](../benchmarks/migration-eval-holdout.json), [second run](../benchmarks/migration-eval-tuning.json) |
-| Automated tests | 292 passing, plus 3 run only against PostgreSQL | See [Tests](#tests) |
+| Correct GPT-4o patches on 36 new repositories, by diff review | **50%** of all 36; **67%** of the 27 attempted | [Grades](../benchmarks/migration-eval-fresh-review.json) |
+| Same review on the 104 earlier repositories | 32% of all 104; 66% of the 50 attempted | [First](../benchmarks/migration-eval-holdout-review.json), [second](../benchmarks/migration-eval-tuning-review.json) |
+| Repositories reaching the model | 75% of 36, up from 48% of 104, on different samples | [New run](../benchmarks/migration-eval-fresh.json) |
+| Generation cost on the new repositories | $0.03 median per run, $1.29 in total | Same run |
+| Automated tests | 341 passing, plus 3 run only against PostgreSQL | See [Tests](#tests) |
 
 ## Real-migration backtest
 
@@ -89,6 +90,9 @@ The synthetic benchmarks caught none of these.
 
 ## Migration generation
 
+The [newest run](#run-on-new-repositories) is the current result. The first two runs below explain
+how it got there.
+
 GPT-4o ran through the production migration service on the held-out repositories, with verification
 in a local Docker sandbox that has networking off. The hosted sandbox was not involved.
 
@@ -161,16 +165,67 @@ proposal was not saved, so whether the refusal was correct is unknown.
 Four retest repositories had usable tests, and they agreed with the review each time: the two with no
 regressions were graded correct, and the two with regressions were graded defective.
 
+### Run on new repositories
+
+The first two runs shaped the fixes, so neither could give a clean score. A third set of 36
+repositories was selected under the same mechanical rules, excluding every earlier repository, and
+committed before scoring. [Predictions](../benchmarks/migration-eval-fresh-predictions.md) were also
+written first.
+
+This run included these changes:
+
+- **Targeted edits.** The model returns text replacements rather than retyping whole files.
+- **Partial files.** Large files are sent as the imports plus the code around each call site. On this
+  set, none of the 546 old-API lines in supplied files were hidden.
+- **Checks Delta Code controls.** Python patches run import, call-argument, undefined-name, and
+  baseline test checks in place of commands the model guessed. Each reports only differences from
+  the original code.
+- **Retries.** One retry for text that doesn't match, and one for a regression a check found.
+
+Of the 36 repositories, 27 reached the model. The other 9 stopped before any spend: 3 were too large
+to upload, 2 had too much to rewrite, 2 contained what looks like a real secret, 1 had too much
+context, and 1 had no call sites found.
+
+| Migration | Correct | Attempted | Earlier runs | Predicted |
+| --- | --- | --- | --- | --- |
+| React 18 root API | 7 | 8 | 13 of 14 | 6–8 |
+| NumPy 1.24 aliases | 6 | 9 | 5 of 6 | 7–9 |
+| Selenium 4 locators | 2 | 5 | 9 of 11 | 4–5 |
+| OpenAI Python 1.x | 2 | 3 | 4 of 14 | 1–3 |
+| Pydantic v2 validators | 1 | 2 | 2 of 5 | 0–2 |
+| **Total** | **18** | **27** | **33 of 50** | **18–27** |
+
+The first 8 repositories ran as a paid test, and graded 2 of 5 correct. Those defects led to the
+undefined-name check, separate retry budgets, and a prompt rule on imports. Those 5 grades were kept.
+The remaining repositories graded 16 of 22 correct (73%), but they include all the NumPy and React
+cases and no OpenAI ones, so the two groups can't be compared.
+
+**What this shows:**
+
+- **More repositories get a patch.** Correct patches rose from 32% to 50% of all repositories tested,
+  mostly because more repositories reached the model. The samples differ, so the size of the gain is
+  uncertain.
+- **Accuracy did not clearly improve.** 67% of attempted repositories were correct, against 66% before,
+  even with an easier mix of migrations. The result landed at the bottom of the predicted range.
+- **The failures changed.** Earlier runs lost code and damaged text. Here, the 7 defects were 3 incomplete
+  migrations, 2 undefined names, 1 syntax error, and 1 type error.
+
+Automatic checks again overstated quality: 21 patches parsed, removed all old usage, and added the
+new API, and only 18 of those were correct.
+
 ### Remaining limits
 
-- **The model guesses verification commands.** In the retest, 17 of 18 first checks failed, mostly
-  because a guessed path such as `tests` did not exist, or because JavaScript tools were not installed.
-  So the model recommended revision on 17 of 18 patches, including most correct ones. Its
-  recommendation is not currently a useful quality signal, and the repository's real test command
-  should be detected rather than guessed.
-- **Large files cannot be migrated.** Edits must fit in 6,000 output tokens, so files above roughly
-  17 KB are skipped. Sending targeted edits instead of whole files would remove this limit.
-- **Refused proposals are not saved**, which makes a refusal impossible to audit afterward.
+- **Incomplete patches pass unnoticed.** Nothing checks whether old call sites remain after a patch.
+  `ciao-contrib` kept 2 removed aliases, its tests didn't reach them, and the review approved it. That
+  was 1 of the 3 approvals in this run.
+- **Regression repair is unproven.** Only one patch reached it, and that patch still failed.
+- **Text matching still loses repositories.** Two were refused twice: one because the model wrote quotes
+  with a backslash, the other because it copied a line that isn't in the file. Together they cost
+  $0.25.
+- **Little is verified by running code.** Only 3 of the 27 repositories had tests that could give a
+  verdict, and JavaScript and TypeScript patches have no automatic checks.
+- **The grades come from one AI reviewer.** `landscape-server-operator` is the closest call: if
+  validators running on raw input counts as a defect, the total is 17.
 
 ## Synthetic benchmarks
 
@@ -191,12 +246,12 @@ unsupported.
 
 | Suite | Tests | Notes |
 | --- | --- | --- |
-| Backend | 282 | Includes real Docker isolation tests, skipped when Docker is not running |
+| Backend | 341 | Includes real Docker isolation tests, skipped when Docker is not running |
 | PostgreSQL | 3 | Skipped without `TEST_DATABASE_URL`; run by `make test-postgres` and CI |
 | Frontend | 6 | Server-rendered routes and identity |
 | Sandbox worker | 4 | Path, argument, quoting, and log-redaction policy |
 
-Backend line coverage is 73% overall and 95% for the impact analyzer.
+Backend line coverage is 71% overall and 95% for the impact analyzer.
 
 ## What has not been measured
 
@@ -218,6 +273,10 @@ make backtest-holdout        # real held-out set; report it, never tune against 
 make test-postgres           # SQL tests against a disposable PostgreSQL container
 make migration-eval-estimate # model cost estimate; makes no model calls
 ```
+
+To rehearse a run for free, add `--simulate` to the command below. It uses the real client, budget,
+sandbox, and checks against a simulated API, so its costs are estimates and its patches say nothing
+about the model.
 
 The paid evaluation needs an explicit spend limit, and it can resume without paying twice:
 

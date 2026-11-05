@@ -50,3 +50,12 @@ Recorded before running the rest. It cost $0.14 for 5 patches, about half the es
 All 3 defects were cheap to catch, so an undefined-name check, separate retry budgets and a prompt rule on imports were added. Replayed over all 53 saved patches, the name check flagged 2 of the 18 defective patches and none of the 35 correct ones.
 
 The 5 patches keep their grades and are not rerun. The remaining repositories are the clean test of these changes, and results will be reported for each group as well as combined.
+
+## Outcome
+
+18 of 27 correct, at the bottom of the predicted range, and 50% of all 36 rather than the 60% expected. It cost $1.29.
+
+- **Within range:** React 7 of 8, OpenAI 2 of 3, Pydantic 1 of 2.
+- **Below range:** NumPy 6 of 9 and Selenium 2 of 5.
+- **Predicted correctly:** text mismatches lost repositories (2), test evidence was thin (3 repositories), and automatic scores ran high (21 against 18).
+- **Not predicted:** incomplete patches were the most common defect, and the review approved one of them.

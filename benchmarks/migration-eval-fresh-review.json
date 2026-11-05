@@ -1,10 +1,221 @@
 {
-  "description": "Grades from reading each patch as a diff against its parent commit. Nothing was executed against a live service. The first 8 repositories ran before the undefined-name check, separate retry budgets and import prompt were added.",
+  "description": "Grades from reading each patch as a diff against its parent commit. Nothing was executed against a live service. The first 8 repositories ran before the undefined-name check, separate retry budgets and import prompt were added; stage records which group each case belongs to.",
   "cases": [
-    {"id": "openai-python-v1:techpizzeria/psionai-guinea-python#3", "stage": "first_8", "grade": "defective", "category": "wrong_api", "note": "Chat path is right, but embeddings.py uses os without importing it, so that path raises NameError."},
-    {"id": "openai-python-v1:silasluiz96-alt/solar-advisor-agent#6", "stage": "first_8", "grade": "correct", "category": null, "note": "Works. Has a redundant response = client = assignment and loosened openai>=1.30 to >=1.0 for no reason."},
-    {"id": "openai-python-v1:bani/bot#1", "stage": "first_8", "grade": "correct", "category": null, "note": "Client created at call time and the repository's own key variable kept."},
-    {"id": "selenium-4-locators:timkpaine/tdameritrade#164", "stage": "first_8", "grade": "defective", "category": "syntax", "note": "Locators are right, but the By import sits unindented inside a function, so the file does not parse. Its one retry had already gone on a text mismatch."},
-    {"id": "selenium-4-locators:ZeitOnline/zeit.nightwatch#8", "stage": "first_8", "grade": "defective", "category": "wrong_api", "note": "Library code is right, but tests/test_basics.py uses By without importing it."}
-  ]
+    {
+      "id": "openai-python-v1:techpizzeria/psionai-guinea-python#3",
+      "stage": "first_8",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Chat path is right, but embeddings.py uses os without importing it, so that path raises NameError."
+    },
+    {
+      "id": "openai-python-v1:silasluiz96-alt/solar-advisor-agent#6",
+      "stage": "first_8",
+      "grade": "correct",
+      "category": null,
+      "note": "Works. Has a redundant response = client = assignment and loosened openai>=1.30 to >=1.0 for no reason."
+    },
+    {
+      "id": "openai-python-v1:bani/bot#1",
+      "stage": "first_8",
+      "grade": "correct",
+      "category": null,
+      "note": "Client created at call time and the repository's own key variable kept."
+    },
+    {
+      "id": "selenium-4-locators:timkpaine/tdameritrade#164",
+      "stage": "first_8",
+      "grade": "defective",
+      "category": "syntax",
+      "note": "Locators are right, but the By import sits unindented inside a function, so the file does not parse. Its one retry had already gone on a text mismatch."
+    },
+    {
+      "id": "selenium-4-locators:ZeitOnline/zeit.nightwatch#8",
+      "stage": "first_8",
+      "grade": "defective",
+      "category": "wrong_api",
+      "note": "Library code is right, but tests/test_basics.py uses By without importing it."
+    },
+    {
+      "id": "selenium-4-locators:jeeva2812/automated-net-access#1",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted and By imported."
+    },
+    {
+      "id": "selenium-4-locators:mmartinsie/lolScout#1",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "All locators converted and By imported in each of the three files."
+    },
+    {
+      "id": "selenium-4-locators:Strip3s/PhoenixBot#72",
+      "stage": "remaining",
+      "grade": "no_patch",
+      "category": "text_mismatch",
+      "note": "Refused twice. The model wrote quotes as backslash-quote in old_text, so the text never matched."
+    },
+    {
+      "id": "numpy-1.24-aliases:GuignardLab/LineageTree#132",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Alias replaced with the builtin."
+    },
+    {
+      "id": "numpy-1.24-aliases:RoshFps/Object-Detection-in-Autonomous-Driving-System#1",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Aliases replaced, including in commented-out code."
+    },
+    {
+      "id": "numpy-1.24-aliases:14harshaldhote/Yolo-Pytorch-Crop-Disease-DETECTION_model-on-raspberryPi4#2",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Aliases replaced with builtins."
+    },
+    {
+      "id": "numpy-1.24-aliases:cxcsds/ciao-contrib#733",
+      "stage": "remaining",
+      "grade": "defective",
+      "category": "incomplete",
+      "note": "Left np.int on 2 of 8 lines, which raises when reached. Its tests didn't cover them, so the review approved it."
+    },
+    {
+      "id": "numpy-1.24-aliases:dtcenter/METcalcpy#489",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Aliases replaced; 212 of 212 tests still pass."
+    },
+    {
+      "id": "numpy-1.24-aliases:sorbotics/yolov9#3",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Alias replaced with the builtin."
+    },
+    {
+      "id": "numpy-1.24-aliases:sakoho81/dmlib#2",
+      "stage": "remaining",
+      "grade": "no_patch",
+      "category": "text_mismatch",
+      "note": "Refused twice. A replacement copied a line that isn't in the file and left it unchanged."
+    },
+    {
+      "id": "numpy-1.24-aliases:Teoroo-CMC/PiNN#42",
+      "stage": "remaining",
+      "grade": "defective",
+      "category": "incomplete",
+      "note": "Left np.int on 1 of 5 lines, and made an unrelated whitespace change."
+    },
+    {
+      "id": "numpy-1.24-aliases:antonypaulson/circle_detection#1",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Aliases replaced; sized types left alone."
+    },
+    {
+      "id": "pydantic-v2-validators:NHSDigital/data-validation-engine#107",
+      "stage": "remaining",
+      "grade": "defective",
+      "category": "incomplete",
+      "note": "Left 16 of 23 validators and never imported the new names, after three attempts and $0.22."
+    },
+    {
+      "id": "pydantic-v2-validators:canonical/landscape-server-operator#102",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Closest call. Uses mode='before' where the developers used 'after', so validators see raw input, but these read fields with .get and valid input behaves the same."
+    },
+    {
+      "id": "react-18-root:kmmehedihassan/Jogaar#1",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:SeleniumHQ/selenium-ide#2024",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:ayyappaswamyangadi/todo-list#1",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:rsl50/Omnistack11#41",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:Ruberoni/drama-keeper#16",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct, with a non-null assertion for strict TypeScript."
+    },
+    {
+      "id": "react-18-root:annajolly/pacman#13",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct."
+    },
+    {
+      "id": "react-18-root:yyaanniivv/simon#36",
+      "stage": "remaining",
+      "grade": "correct",
+      "category": null,
+      "note": "Root API correct in app and test, including unmount."
+    },
+    {
+      "id": "react-18-root:madmaxlax/maxstruever-site#70",
+      "stage": "remaining",
+      "grade": "defective",
+      "category": "type_error",
+      "note": "Passes getElementById's nullable result to createRoot in a strict TypeScript project, which fails type checking."
+    }
+  ],
+  "counts": {
+    "defective": 7,
+    "correct": 18,
+    "no_patch": 2
+  },
+  "by_migration": {
+    "openai-python-v1": {
+      "correct": 2,
+      "attempted": 3
+    },
+    "selenium-4-locators": {
+      "correct": 2,
+      "attempted": 5
+    },
+    "numpy-1.24-aliases": {
+      "correct": 6,
+      "attempted": 9
+    },
+    "pydantic-v2-validators": {
+      "correct": 1,
+      "attempted": 2
+    },
+    "react-18-root": {
+      "correct": 7,
+      "attempted": 8
+    }
+  }
 }
